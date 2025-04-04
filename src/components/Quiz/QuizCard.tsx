@@ -1,5 +1,5 @@
 import { Brain, Clock, ArrowRight } from 'lucide-react';
-import type { Quiz } from '../types/quiz';
+import type { Quiz } from '../../types/Quiz/quiz';
 
 type QuizCardProps = {
   quiz: Quiz;

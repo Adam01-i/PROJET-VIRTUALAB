@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FlaskRound as Flask, Brain, Cuboid as Cube, Book, Plus, Clock, Beaker, ListChecks, LogIn } from 'lucide-react';
-import QuizView from './components/QuizView';
+import QuizView from './components/Quiz/QuizView';
+import Viewer3DView from './components/Viewer3D/Viewer3DView';
 
 type Experience = {
   id: string;
@@ -14,14 +15,6 @@ type Experience = {
   resultatsAttendus: string[];
 };
 
-type Molecule = {
-  id: string;
-  nom: string;
-  formule: string;
-  description: string;
-  structure: string;
-};
-
 declare global {
   interface Window {
     particlesJS: any;
@@ -32,26 +25,8 @@ declare global {
 function App() {
   const [activeTab, setActiveTab] = useState<'accueil' | 'experiences' | 'quiz' | '3d'>('accueil');
   const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedMolecule, setSelectedMolecule] = useState<Molecule | null>(null);
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
   const viewerRef = useRef<any>(null);
-
-  const molecules: Molecule[] = [
-    {
-      id: '1',
-      nom: 'Eau',
-      formule: 'H2O',
-      description: 'Molécule essentielle à la vie, composée d\'un atome d\'oxygène et deux atomes d\'hydrogène.',
-      structure: 'https://models.r-eg.net/models/h2o.pdb'
-    },
-    {
-      id: '2',
-      nom: 'Méthane',
-      formule: 'CH4',
-      description: 'Le plus simple des hydrocarbures, composé d\'un atome de carbone et quatre atomes d\'hydrogène.',
-      structure: 'https://models.r-eg.net/models/ch4.pdb'
-    }
-  ];
 
   const [experiences] = useState<Experience[]>([
     {
@@ -145,23 +120,6 @@ function App() {
       document.body.removeChild(script3D);
     };
   }, []);
-
-  useEffect(() => {
-    if (selectedMolecule && viewerRef.current) {
-      const viewer = window.$3Dmol.createViewer(viewerRef.current, {
-        backgroundColor: 'black',
-      });
-      
-      fetch(selectedMolecule.structure)
-        .then(response => response.text())
-        .then(data => {
-          viewer.addModel(data, "pdb");
-          viewer.setStyle({}, {stick: {}});
-          viewer.zoomTo();
-          viewer.render();
-        });
-    }
-  }, [selectedMolecule]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900">
@@ -401,55 +359,8 @@ function App() {
         {activeTab === 'quiz' && <QuizView />}
           
         {/*Gere la partie Affichage des molecules en 3D*/}
-        {activeTab === '3d' && (
-          <div className="space-y-8">
-            <h2 className="text-4xl font-bold text-white mb-8">Visualisation Moléculaire 3D</h2>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="md:col-span-1 space-y-6">
-                {selectedMolecule && (
-                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                    <h3 className="text-xl font-semibold text-white mb-2">{selectedMolecule.nom}</h3>
-                    <div className="text-lg text-purple-300 mb-4">{selectedMolecule.formule}</div>
-                    <p className="text-purple-200">{selectedMolecule.description}</p>
-                  </div>
-                )}
-                <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                  <h3 className="text-xl font-semibold text-white mb-4">Sélectionnez une molécule</h3>
-                  <div className="space-y-4">
-                    {molecules.map((molecule) => (
-                      <button
-                        key={molecule.id}
-                        onClick={() => setSelectedMolecule(molecule)}
-                        className={`w-full p-4 rounded-lg transition-all duration-200 text-left ${
-                          selectedMolecule?.id === molecule.id
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-white/5 text-purple-200 hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="font-semibold">{molecule.nom}</div>
-                        <div className="text-sm opacity-80">{molecule.formule}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>                
-              </div>
+        {activeTab === '3d' && <Viewer3DView />}
 
-              <div className="md:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden">
-                {selectedMolecule ? (
-                  <div ref={viewerRef} style={{ width: '100%', height: '780px' }} />
-                ) : (
-                  <div className="h-[600px] flex items-center justify-center text-purple-200">
-                    <div className="text-center">
-                      <Cube size={48} className="mx-auto mb-4 text-purple-300" />
-                      <p>Sélectionnez une molécule pour commencer</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

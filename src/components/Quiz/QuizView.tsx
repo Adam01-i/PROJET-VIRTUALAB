@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { quizData } from '../data/quizData';
+import { quizData } from '../../data/Quiz/quizData';
 import QuizCard from './QuizCard';
 import QuizSession from './QuizSession';
 
