@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { FlaskRound as Flask, Brain, Cuboid as Cube } from 'lucide-react';
 
-export default function AccueilView() {
-  const [activeTab, setActiveTab] = useState<'accueil' | 'experiences' | 'quiz' | '3d'>('accueil');
+export default function AccueilView({ onTabChange }: { onTabChange: (tab: 'accueil' | 'experiences' | 'quiz' | '3d') => void }) {
+    
+// const [activeTab, setActiveTab] = useState<'accueil' | 'experiences' | 'quiz' | '3d'>('accueil');
 
   return (
     <>
@@ -22,13 +22,13 @@ export default function AccueilView() {
                 </p>
                 <div className="flex flex-col md:flex-row gap-4 justify-center">
                   <button 
-                    onClick={() => setActiveTab('experiences')}
+                    onClick={() => onTabChange('experiences')}
                     className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-xl flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-purple-500/25">
                     <Flask size={24} />
                     <span className="text-lg font-medium">Commencer une expérience</span>
                   </button>
                   <button 
-                    onClick={() => setActiveTab('quiz')}
+                    onClick={() => onTabChange('quiz')}
                     className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl flex items-center justify-center space-x-3 transition-all duration-200">
                     <Brain size={24} />
                     <span className="text-lg font-medium">Tester mes connaissances</span>
@@ -41,7 +41,7 @@ export default function AccueilView() {
           <div className="container mx-auto px-6 py-24">
             <div className="grid md:grid-cols-3 gap-8">
               <button 
-                onClick={() => setActiveTab('experiences')} 
+                onClick={() => onTabChange('experiences')} 
                 className="bg-white/5 hover:bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-left">  
                 <div>
                   <Flask size={40} className="text-purple-300 mb-4" />
@@ -52,7 +52,7 @@ export default function AccueilView() {
                 </div>
               </button>
               <button 
-                onClick={() => setActiveTab('quiz')}
+                onClick={() => onTabChange('quiz')}
                 className="bg-white/5 hover:bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-left"> 
                 <div>
                   <Brain size={40} className="text-purple-300 mb-4" />
@@ -63,7 +63,7 @@ export default function AccueilView() {
                 </div>
               </button> 
               <button
-                onClick={() => setActiveTab('3d')}
+                onClick={() => onTabChange('3d')}
                 className="bg-white/5 hover:bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-left">  
                 <div>
                   <Cube size={40} className="text-purple-300 mb-4" />

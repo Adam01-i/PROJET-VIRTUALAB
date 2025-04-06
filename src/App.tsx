@@ -56,7 +56,7 @@ function App() {
       </nav>
                 
       {/* Gere la page d'Accueil*/}
-      {activeTab === 'accueil' && <AccueilView />}
+      {activeTab === 'accueil' && <AccueilView onTabChange={setActiveTab}/>}
 
       <main className="container mx-auto px-6 py-24">
         {/*Gere la partie Experiences*/}
