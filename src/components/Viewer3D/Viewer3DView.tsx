@@ -81,36 +81,37 @@ export default function Viewer3DView() {
           )}
           
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-            <h3 className="text-xl font-semibold text-white mb-4">
-              {viewMode === 'molecules' ? 'Molécules disponibles' : 'Matériel disponible'}
-            </h3>
-            <div className="space-y-3">
-              {viewMode === 'molecules'
-                ? molecules.map((molecule) => (
-                    <MoleculeCard
-                      key={molecule.id}
-                      molecule={molecule}
-                      isSelected={selectedItem?.id === molecule.id}
-                      onSelect={setSelectedItem}
-                    />
-                  ))
-                : labEquipment.map((equipment) => (
-                    <EquipmentCard
-                      key={equipment.id}
-                      equipment={equipment}
-                      isSelected={selectedItem?.id === equipment.id}
-                      onSelect={setSelectedItem}
-                    />
-                  ))}
-            </div>
-          </div>
+  <h3 className="text-xl font-semibold text-white mb-4">
+    {viewMode === 'molecules' ? 'Molécules disponibles' : 'Matériel disponible'}
+  </h3>
+  <div className="space-y-3 max-h-80 overflow-y-auto"> {/* Ajout du scroll ici */}
+    {viewMode === 'molecules'
+      ? molecules.map((molecule) => (
+          <MoleculeCard
+            key={molecule.id}
+            molecule={molecule}
+            isSelected={selectedItem?.id === molecule.id}
+            onSelect={setSelectedItem}
+          />
+        ))
+      : labEquipment.map((equipment) => (
+          <EquipmentCard
+            key={equipment.id}
+            equipment={equipment}
+            isSelected={selectedItem?.id === equipment.id}
+            onSelect={setSelectedItem}
+          />
+        ))}
+  </div>
+</div>
+
         </div>
 
-        <div className="md:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden">
+        <div className="md:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden max-h-780">
       {selectedItem ? (
         <div
           ref={viewerRef}
-          style={{ width: '100%', height: '780px' }}
+          style={{ width: '100%', height: 'max-h-780' }}
         />
       ) : (
         <div className="h-[600px] flex items-center justify-center text-purple-200">
