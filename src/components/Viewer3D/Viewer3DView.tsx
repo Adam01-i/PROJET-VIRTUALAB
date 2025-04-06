@@ -5,8 +5,10 @@ import MoleculeCard from './MoleculeCard';
 import EquipmentCard from './EquipmentCard';
 import MoleculeDetails from './MoleculeDetail';
 import EquipmentDetails from './EquipmentDetail';
-import { Cuboid as Cube, FlaskRound as Flask, PenTool as Tool } from 'lucide-react';
+import {FlaskRound as Flask, PenTool as Tool } from 'lucide-react';
 import type { Molecule, LabEquipment } from '../../types/Viewer3D/molecule-equipment';
+import { useEffect,useRef} from 'react';
+import * as $3Dmol from '3dmol'; // Import 3Dmol
 
 type ViewMode = 'molecules' | 'equipment';
 
@@ -15,6 +17,28 @@ export default function Viewer3DView() {
   const [selectedItem, setSelectedItem] = useState<Molecule | LabEquipment | null>(
     molecules[0]
   );
+  const viewerRef = useRef<HTMLDivElement>(null); // réf pour le div du viewer
+
+  useEffect(() => {
+    if (viewerRef.current && selectedItem) {
+      const element = viewerRef.current;
+
+      // Clear any previous viewer (optionnel mais propre)
+      element.innerHTML = "";
+
+      const viewer = $3Dmol.createViewer(element, {
+        backgroundColor: 'white',
+      });
+
+      $3Dmol.download(selectedItem.structure, viewer, {}, () => {
+        viewer.setStyle({}, { stick: {}, sphere: { scale: 0.3 } });
+        viewer.zoomTo();
+        viewer.render();
+      });
+    }
+  }, [selectedItem]);
+  
+  
 
   return (
     <div className="space-y-8">
@@ -83,17 +107,18 @@ export default function Viewer3DView() {
         </div>
 
         <div className="md:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden">
-          {selectedItem ? (
-            <div id="3dmol-viewer" style={{ width: '100%', height: '600px' }} />
-          ) : (
-            <div className="h-[600px] flex items-center justify-center text-purple-200">
-              <div className="text-center">
-                <Cube size={48} className="mx-auto mb-4 text-purple-300" />
-                <p>Sélectionnez un élément pour commencer</p>
-              </div>
-            </div>
-          )}
+      {selectedItem ? (
+        <div
+          ref={viewerRef}
+          style={{ width: '100%', height: '780px' }}
+        />
+      ) : (
+        <div className="h-[600px] flex items-center justify-center text-purple-200">
+          <p>Sélectionnez un élément pour commencer</p>
         </div>
+      )}
+    </div>
+
       </div>
     </div>
   );

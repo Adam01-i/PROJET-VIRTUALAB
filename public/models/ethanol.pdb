@@ -1,0 +1,18 @@
+HEADER    NONAME 06-Apr-25                                              NONE   1
+TITLE                                                                   NONE   2
+COMPND    702                                                           NONE   3
+AUTHOR    Apache                                                        NONE   4
+REVDAT   1  06-Apr-25     0                                             NONE   5
+ATOM      1  O           0      -1.171   0.300   0.000  0.00  0.00           O+0
+ATOM      2  C           0      -0.046  -0.567   0.000  0.00  0.00           C+0
+ATOM      3  C           0       1.217   0.267   0.000  0.00  0.00           C+0
+ATOM      4  H           0      -0.096  -1.212   0.882  0.00  0.00           H+0
+ATOM      5  H           0      -0.095  -1.194  -0.895  0.00  0.00           H+0
+ATOM      6  H           0       2.105  -0.372  -0.018  0.00  0.00           H+0
+ATOM      7  H           0       1.243   0.931  -0.870  0.00  0.00           H+0
+ATOM      8  H           0       1.262   0.905   0.889  0.00  0.00           H+0
+ATOM      9  H           0      -1.129   0.836   0.810  0.00  0.00           H+0
+CONECT    1    2    9    0    0                                         NONE  15
+CONECT    2    1    3    4    5                                         NONE  16
+CONECT    3    2    6    7    8                                         NONE  17
+END                                                                     NONE  18
