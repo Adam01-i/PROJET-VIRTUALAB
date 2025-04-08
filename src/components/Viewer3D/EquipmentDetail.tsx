@@ -1,5 +1,5 @@
 import { LabEquipment } from '../../types/Viewer3D/molecule-equipment';
-import { PenTool as Tool, AlertTriangle } from 'lucide-react';
+import { PenTool as Tool} from 'lucide-react';
 
 type EquipmentDetailsProps = {
   equipment: LabEquipment;
@@ -22,17 +22,7 @@ export default function EquipmentDetails({ equipment }: EquipmentDetailsProps) {
         <div className="bg-purple-500/10 rounded-lg p-4">
           <h4 className="text-white font-medium mb-2">Utilisation</h4>
           <p className="text-purple-200">{equipment.usage}</p>
-        </div>
-        
-        <div className="bg-red-500/10 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <AlertTriangle size={18} className="text-red-400 flex-shrink-0 mt-1" />
-            <div>
-              <h4 className="text-white font-medium mb-2">Précautions</h4>
-              <p className="text-purple-200">{equipment.precautions}</p>
-            </div>
-          </div>
-        </div>
+        </div>        
       </div>
     </div>
   );
