@@ -9,6 +9,7 @@ import { FlaskRound as Flask, PenTool as Tool, ChevronLeft, ChevronRight } from 
 import type { Molecule, LabEquipment } from '../../types/Viewer3D/molecule-equipment';
 import * as $3Dmol from '3dmol';
 import OBJViewer from './OBJViewer';
+import GLBViewer from './GLBViewer';
 
 type ViewMode = 'molecules' | 'equipment';
 
@@ -31,6 +32,9 @@ export default function Viewer3DView() {
   };
 
   useEffect(() => {
+    // Ne rien faire si ce n'est pas une molécule
+    if (viewMode !== 'molecules') return;
+  
     const viewerDiv = viewerRef.current;
     if (!viewerDiv || !selectedItem?.structure) return;
   
@@ -41,26 +45,14 @@ export default function Viewer3DView() {
     });
   
     const url = selectedItem.structure;
-    const isObj = url.endsWith('.obj');
   
-    if (isObj) {
-      fetch(url)
-        .then(res => res.text())
-        .then(objData => {
-          viewer.addModel(objData, 'obj');
-          viewer.setStyle({}, { line: { linewidth: 2, color: 'white' } });
-          viewer.zoomTo();
-          viewer.render();
-        })
-        .catch(err => console.error("Erreur chargement .obj :", err));
-    } else {
-      $3Dmol.download(url, viewer, {}, () => {
-        viewer.setStyle({}, { stick: {}, sphere: { scale: 0.3 } });
-        viewer.zoomTo();
-        viewer.render();
-      });
-    }
-  }, [selectedItem]);
+    $3Dmol.download(url, viewer, {}, () => {
+      viewer.setStyle({}, { stick: {}, sphere: { scale: 0.3 } });
+      viewer.zoomTo();
+      viewer.render();
+    });
+  }, [selectedItem, viewMode]);
+  
   
 
   return (
@@ -141,6 +133,9 @@ export default function Viewer3DView() {
             mtlUrl={selectedItem.mtl}
             resourcePath={selectedItem.resourcePath}
           />
+          ) : 
+            viewMode === 'equipment' && selectedItem.structure.endsWith('.glb') ? (
+            <GLBViewer glbUrl={selectedItem.structure} />
           ) : (
             <div ref={viewerRef} style={{ width: '100%', height: '780px' }} />
           )}
