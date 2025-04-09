@@ -32,9 +32,6 @@ export default function Viewer3DView() {
   };
 
   useEffect(() => {
-    // Ne rien faire si ce n'est pas une molécule
-    if (viewMode !== 'molecules') return;
-  
     const viewerDiv = viewerRef.current;
     if (!viewerDiv || !selectedItem?.structure) return;
   
@@ -45,14 +42,26 @@ export default function Viewer3DView() {
     });
   
     const url = selectedItem.structure;
+    const isObj = url.endsWith('.obj');
   
-    $3Dmol.download(url, viewer, {}, () => {
-      viewer.setStyle({}, { stick: {}, sphere: { scale: 0.3 } });
-      viewer.zoomTo();
-      viewer.render();
-    });
-  }, [selectedItem, viewMode]);
-  
+    if (isObj) {
+      fetch(url)
+        .then(res => res.text())
+        .then(objData => {
+          viewer.addModel(objData, 'obj');
+          viewer.setStyle({}, { line: { linewidth: 2, color: 'white' } });
+          viewer.zoomTo();
+          viewer.render();
+        })
+        .catch(err => console.error("Erreur chargement .obj :", err));
+    } else {
+      $3Dmol.download(url, viewer, {}, () => {
+        viewer.setStyle({}, { stick: {}, sphere: { scale: 0.3 } });
+        viewer.zoomTo();
+        viewer.render();
+      });
+    }
+  }, [selectedItem]);
   
 
   return (
@@ -133,10 +142,9 @@ export default function Viewer3DView() {
             mtlUrl={selectedItem.mtl}
             resourcePath={selectedItem.resourcePath}
           />
-          ) : 
-            viewMode === 'equipment' && selectedItem.structure.endsWith('.glb') ? (
+          ) : viewMode === 'equipment' && selectedItem.structure.endsWith('.glb') ? (
             <GLBViewer glbUrl={selectedItem.structure} />
-          ) : (
+          ): (
             <div ref={viewerRef} style={{ width: '100%', height: '780px' }} />
           )}
 
