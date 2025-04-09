@@ -8,6 +8,7 @@ import EquipmentDetails from './EquipmentDetail';
 import { FlaskRound as Flask, PenTool as Tool, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Molecule, LabEquipment } from '../../types/Viewer3D/molecule-equipment';
 import * as $3Dmol from '3dmol';
+import OBJViewer from './OBJViewer';
 
 type ViewMode = 'molecules' | 'equipment';
 
@@ -134,7 +135,15 @@ export default function Viewer3DView() {
         </div>
 
         <div className="relative md:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden max-h-780">
-          <div ref={viewerRef} style={{ width: '100%', height: '780px' }} />
+          {viewMode === 'equipment' && selectedItem.structure.endsWith('.obj') && 'mtl' in selectedItem && 'resourcePath' in selectedItem ? (
+          <OBJViewer
+            objUrl={selectedItem.structure}
+            mtlUrl={selectedItem.mtl}
+            resourcePath={selectedItem.resourcePath}
+          />
+          ) : (
+            <div ref={viewerRef} style={{ width: '100%', height: '780px' }} />
+          )}
 
           {/* Bouton précédent */}
           <button

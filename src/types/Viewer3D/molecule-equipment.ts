@@ -14,6 +14,8 @@ export type Molecule = {
     nom: string;
     description: string;
     structure: string;
+    mtl: string;
+    resourcePath: string;
     category: 'molecule' | 'equipment';
     usage: string;
     precautions: string;
