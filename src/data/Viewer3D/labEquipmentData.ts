@@ -5,7 +5,7 @@ export const labEquipment: LabEquipment[] = [
     id: 'eq1',
     nom: 'Bécher',
     description: 'Récipient cylindrique gradué utilisé pour contenir, mesurer et mélanger des solutions.',
-    structure: '/materiels/beaker.glb',
+    structure: '/materiels/chemistry_glassware.glb',
     category: 'equipment',
     usage: 'Mesure approximative de volumes, mélanges, chauffage de solutions',
     precautions: 'Attention à la température lors du chauffage'

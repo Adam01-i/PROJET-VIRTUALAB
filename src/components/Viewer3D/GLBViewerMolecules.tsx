@@ -58,10 +58,11 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
       style={{
         width: '100%',
         height: isFullscreen ? '100vh' : '780px',
-        background: 'linear-gradient(135deg, #5b21b6, #d8b4fe)' ,
+        background: 'linear-gradient(135deg, #5b21b6, #d8b4fe)',
         borderRadius: '12px',
         overflow: 'hidden',
         position: 'relative',
+        cursor: 'grab', // Ajoute cette ligne pour changer le curseur en une main
       }}
     >
       {/* Overlay du nom de la molécule */}
@@ -95,26 +96,22 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
       </Canvas>
 
       {/* Bouton plein écran */}
-     
-
-{/* Bouton plein écran avec icône stylée */}
-<button
-  onClick={toggleFullscreen}
-  className="absolute top-4 right-4 flex items-center space-x-2 bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-800 hover:to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg transition-all duration-300 z-10 backdrop-blur-md"
->
-  {isFullscreen ? (
-    <>
-      <Minimize2 size={18} />
-      <span>Quitter</span>
-    </>
-  ) : (
-    <>
-      <Maximize2 size={18} />
-      <span>Plein écran</span>
-    </>
-  )}
-</button>
-
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 flex items-center space-x-2 bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-800 hover:to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg transition-all duration-300 z-10 backdrop-blur-md"
+      >
+        {isFullscreen ? (
+          <>
+            <Minimize2 size={18} />
+            <span>Quitter</span>
+          </>
+        ) : (
+          <>
+            <Maximize2 size={18} />
+            <span>Plein écran</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }
