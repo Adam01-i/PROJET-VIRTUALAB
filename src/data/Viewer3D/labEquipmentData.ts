@@ -10,15 +10,6 @@ export const labEquipment: LabEquipment[] = [
       usage: 'Mesure approximative de volumes, mélanges, chauffage de solutions',
       precautions: 'Attention à la température lors du chauffage',
     },
-    // {
-    //   id: 'eq2',
-    //   nom: 'Béchers',
-    //   description: 'Ensemble de béchers pour la préparation de solutions.',
-    //   structure: '/materiels/beakers.glb',
-    //   category: 'equipment',
-    //   usage: 'Utilisé pour contenir et mélanger des solutions',
-    //   precautions: 'Utiliser avec précaution pour éviter les éclaboussures',
-    // },
     {
       id: 'eq3',
       nom: 'Burette',
@@ -28,15 +19,7 @@ export const labEquipment: LabEquipment[] = [
       usage: 'Mesure précise des volumes de liquide, utilisé dans les titrages',
       precautions: 'Manipuler avec soin, ne pas laisser de liquide à l’intérieur',
     },
-    // {
-    //   id: 'eq4',
-    //   nom: 'Bunsen Burner',
-    //   description: 'Appareil utilisé pour produire une flamme chaude, souvent utilisée pour chauffer des substances.',
-    //   structure: '/materiels/bunsen_burner.glb',
-    //   category: 'equipment',
-    //   usage: 'Chauffer des substances, stériliser des outils',
-    //   precautions: 'Utiliser avec précaution, maintenir éloigné des substances inflammables',
-    // },
+    
     {
       id: 'eq5',
       nom: 'Verre de chimie',
