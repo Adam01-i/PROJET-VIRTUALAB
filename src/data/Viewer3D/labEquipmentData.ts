@@ -18,8 +18,7 @@ export const labEquipment: LabEquipment[] = [
       category: 'equipment',
       usage: 'Mesure précise des volumes de liquide, utilisé dans les titrages',
       precautions: 'Manipuler avec soin, ne pas laisser de liquide à l’intérieur',
-    },
-    
+    },    
     {
       id: 'eq5',
       nom: 'Verre de chimie',
@@ -111,6 +110,4 @@ export const labEquipment: LabEquipment[] = [
     //   usage: 'Mesurer des volumes précis de liquide',
     //   precautions: 'Manipuler avec soin, ne pas laisser de liquide à l’intérieur après utilisation',
     // },
-    
-    
   ];
