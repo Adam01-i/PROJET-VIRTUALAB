@@ -103,7 +103,7 @@ export default function Viewer3DView() {
             {filteredDataList.length === 0 ? (
               <p className="text-white text-center">Aucun élément disponible</p>
             ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              <div className="space-y-3 max-h-[265px] overflow-y-auto">
                 {filteredDataList.map((item, index) =>
                   viewMode === 'molecules' ? (
                     <MoleculeCard
