@@ -7,8 +7,8 @@ export default function ExperienceView() {
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
 
   return (
-    <div className="grid grid-cols-12 gap-6 h-[calc(100vh-6rem)]">
-      <div className="col-span-3 bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 overflow-y-auto">
+    <div className="grid grid-cols-12 gap-3 h-[calc(100vh-8rem)]">
+      <div className="col-span-3 bg-white/5 backdrop-blur-lg rounded-xl p-6  border border-white/10 overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white">Expériences</h2>
           <button className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg transition-all duration-200">

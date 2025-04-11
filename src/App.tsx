@@ -67,7 +67,6 @@ function App() {
           
         {/*Gere la partie Affichage des molecules en 3D*/}
         {activeTab === '3d' && <Viewer3DView />}
-
       </main>
     </div>
   );
