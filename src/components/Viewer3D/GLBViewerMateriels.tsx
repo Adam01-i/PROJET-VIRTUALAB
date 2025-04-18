@@ -104,7 +104,7 @@ export default function GLBViewer({ glbUrl, materielsName }: GLBViewerProps) {
       )}
       <Canvas
         camera={{ position: [2, 2, 4], fov: 60 }}
-        style={{ background: '#2c2c2c' }} // Fond gris foncé
+        style={{ background: 'white' }} // Fond gris foncé
         shadows
         dpr={[1, 2]}
       >

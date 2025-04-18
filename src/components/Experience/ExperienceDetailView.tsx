@@ -74,7 +74,6 @@ export default function ExperienceDetailView({
                   className="text-purple-300 hover:text-white transition-colors"
                 >
                   <ArrowLeft size={24} />
-                </button>
                 <div>
                   <h2 className="text-2xl font-bold text-white">
                     {experience.titre}
@@ -87,6 +86,7 @@ export default function ExperienceDetailView({
                     <span>{experience.niveau}</span>
                   </div>
                 </div>
+                </button>
               </div>
               <button
                 onClick={toggleFullscreen}
@@ -115,7 +115,6 @@ export default function ExperienceDetailView({
                   className="text-purple-300 hover:text-white transition-colors"
                 >
                   <ArrowLeft size={24} />
-                </button>
                 <div>
                   <h2 className="text-2xl font-bold text-white">
                     {experience.titre}
@@ -128,6 +127,8 @@ export default function ExperienceDetailView({
                     <span>{experience.niveau}</span>
                   </div>
                 </div>
+                </button>
+
               </div>
               <button
                 onClick={toggleFullscreen}
