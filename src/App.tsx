@@ -1,74 +1,37 @@
-import { useState, useEffect} from 'react';
-import { FlaskRound as Flask, Brain, Cuboid as Cube, Book, LogIn } from 'lucide-react';
-import QuizView from './components/Quiz/QuizView';
-import Viewer3DView from './components/Viewer3D/Viewer3DView';
-import ExperienceView from './components/Experience/ExperienceView';
-import AccueilView from './components/Accueil/AccueilView';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+import QuizView from './components/Eleve/Quiz/QuizView';
+import Viewer3DView from './components/Eleve/Viewer3D/Viewer3DView';
+import ExperienceView from './components/Eleve/Experience/ExperienceView';
+import AccueilView from './components/Eleve/Accueil/AccueilView';
+import ProfesseurLayout from './components/Professeur/ProfesseurLayout';
+import ProfExpView from './components/Professeur/Prof-Exp/ProfExpView';
+import ProfQuizView from './components/Professeur/Prof-Quiz/ProfQuizView';
+import ProfElevView from './components/Professeur/Prof-Elev/ProfElevView';
+import Prof3DView from './components/Professeur/Prof-3D/Prof3DView';
+import EleveLayout from './components/Eleve/EleveLayout';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'accueil' | 'experiences' | 'quiz' | '3d'>('accueil');
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  });
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900">
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-lg' : 'bg-transparent'}`}>
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <Flask size={28} className="text-purple-300" />
-              <span className="text-white font-bold text-xl">VirtuaLab</span>
-            </div>
-            <div className="flex space-x-1">
-              {[
-                { id: 'accueil', icon: Book, label: 'Accueil' },
-                { id: 'experiences', icon: Flask, label: 'Expériences' },
-                { id: 'quiz', icon: Brain, label: 'Quiz' },
-                { id: '3d', icon: Cube, label: 'Visualisation 3D' },
-                {id: 'login', icon: LogIn, label: 'Se Connecter'}
-              ].map(({ id, icon: Icon, label }) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveTab(id as typeof activeTab)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                    activeTab === id
-                      ? 'bg-white/10 text-white'
-                      : 'text-purple-200 hover:bg-white/5'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="font-medium">{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </nav>
-                
-      {/* Gere la page d'Accueil*/}
-      {activeTab === 'accueil' && <AccueilView onTabChange={setActiveTab}/>}
+    <Routes>
+      {/* Professeur */}
+      <Route path="/professeur" element={<ProfesseurLayout />}>
+        <Route index element={<Navigate to="/professeur/experiences" replace />} />
+        <Route path="experiences" element={<ProfExpView />} />
+        <Route path="quiz" element={<ProfQuizView />} />
+        <Route path="suivi-eleve" element={<ProfElevView />} />
+        <Route path="3D" element={<Prof3DView />} />
+      </Route>
 
-      <main className="container mx-auto px-6 py-24">
-        {/*Gere la partie Experiences*/}
-        {activeTab === 'experiences' && <ExperienceView />}
-        
-        {/*Gere la partie Quiz*/}
-        {activeTab === 'quiz' && <QuizView />}
-          
-        {/*Gere la partie Affichage des molecules en 3D*/}
-        {activeTab === '3d' && <Viewer3DView />}
-      </main>
-    </div>
+      {/* Élève */}
+      <Route path="/" element={<EleveLayout />}>
+        <Route index element={<AccueilView />} />
+        <Route path="eleve" element={<Navigate to="/" replace />} />
+        <Route path="eleve/experiences" element={<ExperienceView />} />
+        <Route path="eleve/quiz" element={<QuizView />} />
+        <Route path="eleve/3d" element={<Viewer3DView />} />
+      </Route>
+    </Routes>
   );
 }
 

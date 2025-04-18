@@ -8,8 +8,8 @@ import {
   Book,
   ListChecks,
 } from "lucide-react";
-import type { Experience } from "../../types/Experience/experience";
-import TitrageAcidoBasiqueSimulation from "../../Simulations/TitrageAcidoBasiqueSimulation";
+import type { Experience } from "../../../types/Experience/experience";
+import TitrageAcidoBasiqueSimulation from "../../../Simulations/TitrageAcidoBasiqueSimulation";
 // Import d'autres simulations si nécessaire
 
 // Déclaration du mappage des expériences vers leurs simulations

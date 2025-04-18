@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { experienceData } from '../../data/Experience/experienceData';
+import { experienceData } from '../../../data/Experience/experienceData';
 import ExperienceCard from './ExperienceCard';
 import ExperienceDetailView from './ExperienceDetailView';
 

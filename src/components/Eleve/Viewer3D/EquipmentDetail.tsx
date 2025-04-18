@@ -1,4 +1,4 @@
-import { LabEquipment } from '../../types/Viewer3D/molecule-equipment';
+import { LabEquipment } from '../../../types/Viewer3D/molecule-equipment';
 import { PenTool as Tool} from 'lucide-react';
 
 type EquipmentDetailsProps = {

@@ -7,14 +7,16 @@ export type QuizQuestion = {
     image?: string;
   };
   
+  export type Niveau = "Débutant" | "Intermédiaire" | "Avancé";
+
   export type Quiz = {
     id: string;
     titre: string;
     description: string;
-    niveau: 'Débutant' | 'Intermédiaire' | 'Avancé';
     duree: string;
-    questions: QuizQuestion[];
+    niveau: Niveau;
     image: string;
+    questions: QuizQuestion[];
   };
   
   export type QuizProgress = {
