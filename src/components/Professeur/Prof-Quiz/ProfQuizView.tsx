@@ -68,7 +68,7 @@ export default function ProfQuizView() {
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Liste des quiz */}
-        <div className="md:w-[62%] space-y-4">
+        <div className="md:w-[60%] space-y-4">
           {quizData.map((quiz) => (
             <div
               key={quiz.id}
@@ -94,7 +94,7 @@ export default function ProfQuizView() {
         </div>
 
         {/* Détails + édition */}
-        <div className="md:w-[38%] space-y-6">
+        <div className="md:w-[40%] space-y-6">
           <ProfQuizCard quiz={selectedQuiz} onStart={handleEdit} />
 
           {isEditing && (
