@@ -13,7 +13,7 @@ export const quizData: Quiz[] = [
         id: '1',
         question: "Quelle est la définition d'un acide selon Brønsted-Lowry ?",
         options: [
-          "Une espèce qui peut céder un proton H+",
+          "Une espèce qui peut céder un proton H+", 
           "Une espèce qui peut accepter un proton H+",
           "Une espèce qui peut céder un électron",
           "Une espèce qui peut accepter un électron"
