@@ -1,10 +1,10 @@
 import { useState } from "react";
 import ProfQuizCard from "./ProfQuizCard";
 import { quizData } from "../../../data/Quiz/quizData";
-import type { Quiz, QuizQuestion  } from "../../../types/Quiz/quiz";
+import type { Quiz, QuizQuestion } from "../../../types/Quiz/quiz";
 
 export default function ProfQuizView() {
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz>(quizData[0]);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState<Quiz>({
@@ -40,7 +40,7 @@ export default function ProfQuizView() {
   };
 
   const addQuestion = () => {
-    const newQuestion: QuizQuestion  = {
+    const newQuestion: QuizQuestion = {
       id: (formData.questions.length + 1).toString(),
       question: '',
       options: ['', '', '', ''],
@@ -58,17 +58,38 @@ export default function ProfQuizView() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("✅ Données mises à jour :", formData);
+    console.log("✅ Données soumises :", formData);
     setIsEditing(false);
+    setSelectedQuiz(null);
   };
 
   return (
-    <div className="p-6 md:p-8 bg-gray-100 text-gray-800 min-h-screen">
-      <h2 className="text-3xl font-bold text-purple-700 mb-6">Gestion des quiz</h2>
+    <div className="p-6 md:p-2 bg-gray-100 text-gray-800 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-purple-700">Gestion des Quiz</h2>
+        <button
+          onClick={() => {
+            setFormData({
+              id: '',
+              titre: '',
+              description: '',
+              duree: '',
+              niveau: 'Débutant',
+              image: '',
+              questions: [],
+            });
+            setSelectedQuiz(null);
+            setIsEditing(true);
+          }}
+          className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md"
+        >
+          ➕ Nouveau Quiz
+        </button>
+      </div>
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Liste des quiz */}
-        <div className="md:w-[60%] space-y-4">
+        <div className="md:w-[60%] space-y-4 scroll-y max-h-[84vh] overflow-auto">
           {quizData.map((quiz) => (
             <div
               key={quiz.id}
@@ -93,19 +114,24 @@ export default function ProfQuizView() {
           ))}
         </div>
 
-        {/* Détails + édition */}
-        <div className="md:w-[40%] space-y-6">
-          <ProfQuizCard quiz={selectedQuiz} onStart={handleEdit} />
+        {/* Détails ou Formulaire */}
+        <div className="md:w-[40%] space-y-6 scroll-y max-h-[84vh] overflow-auto">
+          {/* Affiche la carte uniquement si un quiz est sélectionné et qu'on n'est pas en mode édition */}
+          {selectedQuiz && !isEditing && (
+            <ProfQuizCard quiz={selectedQuiz} onStart={handleEdit} />
+          )}
 
           {isEditing && (
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-md border border-gray-200 space-y-6 overflow-auto">
-              {/* Info quiz */}
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white rounded-xl p-6 shadow-md border border-gray-200 space-y-6 overflow-auto"
+            >
+              {/* Infos quiz */}
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Titre</label>
                   <input
                     type="text"
-                    name="titre"
                     value={formData.titre}
                     onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
@@ -114,11 +140,21 @@ export default function ProfQuizView() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Description</label>
                   <textarea
-                    name="description"
                     rows={3}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Image (URL)</label>
+                  <input
+                    type="text"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                    placeholder="https://exemple.com/image.jpg"
                   />
                 </div>
 
