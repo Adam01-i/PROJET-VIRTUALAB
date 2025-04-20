@@ -49,7 +49,7 @@ export default function EleveLayout() {
       </nav>
 
       {/* Contenu de la page élève */}
-      <main className="pt-24 px-6 pb-12">
+      <main className="pt-24 px-16 pb-12">
         <Outlet />
       </main>
     </div>

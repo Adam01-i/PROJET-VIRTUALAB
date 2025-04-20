@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import ProfQuizCard from "./ProfQuizCard";
 import { supabase } from "../../../lib/supabaseClient";
 import type { Quiz, QuizQuestion } from "../../../types/Quiz/quiz";
+import { toast } from "sonner";
 
 export default function ProfQuizView() {
   const [quizList, setQuizList] = useState<Quiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const [formData, setFormData] = useState<Quiz>({
     id: '',
@@ -25,6 +28,7 @@ export default function ProfQuizView() {
       .order('created_at', { ascending: false });
 
     if (error) {
+      toast.error("❌ Erreur de chargement des quiz.");
       console.error("❌ Erreur fetch quizzes :", error);
     } else {
       setQuizList(data || []);
@@ -42,108 +46,155 @@ export default function ProfQuizView() {
     setFormData({ ...quiz });
   };
 
+  const uploadQuizImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `quizzes/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('quiz-images')
+      .upload(filePath, file);
+
+    if (error) {
+      toast.error("❌ Échec de l'upload de l'image");
+      return null;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('quiz-images')
+      .getPublicUrl(`quizzes/${fileName}`);
+
+    return publicUrlData?.publicUrl ?? null;
+  };
+
   const handleDelete = async (quizId: string) => {
-    const confirm = window.confirm("❗ Supprimer ce quiz ? Cette action est irréversible.");
-    if (!confirm) return;
+    const confirmDelete = window.confirm("❗ Supprimer ce quiz ? Cette action est irréversible.");
+    if (!confirmDelete) return;
 
-    await supabase.from('questions').delete().eq('quiz_id', quizId);
-    await supabase.from('quizzes').delete().eq('id', quizId);
+    try {
+      await toast.promise(
+        Promise.all([
+          supabase.from('questions').delete().eq('quiz_id', quizId),
+          supabase.from('quizzes').delete().eq('id', quizId),
+        ]),
+        {
+          loading: 'Suppression en cours...',
+          success: '✅ Quiz supprimé avec succès.',
+          error: '❌ Échec de la suppression.',
+        }
+      );
 
-    await fetchQuizzes();
-    setSelectedQuiz(null);
+      await fetchQuizzes();
+      setSelectedQuiz(null);
+    } catch (err) {
+      toast.error("Erreur lors de la suppression.");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    // Vérifier si des questions sont présentes
+
+    if (isUploadingImage) {
+      toast.error("⏳ Attendez que l'image soit entièrement uploadée.");
+      return;
+    }
+
     if (formData.questions.length === 0) {
-      // Ajouter une question vide par défaut si aucune question n'est présente
-      const defaultQuestion = {
-        quiz_id: formData.id || '',  // ID vide si c'est un nouveau quiz
-        question: 'Question vide',
-        options: ['', '', '', ''],
-        correctAnswer: 0,
-        explanation: '',
-      };
-      setFormData({ ...formData, questions: [defaultQuestion] });
+      toast.error("Le quiz doit contenir au moins une question.");
+      return;
     }
-  
-    // Si le quiz existe (édition)
-    if (formData.id) {
-      // Mise à jour du quiz
-      await supabase.from('quizzes').update({
-        titre: formData.titre,
-        description: formData.description,
-        niveau: formData.niveau,
-        duree: formData.duree,
-        image: formData.image,
-      }).eq('id', formData.id);
-  
-      // Mise à jour des questions (sans l'ID car Supabase gère l'ID)
-      const currentQuestions = formData.questions.map((q) => ({
-        quiz_id: formData.id,  // Associe chaque question à son quiz
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        // Pas d'ID fourni, Supabase va générer l'ID automatiquement
-      }));
-  
-      // Utilisation de upsert pour insérer ou mettre à jour les questions
-      for (const newQuestion of currentQuestions) {
-        await supabase.from('questions').upsert(newQuestion);
-      }
-    } else {
-      // Création d'un nouveau quiz
-      const { data } = await supabase
-        .from('quizzes')
-        .insert([{
-          titre: formData.titre,
-          description: formData.description,
-          niveau: formData.niveau,
-          duree: formData.duree,
-          image: formData.image,
-        }])
-        .select();
-  
-      const quizId = data?.[0]?.id;
-  
-      if (quizId) {
-        const questionsToInsert = formData.questions.map((q) => ({
-          quiz_id: quizId,  // Associe chaque question au quiz créé
-          question: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-          // Pas d'ID car Supabase gère l'ID automatiquement
-        }));
-  
-        await supabase.from('questions').insert(questionsToInsert);
-      }
+
+    try {
+      await toast.promise((async () => {
+        if (formData.id) {
+          await supabase.from('quizzes').update({
+            titre: formData.titre,
+            description: formData.description,
+            niveau: formData.niveau,
+            duree: formData.duree,
+            image: formData.image,
+          }).eq('id', formData.id);
+
+          const { data: existingQuestions } = await supabase
+            .from('questions')
+            .select('id')
+            .eq('quiz_id', formData.id);
+
+          const existingIds = (existingQuestions || []).map(q => q.id);
+          const updatedIds = formData.questions
+            .filter(q => q.id)
+            .map(q => q.id);
+          const idsToDelete = existingIds.filter(id => !updatedIds.includes(id));
+
+          if (idsToDelete.length > 0) {
+            await supabase.from('questions').delete().in('id', idsToDelete);
+          }
+
+          const upsertData = formData.questions.map(q => ({
+            id: q.id ?? uuidv4(),
+            quiz_id: formData.id,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+          }));
+
+          await supabase.from('questions').upsert(upsertData);
+        } else {
+          const { data: quizData, error: quizError } = await supabase
+            .from('quizzes')
+            .insert([{
+              titre: formData.titre,
+              description: formData.description,
+              niveau: formData.niveau,
+              duree: formData.duree,
+              image: formData.image,
+            }])
+            .select();
+
+          const newQuizId = quizData?.[0]?.id;
+
+          if (!newQuizId || quizError) {
+            throw new Error("Erreur création du quiz.");
+          }
+
+          const insertQuestions = formData.questions.map(q => ({
+            id: q.id ?? uuidv4(),
+            quiz_id: newQuizId,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+          }));
+
+          await supabase.from('questions').insert(insertQuestions);
+        }
+      })(), {
+        loading: 'Sauvegarde en cours...',
+        success: formData.id ? '✅ Quiz mis à jour !' : '✅ Nouveau quiz créé !',
+        error: '❌ Erreur lors de la sauvegarde.',
+      });
+
+      setIsEditing(false);
+      setFormData({
+        id: '',
+        titre: '',
+        description: '',
+        duree: '',
+        niveau: 'Débutant',
+        image: '',
+        questions: [],
+      });
+
+      await fetchQuizzes();
+    } catch (error) {
+      console.error(error);
     }
-  
-    // Réinitialisation après la soumission
-    setIsEditing(false);
-    setFormData({
-      id: '',
-      titre: '',
-      description: '',
-      duree: '',
-      niveau: 'Débutant',
-      image: '',
-      questions: [],
-    });
-  
-    await fetchQuizzes();
   };
-  
-  
-  
 
   const addQuestion = () => {
     const newQuestion: QuizQuestion = {
-      id: (formData.questions.length + 1).toString(),
+      id: uuidv4(),
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
@@ -202,11 +253,10 @@ export default function ProfQuizView() {
             quizList.map((quiz) => (
               <div
                 key={quiz.id}
-                className={`cursor-pointer p-5 rounded-xl shadow-md border transition-all duration-200 ${
-                  selectedQuiz?.id === quiz.id
-                    ? "bg-purple-100 border-purple-300"
-                    : "bg-white hover:bg-gray-50 border-gray-200"
-                }`}
+                className={`cursor-pointer p-5 rounded-xl shadow-md border transition-all duration-200 ${selectedQuiz?.id === quiz.id
+                  ? "bg-purple-100 border-purple-300"
+                  : "bg-white hover:bg-gray-50 border-gray-200"
+                  }`}
                 onClick={() => {
                   setSelectedQuiz(quiz);
                   setIsEditing(false);
@@ -258,14 +308,44 @@ export default function ProfQuizView() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Image (URL)</label>
+                  <label className="block text-sm font-medium text-gray-700">Image du quiz</label>
                   <input
-                    type="text"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      setIsUploadingImage(true);
+                      toast.loading("⏳ Upload de l'image en cours...");
+
+                      const imageUrl = await uploadQuizImage(file);
+
+                      toast.dismiss();
+                      setIsUploadingImage(false);
+
+                      if (imageUrl) {
+                        toast.success("✅ Image uploadée avec succès");
+                        setFormData((prev) => ({ ...prev, image: imageUrl }));
+                      } else {
+                        toast.error("❌ Échec de l'upload");
+                      }
+                    }}
+
                     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                   />
+
+                  {formData.image && (
+                    <div className="mt-2">
+                      <img
+                        src={formData.image}
+                        alt="Aperçu du quiz"
+                        className="w-full h-auto max-h-48 object-contain border rounded-md"
+                      />
+                    </div>
+                  )}
                 </div>
+
 
                 <div className="flex gap-4">
                   <div className="w-1/2">
@@ -382,10 +462,12 @@ export default function ProfQuizView() {
               <div className="flex justify-end gap-2 pt-4">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium"
+                  disabled={isUploadingImage}
+                  className={`px-4 py-2 ${isUploadingImage ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"} text-white rounded-md text-sm font-medium`}
                 >
-                  Enregistrer
+                  {isUploadingImage ? "Upload image..." : "Enregistrer"}
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}

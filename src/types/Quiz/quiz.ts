@@ -1,5 +1,5 @@
 export type QuizQuestion = {
-    id: string;
+    id?: string;
     question: string;
     options: string[];
     correctAnswer: number;
