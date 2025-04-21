@@ -6,6 +6,7 @@ import { Maximize2, Minimize2 } from 'lucide-react'; // Icônes
 interface GLBViewerProps {
   glbUrl: string;
   moleculeName?: string;
+  materielsName?: string;
 }
 
 function MoleculeModel({ url }: { url: string }) {
@@ -38,7 +39,7 @@ function MoleculeModel({ url }: { url: string }) {
   return <primitive object={scene} ref={ref} />;
 }
 
-export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerProps) {
+export default function GLBViewerMolecules({ glbUrl, moleculeName, materielsName }: GLBViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -82,6 +83,25 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
           }}
         >
           {moleculeName}
+        </div>
+      )}
+      {/* Overlay du nom de la molécule */}
+      {materielsName && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#333',
+            zIndex: 10,
+          }}
+        >
+          {materielsName}
         </div>
       )}
 

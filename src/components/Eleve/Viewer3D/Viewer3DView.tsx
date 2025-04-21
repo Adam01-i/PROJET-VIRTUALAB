@@ -5,8 +5,7 @@ import MoleculeCard from './MoleculeCard';
 import EquipmentCard from './EquipmentCard';
 import MoleculeDetails from './MoleculeDetail';
 import EquipmentDetails from './EquipmentDetail';
-import GLBViewerMolecules from './GLBViewerMolecules';
-import GLBViewerMateriels from './GLBViewerMateriels';
+import GLBViewer from './GLBViewer';
 import { FlaskRound as Flask, PenTool as Tool, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Molecule, LabEquipment } from '../../../types/Viewer3D/molecule-equipment';
 
@@ -130,13 +129,13 @@ export default function Viewer3DView() {
           {/* Vérifier si selectedItem existe avant d'afficher la structure */}
           {selectedItem && selectedItem.structure && selectedItem.structure.endsWith('.glb') && (
             viewMode === 'molecules' ? (
-              <GLBViewerMolecules
+              <GLBViewer
                 key={`molecule-${selectedItem.id}`}
                 glbUrl={selectedItem.structure}
                 moleculeName={selectedItem.nom}
               />
             ) : (
-              <GLBViewerMateriels
+              <GLBViewer
                 key={`equipment-${selectedItem.id}`}
                 glbUrl={selectedItem.structure}
                 materielsName={selectedItem.nom}
