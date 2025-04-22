@@ -1,5 +1,5 @@
 import { PenTool as Tool } from 'lucide-react';
-import type { LabEquipment } from '../../../types/Viewer3D/molecule-equipment';
+import type { LabEquipment } from '../../../../types/Viewer3D/molecule-equipment';
 
 type EquipmentCardProps = {
   equipment: LabEquipment;

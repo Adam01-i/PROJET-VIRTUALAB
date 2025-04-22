@@ -1,5 +1,5 @@
 import { Brain, Clock, Pencil, Trash2 } from 'lucide-react';
-import type { Quiz } from '../../../types/Quiz/quiz';
+import type { Quiz } from '../../../../types/Quiz/quiz';
 
 type ProfQuizCardProps = {
   quiz: Quiz;

@@ -1,4 +1,4 @@
-import { Molecule } from '../../../types/Viewer3D/molecule-equipment';
+import { Molecule } from '../../../../types/Viewer3D/molecule-equipment';
 import { FlaskRound as Flask, GraduationCap, Info } from 'lucide-react';
 
 type MoleculeDetailsProps = {

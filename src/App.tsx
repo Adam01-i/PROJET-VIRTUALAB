@@ -1,17 +1,17 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import QuizView from './components/Eleve/Quiz/QuizView';
-import Viewer3DView from './components/Eleve/Viewer3D/Viewer3DView';
-import ExperienceView from './components/Eleve/Experience/ExperienceView';
-import AccueilView from './components/Eleve/Accueil/AccueilView';
+import QuizView from './components/views/Eleve/Quiz/QuizView';
+import Viewer3DView from './components/views/Eleve/Viewer3D/Viewer3DView';
+import ExperienceView from './components/views/Eleve/Experience/ExperienceView';
+import AccueilView from './components/views/Eleve/Accueil/AccueilView';
 
-import ProfesseurLayout from './components/Professeur/ProfesseurLayout';
-import ProfExpView from './components/Professeur/Prof-Exp/ProfExpView';
-import ProfQuizView from './components/Professeur/Prof-Quiz/ProfQuizView';
-import ProfElevView from './components/Professeur/Prof-Elev/ProfElevView';
-import Prof3DView from './components/Professeur/Prof-3D/Prof3DView';
+import ProfesseurLayout from './components/layouts/ProfesseurLayout';
+import ProfExpView from './components/views/Professeur/Prof-Exp/ProfExpView';
+import ProfQuizView from './components/views/Professeur/Prof-Quiz/ProfQuizView';
+import ProfElevView from './components/views/Professeur/Prof-Elev/ProfElevView';
+import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
 
-import EleveLayout from './components/Eleve/EleveLayout';
+import EleveLayout from './components/layouts/EleveLayout';
 import { Toaster} from 'sonner';
 
 function App() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../../lib/supabaseClient';
-import type { Quiz } from '../../../types/Quiz/quiz';
+import { supabase } from '../../../../lib/supabaseClient';
+import type { Quiz } from '../../../../types/Quiz/quiz';
 import QuizCard from './QuizCard';
 import QuizSession from './QuizSession';
 

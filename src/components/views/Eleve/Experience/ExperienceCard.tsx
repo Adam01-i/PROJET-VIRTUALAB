@@ -1,5 +1,5 @@
 import { Clock, Beaker, ArrowRight } from 'lucide-react';
-import type { Experience } from '../../../types/Experience/experience';
+import type { Experience } from '../../../../types/Experience/experience';
 
 type ExperienceCardProps = {
   experience: Experience;

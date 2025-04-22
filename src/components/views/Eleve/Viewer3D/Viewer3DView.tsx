@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { molecules } from '../../../data/Viewer3D/moleculeData';
-import { labEquipment } from '../../../data/Viewer3D/labEquipmentData';
+import { molecules } from '../../../../data/Viewer3D/moleculeData';
+import { labEquipment } from '../../../../data/Viewer3D/labEquipmentData';
 import MoleculeCard from './MoleculeCard';
 import EquipmentCard from './EquipmentCard';
 import MoleculeDetails from './MoleculeDetail';
 import EquipmentDetails from './EquipmentDetail';
 import GLBViewer from './GLBViewer';
 import { FlaskRound as Flask, PenTool as Tool, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { Molecule, LabEquipment } from '../../../types/Viewer3D/molecule-equipment';
+import type { Molecule, LabEquipment } from '../../../../types/Viewer3D/molecule-equipment';
 
 type ViewMode = 'molecules' | 'equipment';
 

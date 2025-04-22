@@ -3,8 +3,8 @@ import { FlaskRound as Flask, PenTool as Tool, Trash2 } from 'lucide-react';
 import ProfMoleculeDetails from './ProfMoleculeDetails';
 import ProfMaterielsDetails from './ProfMaterielsDetails';
 import ProfGLBViewer from './ProfGLBViewer';
-import type { Molecule, LabEquipment } from '../../../types/Viewer3D/molecule-equipment';
-import { supabase } from '../../../lib/supabaseClient';
+import type { Molecule, LabEquipment } from '../../../../types/Viewer3D/molecule-equipment';
+import { supabase } from '../../../../lib/supabaseClient';
 import { toast } from 'sonner';
 
 type ViewMode = 'molecule' | 'equipment';

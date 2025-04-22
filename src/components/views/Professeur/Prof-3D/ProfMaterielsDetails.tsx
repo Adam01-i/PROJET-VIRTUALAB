@@ -1,5 +1,5 @@
 import { Info, AlertTriangle } from 'lucide-react';
-import type { LabEquipment } from '../../../types/Viewer3D/molecule-equipment';
+import type { LabEquipment } from '../../../../types/Viewer3D/molecule-equipment';
 
 type Props = {
   equipment: LabEquipment;
