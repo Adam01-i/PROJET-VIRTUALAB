@@ -11,7 +11,7 @@ export default function MoleculeCard({ molecule, isSelected, onSelect }: Molecul
   return (
     <button
       onClick={() => onSelect(molecule)}
-      className={`w-full p-4 rounded-lg transition-all duration-200 text-left ${
+      className={`w-full p-3 rounded-md transition-all duration-200 text-left text-sm ${
         isSelected
           ? 'bg-purple-500 text-white'
           : 'bg-white/5 text-purple-200 hover:bg-white/10'
@@ -19,10 +19,10 @@ export default function MoleculeCard({ molecule, isSelected, onSelect }: Molecul
     >
       <div className="flex items-start justify-between">
         <div>
-          <h4 className="font-semibold mb-1">{molecule.nom}</h4>
-          <div className="text-sm opacity-80">{molecule.formule}</div>
+          <h4 className="font-semibold mb-0 text-base">{molecule.nom}</h4>
+          <div className="opacity-80">{molecule.formule}</div>
         </div>
-        <Info size={18} className="opacity-60" />
+        <Info size={16} className="opacity-60" />
       </div>
     </button>
   );

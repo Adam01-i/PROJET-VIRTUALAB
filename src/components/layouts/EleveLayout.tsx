@@ -23,24 +23,26 @@ export default function EleveLayout() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 text-white">
       {/* Barre de navigation élève */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-lg' : 'bg-transparent'}`}>
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <Flask size={28} className="text-purple-300" />
-              <span className="text-white font-bold text-xl">VirtuaLab</span>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-transparent'}`}>
+        <div className="max-w-[1280px] mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-2">
+              <Flask size={20} className="text-purple-300" />
+              <span className="text-white font-semibold text-base">VirtuaLab</span>
             </div>
-            <div className="flex space-x-1">
+            <div className="flex flex-wrap gap-2">
               {navItems.map(({ path, icon: Icon, label }) => (
                 <Link
                   key={path}
                   to={path}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                    location.pathname === path ? 'bg-white/10 text-white' : 'text-purple-200 hover:bg-white/5'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition duration-150 ${
+                    location.pathname === path
+                      ? 'bg-white/10 text-white'
+                      : 'text-purple-200 hover:bg-white/5'
                   }`}
                 >
-                  <Icon size={20} />
-                  <span className="font-medium">{label}</span>
+                  <Icon size={16} />
+                  <span>{label}</span>
                 </Link>
               ))}
             </div>
@@ -49,7 +51,7 @@ export default function EleveLayout() {
       </nav>
 
       {/* Contenu de la page élève */}
-      <main className="pt-24 px-16 pb-12">
+      <main className="max-w-[1280px] mx-auto px-4 pt-16 pb-10">
         <Outlet />
       </main>
     </div>

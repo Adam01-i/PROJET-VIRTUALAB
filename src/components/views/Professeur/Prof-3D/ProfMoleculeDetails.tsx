@@ -7,36 +7,35 @@ type Props = {
 
 export default function ProfMoleculeDetails({ molecule }: Props) {
   return (
-<div className="bg-white rounded-xl p-6 border border-gray-200 shadow">
-  <h3 className="text-xl font-bold text-gray-800 mb-4">{molecule.nom}</h3>
+    <div className="bg-white rounded-md p-4 border border-gray-200 shadow-sm text-sm">
+      <h3 className="text-base font-semibold text-gray-800 mb-3">{molecule.nom}</h3>
 
-  <div className="space-y-3 text-gray-700">
-    <div className="flex items-center space-x-2">
-      <Flask size={18} />
-      <span className="text-lg">{molecule.formule}</span>
-    </div>
-
-    {molecule.niveau && (
-      <div className="flex items-center space-x-2">
-        <GraduationCap size={18} />
-        <span>{molecule.niveau}</span>
-      </div>
-    )}
-
-    <div className="border-t border-gray-200 pt-4 text-sm">
-      <p>{molecule.description}</p>
-    </div>
-
-    {molecule.importance && (
-      <div className="bg-purple-100 rounded-lg p-4 mt-3">
-        <div className="flex items-start space-x-3">
-          <Info size={18} className="text-purple-600 mt-1" />
-          <p className="text-gray-800">{molecule.importance}</p>
+      <div className="space-y-3 text-gray-700">
+        <div className="flex items-center gap-2">
+          <Flask size={16} />
+          <span>{molecule.formule}</span>
         </div>
-      </div>
-    )}
-  </div>
-</div>
 
+        {molecule.niveau && (
+          <div className="flex items-center gap-2">
+            <GraduationCap size={16} />
+            <span>{molecule.niveau}</span>
+          </div>
+        )}
+
+        <div className="border-t border-gray-200 pt-3">
+          <p>{molecule.description}</p>
+        </div>
+
+        {molecule.importance && (
+          <div className="bg-purple-100 rounded-md p-3">
+            <div className="flex items-start gap-2">
+              <Info size={16} className="text-purple-600 mt-1" />
+              <p>{molecule.importance}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

@@ -2,7 +2,8 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, OrbitControls } from '@react-three/drei';
 import { Suspense, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { Maximize2, Minimize2 } from 'lucide-react'; // Icônes
+import { Maximize2, Minimize2 } from 'lucide-react';
+
 interface GLBViewerProps {
   glbUrl: string;
   moleculeName?: string;
@@ -28,7 +29,6 @@ function MoleculeModel({ url }: { url: string }) {
     ref.current.scale.setScalar(scale);
   }, [scene]);
 
-  // Rotation automatique
   useFrame(() => {
     if (ref.current) {
       ref.current.rotation.y += 0.005;
@@ -55,36 +55,16 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
   return (
     <div
       ref={viewerRef}
-      style={{
-        width: '100%',
-        height: isFullscreen ? '100vh' : '480px',
-        background: 'linear-gradient(135deg, #5b21b6, #d8b4fe)',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        position: 'relative',
-        cursor: 'grab', // Ajoute cette ligne pour changer le curseur en une main
-      }}
+      className={`relative w-full ${isFullscreen ? 'h-screen' : 'h-[400px]'} rounded-lg overflow-hidden cursor-grab bg-gradient-to-br from-purple-700 to-purple-300`}
     >
-      {/* Overlay du nom de la molécule */}
+      {/* Titre molécule */}
       {moleculeName && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '20px',
-            left: '20px',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            color: '#333',
-            zIndex: 10,
-          }}
-        >
+        <div className="absolute top-4 left-4 bg-white/90 px-3 py-1.5 rounded-md font-semibold text-sm text-gray-800 z-10 shadow">
           {moleculeName}
         </div>
       )}
 
+      {/* Canvas 3D */}
       <Canvas camera={{ position: [2, 2, 3] }}>
         <Suspense fallback={null}>
           <Environment preset="studio" background={false} />
@@ -95,19 +75,19 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
         </Suspense>
       </Canvas>
 
-      {/* Bouton plein écran */}
+      {/* Plein écran */}
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 flex items-center space-x-2 bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-800 hover:to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg transition-all duration-300 z-10 backdrop-blur-md"
+        className="absolute top-4 right-4 flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1.5 rounded-md z-10 shadow backdrop-blur"
       >
         {isFullscreen ? (
           <>
-            <Minimize2 size={18} />
+            <Minimize2 size={16} />
             <span>Quitter</span>
           </>
         ) : (
           <>
-            <Maximize2 size={18} />
+            <Maximize2 size={16} />
             <span>Plein écran</span>
           </>
         )}

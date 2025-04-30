@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FlaskRound as Flask, PenTool as Tool, Trash2 } from 'lucide-react';
+import { FlaskRound as Flask, PenTool as Tool, Trash2, Pencil } from 'lucide-react';
 import ProfMoleculeDetails from './ProfMoleculeDetails';
 import ProfMaterielsDetails from './ProfMaterielsDetails';
 import ProfGLBViewer from './ProfGLBViewer';
 import type { Molecule, LabEquipment } from '../../../../types/Viewer3D/molecule-equipment';
 import { supabase } from '../../../../lib/supabaseClient';
 import { toast } from 'sonner';
+
 
 type ViewMode = 'molecule' | 'equipment';
 
@@ -74,7 +75,22 @@ export default function Prof3DView() {
 
       setIsEditing(false);
       setFormData({ nom: '', description: '', structure: '', category: viewMode });
-      fetchItems();
+
+      if (isEdit) {
+        // Mise à jour locale immédiate
+        if (viewMode === 'molecule') {
+          setMoleculeList(prev =>
+            prev.map(item => item.id === formData.id ? { ...item, ...formData } as Molecule : item)
+          );
+        } else {
+          setEquipmentList(prev =>
+            prev.map(item => item.id === formData.id ? { ...item, ...formData } as LabEquipment : item)
+          );
+        }
+      } else {
+        fetchItems(); // On recharge uniquement si nouvel ajout
+      }
+
     } catch (error) {
       console.error(error);
     }
@@ -83,7 +99,7 @@ export default function Prof3DView() {
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("Supprimer cet élément ?");
     if (!confirmDelete) return;
-  
+
     try {
       await toast.promise(
         (async () => {
@@ -100,25 +116,54 @@ export default function Prof3DView() {
       console.error(err);
     }
   };
-  
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const folder = viewMode === 'molecule' ? 'molecules' : 'equipments';
+    const filename = `${folder}/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage
+      .from('structures') // ✅ Nom du bucket
+      .upload(filename, file);
+
+    if (error) {
+      toast.error("❌ Échec de l'upload du fichier .glb");
+      console.error(error);
+      return;
+    }
+
+    // Obtenir l'URL publique du fichier uploadé
+    const { data: publicURL } = supabase.storage
+      .from('structures')
+      .getPublicUrl(filename);
+
+    if (publicURL?.publicUrl) {
+      setFormData((prev) => ({
+        ...prev,
+        structure: publicURL.publicUrl,
+      }));
+      toast.success("✅ Fichier .glb uploadé !");
+    }
+  };
+
 
   return (
-    <div className="p-6">
+    <div className="p-4 max-w-[1280px] mx-auto text-base text-gray-800 min-h-screen">
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <div className='flex space-x-2'>
+        <div className="flex gap-2">
           <button
             onClick={() => {
               setViewMode('molecule');
               setSelectedEquipment(null);
               setIsEditing(false);
             }}
-            className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${viewMode === 'molecule'
-              ? 'bg-purple-500 text-white'
+            className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
+              ? 'bg-purple-600 text-white'
               : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
               }`}
           >
-            <Flask size={20} />
+            <Flask size={16} />
             <span>Molécules</span>
           </button>
           <button
@@ -127,15 +172,16 @@ export default function Prof3DView() {
               setSelectedMolecule(null);
               setIsEditing(false);
             }}
-            className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${viewMode === 'equipment'
-              ? 'bg-purple-500 text-white'
+            className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
+              ? 'bg-purple-600 text-white'
               : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
               }`}
           >
-            <Tool size={20} />
+            <Tool size={16} />
             <span>Matériel</span>
           </button>
         </div>
+
         <button
           onClick={() => {
             setIsEditing(true);
@@ -147,7 +193,12 @@ export default function Prof3DView() {
               description: '',
               structure: '',
               category: viewMode,
+              formule: '',
+              niveau: '',
+              importance: '',
+              usage: ''
             });
+
           }}
           className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md"
         >
@@ -155,120 +206,115 @@ export default function Prof3DView() {
         </button>
       </div>
 
-      {/* FORMULAIRE */}
-      {isEditing && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="space-y-4 bg-white p-6 rounded-md shadow border mb-6"
-        >
-          <input
-            type="text"
-            placeholder="Nom"
-            value={formData.nom}
-            onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-            className="w-full p-2 border rounded"
-          />
-          <textarea
-            placeholder="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full p-2 border rounded"
-          />
-          <input
-            type="text"
-            placeholder="URL du fichier .glb"
-            value={formData.structure}
-            onChange={(e) => setFormData({ ...formData, structure: e.target.value })}
-            className="w-full p-2 border rounded"
-          />
-          <div className="flex justify-end gap-2">
-            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Enregistrer</button>
-            <button type="button" onClick={() => setIsEditing(false)} className="bg-gray-300 px-4 py-2 rounded">Annuler</button>
-          </div>
-        </form>
-      )}
 
-      {/* ZONE AFFICHAGE */}
+
+      {/* LISTE + DÉTAILS */}
       <div className="flex flex-col md:flex-row gap-6">
-        {/* LISTE GAUCHE */}
-        <div className="md:w-[60%] space-y-4 scroll-y max-h-[84vh] overflow-auto">
+        {/* LISTE */}
+        <div className="md:w-[60%] space-y-3 max-h-[84vh] overflow-auto">
           {viewMode === 'molecule'
             ? moleculeList.length === 0
-              ? <div className="text-gray-500">Aucune molécule trouvée.</div>
+              ? <p className="text-gray-500">Aucune molécule trouvée.</p>
               : moleculeList.map((mol) => (
                 <div
                   key={mol.id}
-                  className={`cursor-pointer p-5 rounded-xl shadow-md border transition-all duration-200 ${selectedMolecule?.id === mol.id
-                    ? 'bg-purple-100 border-purple-300'
-                    : 'bg-white hover:bg-gray-50 border-gray-200'
-                    }`}
                   onClick={() => {
                     setSelectedMolecule(mol);
                     setSelectedEquipment(null);
                     setIsEditing(false);
                   }}
+                  className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${selectedMolecule?.id === mol.id
+                    ? 'bg-purple-100 border-purple-300'
+                    : 'bg-white hover:bg-gray-50 border-gray-200'
+                    }`}
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1">{mol.nom}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">{mol.description}</p>
-                      <div className="text-sm text-gray-500 flex items-center gap-3">
+                      <h3 className="text-base font-semibold text-gray-800">{mol.nom}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2">{mol.description}</p>
+                      <div className="text-sm text-gray-500 flex gap-3 mt-1">
                         <span className="px-2 py-0.5 bg-gray-100 rounded-full">
                           {mol.niveau || 'Niveau inconnu'}
                         </span>
                         <span>{mol.formule}</span>
                       </div>
                     </div>
-                    <Trash2
-                      size={16}
-                      className="text-red-500 hover:text-red-700 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(mol.id);
-                      }}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Pencil
+                        size={16}
+                        className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditing(true);
+                          setFormData({
+                            ...mol,
+                            category: viewMode,
+                          });
+                        }}
+                      />
+                      <Trash2
+                        size={16}
+                        className="text-red-500 hover:text-red-700 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(mol.id);
+                        }}
+                      />
+                    </div>
+
                   </div>
                 </div>
               ))
             : equipmentList.length === 0
-              ? <div className="text-gray-500">Aucun matériel trouvé.</div>
+              ? <p className="text-gray-500">Aucun matériel trouvé.</p>
               : equipmentList.map((equip) => (
                 <div
                   key={equip.id}
-                  className={`cursor-pointer p-5 rounded-xl shadow-md border transition-all duration-200 ${selectedEquipment?.id === equip.id
-                    ? 'bg-purple-100 border-purple-300'
-                    : 'bg-white hover:bg-gray-50 border-gray-200'
-                    }`}
                   onClick={() => {
                     setSelectedEquipment(equip);
                     setSelectedMolecule(null);
                     setIsEditing(false);
                   }}
+                  className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${selectedEquipment?.id === equip.id
+                    ? 'bg-purple-100 border-purple-300'
+                    : 'bg-white hover:bg-gray-50 border-gray-200'
+                    }`}
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1">{equip.nom}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">{equip.description}</p>
+                      <h3 className="text-base font-semibold text-gray-800">{equip.nom}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2">{equip.description}</p>
                     </div>
-                    <Trash2
-                      size={16}
-                      className="text-red-500 hover:text-red-700 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(equip.id);
-                      }}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Pencil
+                        size={16}
+                        className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditing(true);
+                          setFormData({
+                            ...equip,
+                            category: viewMode,
+                          });
+                        }}
+                      />
+                      <Trash2
+                        size={16}
+                        className="text-red-500 hover:text-red-700 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(equip.id);
+                        }}
+                      />
+                    </div>
+
                   </div>
                 </div>
-              ))
-          }
+              ))}
         </div>
 
-        {/* VISUALISATION 3D + DÉTAILS */}
-        <div className="md:w-[40%] space-y-6 scroll-y max-h-[84vh] overflow-auto">
+        {/* DÉTAILS + 3D */}
+        <div className="md:w-[40%] space-y-4 max-h-[84vh] overflow-auto text-sm">
           {viewMode === 'molecule' && selectedMolecule ? (
             <>
               <ProfGLBViewer glbUrl={selectedMolecule.structure} moleculeName={selectedMolecule.nom} />
@@ -280,12 +326,131 @@ export default function Prof3DView() {
               <ProfMaterielsDetails equipment={selectedEquipment} />
             </>
           ) : (
-            <div className="text-gray-400 text-sm italic">
+            <p className="text-gray-400 italic">
               Sélectionne un élément à gauche pour voir sa visualisation 3D et ses détails.
-            </div>
+            </p>
           )}
+
+          {/* 👉 FORMULAIRE EN DESSOUS DES DÉTAILS */}
+          {isEditing && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"
+            >
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Nom</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.nom}
+                  onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  required
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Structure (.glb)</label>
+
+                <input
+                  type="text"
+                  placeholder="URL du fichier .glb ou automatique après l’upload"
+                  value={formData.structure}
+                  onChange={(e) => setFormData({ ...formData, structure: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                />
+
+                <input
+                  type="file"
+                  accept=".glb"
+                  onChange={handleFileUpload}
+                  className="mt-2 block w-full text-sm text-gray-700
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-md file:border-0
+               file:text-sm file:font-semibold
+               file:bg-purple-600 file:text-white
+               hover:file:bg-purple-700"
+                />
+              </div>
+
+
+              {viewMode === 'molecule' && (
+                <>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">Formule chimique</label>
+                    <input
+                      type="text"
+                      value={formData.formule || ''}
+                      onChange={(e) => setFormData({ ...formData, formule: e.target.value })}
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">Niveau</label>
+                    <input
+                      type="text"
+                      value={formData.niveau || ''}
+                      onChange={(e) => setFormData({ ...formData, niveau: e.target.value })}
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">Importance</label>
+                    <textarea
+                      value={formData.importance || ''}
+                      onChange={(e) => setFormData({ ...formData, importance: e.target.value })}
+                      className="w-full p-2 border rounded-md"
+                      rows={2}
+                    />
+                  </div>
+                </>
+              )}
+
+              {viewMode === 'equipment' && (
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">Usage</label>
+                  <textarea
+                    value={formData.usage || ''}
+                    onChange={(e) => setFormData({ ...formData, usage: e.target.value })}
+                    className="w-full p-2 border rounded-md"
+                    rows={2}
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-md">
+                  {formData.id ? 'Modifier' : 'Ajouter'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="bg-gray-300 px-4 py-2 rounded-md"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          )}
+
         </div>
+
       </div>
     </div>
   );
-}
+}  

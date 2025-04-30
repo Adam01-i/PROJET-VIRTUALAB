@@ -9,7 +9,6 @@ export default function QuizView() {
   const [activeQuiz, setActiveQuiz] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger les quiz depuis Supabase
   const fetchQuizzes = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -30,13 +29,8 @@ export default function QuizView() {
     fetchQuizzes();
   }, []);
 
-  const handleStartQuiz = (quizId: string) => {
-    setActiveQuiz(quizId);
-  };
-
-  const handleCompleteQuiz = (score: number) => {
-    console.log(`Quiz terminé avec un score de : ${score}`);
-  };
+  const handleStartQuiz = (quizId: string) => setActiveQuiz(quizId);
+  const handleCompleteQuiz = (score: number) => console.log(`Score : ${score}`);
 
   const currentQuiz = activeQuiz ? quizList.find(q => q.id === activeQuiz) : null;
 
@@ -51,15 +45,15 @@ export default function QuizView() {
   }
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-4xl font-bold text-white">Quiz disponibles</h2>
+    <div className="max-w-[1280px] mx-auto px-4 py-10 space-y-3">
+      <h2 className="text-2xl font-semibold text-white">Quiz disponibles</h2>
 
       {loading ? (
-        <p className="text-purple-200">Chargement en cours...</p>
+        <p className="text-purple-200 text-sm">Chargement en cours...</p>
       ) : quizList.length === 0 ? (
-        <p className="text-purple-200">Aucun quiz disponible pour le moment.</p>
+        <p className="text-purple-200 text-sm">Aucun quiz disponible pour le moment.</p>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
           {quizList.map((quiz) => (
             <QuizCard
               key={quiz.id}

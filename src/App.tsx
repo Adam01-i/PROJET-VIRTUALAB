@@ -20,15 +20,6 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
       <Routes>
-        {/* Interface Professeur */}
-        <Route path="/professeur" element={<ProfesseurLayout />}>
-          <Route index element={<Navigate to="/professeur/experiences" replace />} />
-          <Route path="experiences" element={<ProfExpView />} />
-          <Route path="quiz" element={<ProfQuizView />} />
-          <Route path="suivi-eleve" element={<ProfElevView />} />
-          <Route path="3D" element={<Prof3DView />} />
-        </Route>
-
         {/* Interface Élève */}
         <Route path="/" element={<EleveLayout />}>
           <Route index element={<AccueilView />} />
@@ -36,6 +27,14 @@ function App() {
           <Route path="eleve/experiences" element={<ExperienceView />} />
           <Route path="eleve/quiz" element={<QuizView />} />
           <Route path="eleve/3d" element={<Viewer3DView />} />
+        </Route>
+        {/* Interface Professeur */}
+        <Route path="/professeur" element={<ProfesseurLayout />}>
+          <Route index element={<Navigate to="/professeur/experiences" replace />} />
+          <Route path="experiences" element={<ProfExpView />} />
+          <Route path="quiz" element={<ProfQuizView />} />
+          <Route path="suivi-eleve" element={<ProfElevView />} />
+          <Route path="3D" element={<Prof3DView />} />
         </Route>
       </Routes>
     </>

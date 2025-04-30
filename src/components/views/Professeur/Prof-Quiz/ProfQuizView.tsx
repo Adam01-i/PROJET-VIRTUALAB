@@ -222,9 +222,9 @@ export default function ProfQuizView() {
   };
 
   return (
-    <div className="p-6 md:p-2 bg-gray-100 text-gray-800 min-h-screen">
+    <div className="p-4 bg-gray-100 text-gray-800 min-h-screen max-w-[1280px] mx-auto text-base">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-purple-700">Gestion des quiz</h2>
+        <h2 className="text-xl font-bold text-purple-700">Gestion des quiz</h2>
         <button
           onClick={() => {
             setFormData({
@@ -246,25 +246,26 @@ export default function ProfQuizView() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-[60%] space-y-4 scroll-y max-h-[84vh] overflow-auto">
+        <div className="md:w-[60%] space-y-4 max-h-[84vh] overflow-auto">
           {quizList.length === 0 ? (
-            <div className="text-gray-500">Aucun quiz trouvé.</div>
+            <p className="text-gray-500">Aucun quiz trouvé.</p>
           ) : (
             quizList.map((quiz) => (
               <div
                 key={quiz.id}
-                className={`cursor-pointer p-5 rounded-xl shadow-md border transition-all duration-200 ${selectedQuiz?.id === quiz.id
-                  ? "bg-purple-100 border-purple-300"
-                  : "bg-white hover:bg-gray-50 border-gray-200"
-                  }`}
+                className={`cursor-pointer p-4 rounded-md shadow-sm border transition ${
+                  selectedQuiz?.id === quiz.id
+                    ? 'bg-purple-100 border-purple-300'
+                    : 'bg-white hover:bg-gray-50 border-gray-200'
+                }`}
                 onClick={() => {
                   setSelectedQuiz(quiz);
                   setIsEditing(false);
                 }}
               >
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">{quiz.titre}</h3>
+                <h3 className="text-base font-semibold text-gray-800 mb-1">{quiz.titre}</h3>
                 <p className="text-sm text-gray-600 line-clamp-2 mb-2">{quiz.description}</p>
-                <div className="text-sm text-gray-500 flex items-center gap-3">
+                <div className="text-sm text-gray-500 flex gap-3">
                   <span className="px-2 py-0.5 bg-gray-100 rounded-full">{quiz.niveau}</span>
                   <span>{quiz.questions?.length || 0} questions</span>
                   <span>{quiz.duree}</span>
@@ -274,7 +275,7 @@ export default function ProfQuizView() {
           )}
         </div>
 
-        <div className="md:w-[40%] space-y-6 scroll-y max-h-[84vh] overflow-auto">
+        <div className="md:w-[40%] space-y-6 max-h-[84vh] overflow-auto">
           {selectedQuiz && !isEditing && (
             <ProfQuizCard
               quiz={selectedQuiz}
@@ -284,31 +285,32 @@ export default function ProfQuizView() {
           )}
 
           {isEditing && (
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-md border border-gray-200 space-y-6">
-              {/* Champs du formulaire */}
-              <div className="space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white rounded-md p-4 shadow-sm border space-y-5"
+            >
+              <div className="space-y-3 text-sm">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Titre</label>
+                  <label className="font-medium">Titre</label>
                   <input
-                    type="text"
                     value={formData.titre}
                     onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                    className="w-full mt-1 p-2 border rounded-md"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <label className="font-medium">Description</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                    rows={3}
+                    rows={2}
+                    className="w-full mt-1 p-2 border rounded-md"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Image du quiz</label>
+                  <label className="font-medium">Image</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -317,45 +319,32 @@ export default function ProfQuizView() {
                       if (!file) return;
 
                       setIsUploadingImage(true);
-                      toast.loading("⏳ Upload de l'image en cours...");
-
-                      const imageUrl = await uploadQuizImage(file);
-
+                      toast.loading("⏳ Upload image...");
+                      const url = await uploadQuizImage(file);
                       toast.dismiss();
                       setIsUploadingImage(false);
 
-                      if (imageUrl) {
-                        toast.success("✅ Image uploadée avec succès");
-                        setFormData((prev) => ({ ...prev, image: imageUrl }));
-                      } else {
-                        toast.error("❌ Échec de l'upload");
-                      }
+                      if (url) {
+                        setFormData((prev) => ({ ...prev, image: url }));
+                        toast.success("✅ Image ajoutée !");
+                      } else toast.error("❌ Échec upload");
                     }}
-
-                    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                    className="w-full mt-1 p-2 border rounded-md"
                   />
-
                   {formData.image && (
-                    <div className="mt-2">
-                      <img
-                        src={formData.image}
-                        alt="Aperçu du quiz"
-                        className="w-full h-auto max-h-48 object-contain border rounded-md"
-                      />
-                    </div>
+                    <img src={formData.image} alt="preview" className="mt-2 max-h-40 w-full object-contain border rounded-md" />
                   )}
                 </div>
 
-
                 <div className="flex gap-4">
                   <div className="w-1/2">
-                    <label className="block text-sm font-medium">Durée</label>
+                    <label>Durée</label>
                     <select
                       value={formData.duree}
                       onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
-                      className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                      className="w-full mt-1 p-2 border rounded-md"
                     >
-                      <option value="">-- Choisir une durée --</option>
+                      <option value="">-- Choisir --</option>
                       <option value="15 min">15 min</option>
                       <option value="30 min">30 min</option>
                       <option value="45 min">45 min</option>
@@ -363,13 +352,13 @@ export default function ProfQuizView() {
                     </select>
                   </div>
                   <div className="w-1/2">
-                    <label className="block text-sm font-medium">Niveau</label>
+                    <label>Niveau</label>
                     <select
                       value={formData.niveau}
                       onChange={(e) =>
                         setFormData({ ...formData, niveau: e.target.value as Quiz['niveau'] })
                       }
-                      className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                      className="w-full mt-1 p-2 border rounded-md"
                     >
                       <option value="Débutant">Débutant</option>
                       <option value="Intermédiaire">Intermédiaire</option>
@@ -379,99 +368,78 @@ export default function ProfQuizView() {
                 </div>
               </div>
 
-              {/* Questions */}
-              <div className="space-y-6">
-                <h4 className="text-lg font-semibold text-gray-800">Questions</h4>
-                {formData.questions.map((q, qIndex) => (
-                  <div key={qIndex} className="p-4 bg-white border rounded-md space-y-4 shadow-sm">
-                    <div className="text-sm font-semibold text-purple-700">
-                      Question {qIndex + 1}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium">Intitulé</label>
+              <div className="space-y-4">
+                <h4 className="text-base font-semibold text-gray-700">Questions</h4>
+                {formData.questions.map((q, idx) => (
+                  <div key={q.id} className="bg-gray-50 p-3 rounded-md border space-y-3 text-sm">
+                    <div className="font-medium text-purple-700">Question {idx + 1}</div>
+                    <input
+                      value={q.question}
+                      onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      placeholder="Intitulé"
+                    />
+                    {q.options.map((opt, optIdx) => (
                       <input
-                        type="text"
-                        value={q.question}
-                        onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        key={optIdx}
+                        value={opt}
+                        onChange={(e) => handleOptionChange(idx, optIdx, e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                        placeholder={`Option ${optIdx + 1}`}
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Options</label>
-                      {q.options.map((opt, oIndex) => (
-                        <input
-                          key={oIndex}
-                          type="text"
-                          value={opt}
-                          placeholder={`Option ${oIndex + 1}`}
-                          onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                          className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-                        />
+                    ))}
+                    <select
+                      value={q.correctAnswer}
+                      onChange={(e) => handleQuestionChange(idx, 'correctAnswer', Number(e.target.value))}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      {q.options.map((_, i) => (
+                        <option key={i} value={i}>Bonne réponse : Option {i + 1}</option>
                       ))}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium">Bonne réponse</label>
-                      <select
-                        value={q.correctAnswer}
-                        onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', Number(e.target.value))}
-                        className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                      >
-                        {q.options.map((_, idx) => (
-                          <option key={idx} value={idx}>
-                            Option {idx + 1}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium">Explication</label>
-                      <textarea
-                        value={q.explanation}
-                        onChange={(e) => handleQuestionChange(qIndex, 'explanation', e.target.value)}
-                        className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div className="flex justify-end">
+                    </select>
+                    <textarea
+                      value={q.explanation}
+                      onChange={(e) => handleQuestionChange(idx, 'explanation', e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      placeholder="Explication (facultatif)"
+                      rows={2}
+                    />
+                    <div className="text-right">
                       <button
+                        onClick={() => removeQuestion(idx)}
                         type="button"
-                        onClick={() => removeQuestion(qIndex)}
-                        className="text-sm text-red-600 hover:underline"
+                        className="text-red-600 text-sm hover:underline"
                       >
-                        Supprimer cette question
+                        Supprimer
                       </button>
                     </div>
                   </div>
                 ))}
-
                 <button
                   type="button"
                   onClick={addQuestion}
-                  className="text-sm font-medium text-purple-700 hover:underline"
+                  className="text-purple-700 text-sm font-medium hover:underline"
                 >
                   ➕ Ajouter une question
                 </button>
               </div>
 
-              {/* Boutons */}
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="submit"
                   disabled={isUploadingImage}
-                  className={`px-4 py-2 ${isUploadingImage ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"} text-white rounded-md text-sm font-medium`}
+                  className={`px-4 py-2 text-white text-sm rounded-md ${
+                    isUploadingImage
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
                 >
-                  {isUploadingImage ? "Upload image..." : "Enregistrer"}
+                  {isUploadingImage ? 'Image...' : 'Enregistrer'}
                 </button>
-
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md text-sm font-medium"
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm rounded-md"
                 >
                   Annuler
                 </button>

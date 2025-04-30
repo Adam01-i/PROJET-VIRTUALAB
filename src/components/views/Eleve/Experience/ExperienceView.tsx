@@ -24,8 +24,10 @@ export default function ExperienceView() {
   }
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-4xl font-bold text-white">Expériences disponibles</h2>
+    <div className="max-w-[1280px] mx-auto px-4 py-12 space-y-8">
+      <h2 className="text-2xl font-semibold text-white">
+        Expériences disponibles
+      </h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {experienceData.map((experience) => (
           <ExperienceCard

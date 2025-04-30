@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Check, X, HelpCircle, RefreshCw, Award } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, Check, X, HelpCircle, RefreshCw, Award,
+} from 'lucide-react';
 import type { Quiz, QuizProgress } from '../../../../types/Quiz/quiz';
 
 type QuizSessionProps = {
@@ -17,11 +19,11 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     showExplanation: false,
   });
 
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(600); // 10 min
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft(prev => {
         if (prev <= 0 || progress.completed) {
           clearInterval(timer);
           return 0;
@@ -38,7 +40,6 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
   const handleAnswer = (answerIndex: number) => {
     if (hasAnswered) return;
-
     const isCorrect = answerIndex === currentQuestion.correctAnswer;
     const newAnswers = [...progress.answers];
     newAnswers[progress.currentQuestion] = answerIndex;
@@ -66,36 +67,36 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 overflow-hidden">
+    <div className="max-w-[700px] mx-auto bg-white/5 backdrop-blur-md rounded-md border border-white/10">
       {/* Header */}
-      <div className="p-6 border-b border-white/10">
+      <div className="p-4 border-b border-white/10">
         <div className="flex items-center justify-between">
           <button
             onClick={onExit}
-            className="flex items-center space-x-2 text-purple-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-purple-300 hover:text-white text-sm"
           >
-            <ArrowLeft size={20} />
-            <span>Quitter le quiz</span>
+            <ArrowLeft size={16} />
+            <span>Quitter</span>
           </button>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-purple-300">
-              <Check size={20} className="text-green-500" />
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1.5 text-green-400">
+              <Check size={16} />
               <span>{progress.score} / {progress.answers.length}</span>
             </div>
-            <div className="px-4 py-2 bg-purple-500/20 rounded-lg text-purple-300">
+            <div className="px-3 py-1 bg-purple-500/20 rounded text-purple-200">
               {formatTime(timeLeft)}
             </div>
           </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-3">
           <div className="w-full bg-white/10 rounded-full h-2">
-            <div 
-              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+            <div
+              className="bg-purple-500 h-2 rounded-full transition-all"
               style={{ width: `${((progress.currentQuestion + 1) / quiz.questions.length) * 100}%` }}
             />
           </div>
@@ -103,60 +104,69 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
       </div>
 
       {/* Question */}
-      <div className="p-8">
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold text-white mb-4">
-            Question {progress.currentQuestion + 1} sur {quiz.questions.length}
+      <div className="p-5">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-white mb-2">
+            Question {progress.currentQuestion + 1} / {quiz.questions.length}
           </h3>
-          <p className="text-xl text-purple-200">{currentQuestion.question}</p>
+          <p className="text-base text-purple-200">{currentQuestion.question}</p>
         </div>
 
         {currentQuestion.image && (
-          <div className="mb-8 rounded-xl overflow-hidden">
-            <img 
-              src={currentQuestion.image} 
-              alt="Question illustration" 
-              className="w-full h-64 object-cover"
+          <div className="mb-6 rounded-lg overflow-hidden">
+            <img
+              src={currentQuestion.image}
+              alt="Illustration"
+              className="w-full h-52 object-cover"
             />
           </div>
         )}
 
-        <div className="space-y-4">
-          {currentQuestion.options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => handleAnswer(index)}
-              disabled={hasAnswered}
-              className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
-                hasAnswered
-                  ? index === currentQuestion.correctAnswer
-                    ? 'bg-green-500/20 border-green-500 text-white'
-                    : index === progress.answers[progress.currentQuestion]
-                    ? 'bg-red-500/20 border-red-500 text-white'
-                    : 'bg-white/5 border-white/10 text-purple-200'
-                  : 'bg-white/5 hover:bg-white/10 border-white/10 text-purple-200'
-              } border`}
-            >
-              <div className="flex items-center justify-between">
-                <span>{option}</span>
-                {hasAnswered && (
-                  index === currentQuestion.correctAnswer ? (
-                    <Check size={20} className="text-green-500" />
-                  ) : index === progress.answers[progress.currentQuestion] ? (
-                    <X size={20} className="text-red-500" />
-                  ) : null
-                )}
-              </div>
-            </button>
-          ))}
+        <div className="space-y-3">
+          {currentQuestion.options.map((option, index) => {
+            const isCorrect = index === currentQuestion.correctAnswer;
+            const isSelected = progress.answers[progress.currentQuestion] === index;
+
+            let baseClasses =
+              'w-full p-3 rounded-md border transition-all text-left text-sm';
+            let stateClasses = 'bg-white/5 hover:bg-white/10 text-purple-200 border-white/10';
+
+            if (hasAnswered) {
+              if (isCorrect) {
+                stateClasses = 'bg-green-500/20 text-white border-green-500';
+              } else if (isSelected) {
+                stateClasses = 'bg-red-500/20 text-white border-red-500';
+              }
+            }
+
+            return (
+              <button
+                key={index}
+                onClick={() => handleAnswer(index)}
+                disabled={hasAnswered}
+                className={`${baseClasses} ${stateClasses}`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{option}</span>
+                  {hasAnswered && (
+                    isCorrect ? (
+                      <Check size={16} className="text-green-400" />
+                    ) : isSelected ? (
+                      <X size={16} className="text-red-400" />
+                    ) : null
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {progress.showExplanation && (
-          <div className="mt-8 p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <div className="flex items-start space-x-3">
-              <HelpCircle size={24} className="text-purple-300 flex-shrink-0 mt-1" />
+          <div className="mt-6 p-3 bg-purple-500/10 rounded-md border border-purple-500/20 text-sm">
+            <div className="flex gap-3 items-start">
+              <HelpCircle size={20} className="text-purple-300 mt-1" />
               <div>
-                <h4 className="text-white font-semibold mb-2">Explication</h4>
+                <h4 className="text-white font-semibold mb-1">Explication</h4>
                 <p className="text-purple-200">{currentQuestion.explanation}</p>
               </div>
             </div>
@@ -165,63 +175,66 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t border-white/10">
+      <div className="p-4 border-t border-white/10">
         <div className="flex justify-between">
           <button
-            onClick={() => setProgress(prev => ({ ...prev, currentQuestion: prev.currentQuestion - 1 }))}
+            onClick={() => setProgress(prev => ({
+              ...prev,
+              currentQuestion: prev.currentQuestion - 1,
+              showExplanation: false,
+            }))}
             disabled={progress.currentQuestion === 0}
-            className="flex items-center space-x-2 text-purple-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 text-purple-300 hover:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ArrowLeft size={20} />
-            <span>Question précédente</span>
+            <ArrowLeft size={16} />
+            <span>Précédente</span>
           </button>
+
           {hasAnswered && (
             <button
               onClick={handleNext}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
             >
               <span>
-                {progress.currentQuestion === quiz.questions.length - 1 ? 'Terminer' : 'Question suivante'}
+                {progress.currentQuestion === quiz.questions.length - 1 ? 'Terminer' : 'Suivante'}
               </span>
-              <ArrowRight size={20} />
+              <ArrowRight size={16} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Results Modal */}
+      {/* Modal Résultat */}
       {progress.completed && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-indigo-900 rounded-xl p-8 max-w-lg w-full mx-4">
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Award size={40} className="text-purple-300" />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-indigo-900 rounded-md p-5 w-full max-w-md mx-4">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Award size={28} className="text-purple-300" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Quiz terminé !</h3>
-              <p className="text-purple-200">
-                Vous avez obtenu un score de {progress.score} sur {quiz.questions.length}
+              <h3 className="text-lg font-bold text-white mb-1">Quiz terminé !</h3>
+              <p className="text-sm text-purple-200">
+                Score : {progress.score} / {quiz.questions.length}
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <button
-                onClick={() => {
-                  setProgress({
-                    currentQuestion: 0,
-                    answers: [],
-                    score: 0,
-                    completed: false,
-                    showExplanation: false,
-                  });
-                }}
-                className="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg flex items-center justify-center space-x-2"
+                onClick={() => setProgress({
+                  currentQuestion: 0,
+                  answers: [],
+                  score: 0,
+                  completed: false,
+                  showExplanation: false,
+                })}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md text-sm flex items-center justify-center gap-2"
               >
-                <RefreshCw size={20} />
-                <span>Recommencer le quiz</span>
+                <RefreshCw size={16} />
+                <span>Recommencer</span>
               </button>
               <button
                 onClick={onExit}
-                className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-lg"
+                className="w-full bg-white/5 hover:bg-white/10 text-white py-2 rounded-md text-sm"
               >
                 Retour aux quiz
               </button>
