@@ -5,6 +5,7 @@ export type Experience = {
   duree: string;
   niveau: string;
   image: string;
+  simulationPath: string;
   objectifs: string[];
   materiel: string[];
   resultatsAttendus: string[];

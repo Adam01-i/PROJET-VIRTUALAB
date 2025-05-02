@@ -8,6 +8,7 @@ export const experienceData: Experience[] = [
     duree: '45 min',
     niveau: 'Première',
     image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
+    simulationPath: 'TitrageAcidoBasique',
     objectifs: [
       'Comprendre le principe des réactions d\'oxydo-réduction',
       'Identifier les espèces oxydantes et réductrices',
@@ -36,6 +37,7 @@ export const experienceData: Experience[] = [
     duree: '60 min',
     niveau: 'Première',
     image: 'https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?auto=format&fit=crop&w=800&q=80',
+    simulationPath: '',
     objectifs: [
       'Définir un équilibre chimique',
       'Comprendre le principe de Le Chatelier',
@@ -64,6 +66,7 @@ export const experienceData: Experience[] = [
     duree: '45 min',
     niveau: 'Première',
     image: 'https://images.unsplash.com/photo-1554475900-0a0350e3fc7b?auto=format&fit=crop&w=800&q=80',
+    simulationPath: '',
     objectifs: [
       'Comprendre le principe du titrage',
       'Utiliser un indicateur coloré approprié',

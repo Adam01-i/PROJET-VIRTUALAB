@@ -9,10 +9,14 @@ import {
   ListChecks,
 } from "lucide-react";
 import type { Experience } from "../../../../types/Experience/experience";
-import TitrageAcidoBasiqueSimulation from "../../../../simulations/TitrageAcidoBasique";
+import { lazy, Suspense } from "react";
 
-const simulationComponents: Record<string, React.FC> = {
-  "3": TitrageAcidoBasiqueSimulation,
+
+
+
+// Fonction pour charger dynamiquement une simulation
+const loadSimulationComponent = (fileName: string) => {
+  return lazy(() => import(`../../../../simulations/${fileName}`));
 };
 
 type ExperienceDetailViewProps = {
@@ -37,17 +41,25 @@ export default function ExperienceDetailView({
   }, []);
 
   const renderSimulation = () => {
-    const SimulationComponent = simulationComponents[experience.id];
-    if (SimulationComponent) return <SimulationComponent />;
-
+    if (!experience.simulationPath) {
+      return (
+        <div className="text-center text-purple-200">
+          <Flask size={40} className="mx-auto mb-2" />
+          <p className="text-base font-medium">Zone de simulation interactive</p>
+        </div>
+      );
+    }
+  
+    // Charger dynamiquement le composant simulation depuis le chemin indiqué
+    const SimulationComponent = loadSimulationComponent(experience.simulationPath);
+  
     return (
-      <div className="text-center text-purple-200">
-        <Flask size={40} className="mx-auto mb-2" />
-        <p className="text-base font-medium">Zone de simulation interactive</p>
-      </div>
+      <Suspense fallback={<div className="text-white">Chargement de la simulation...</div>}>
+        <SimulationComponent />
+      </Suspense>
     );
   };
-
+  
   const SimulationContainer = ({ height }: { height: string }) => (
     <div
       className={`relative ${height} bg-indigo-900/50 rounded-md flex items-center justify-center`}
