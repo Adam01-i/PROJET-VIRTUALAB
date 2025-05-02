@@ -19,7 +19,7 @@ export default function Prof3DView() {
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Molecule & LabEquipment>>({
-    id: '',
+    id: 'undefined',
     nom: '',
     description: '',
     structure: '',
@@ -51,50 +51,92 @@ export default function Prof3DView() {
 
   const handleSubmit = async () => {
     const isEdit = !!formData.id;
-
-    const payload = {
-      ...formData,
-      category: viewMode,
-    };
-
+  
     try {
-      await toast.promise(
-        (async () => {
-          if (isEdit) {
-            return await supabase.from('lab_items').update(payload).eq('id', formData.id);
+      await toast.promise(async () => {
+        if (isEdit) {
+          // ✅ Mode modification
+          await supabase.from('lab_items').update({
+            nom: formData.nom,
+            description: formData.description,
+            structure: formData.structure,
+            category: viewMode,
+            formule: formData.formule,
+            niveau: formData.niveau,
+            importance: formData.importance,
+            usage: formData.usage,
+          }).eq('id', formData.id);
+  
+          // Mise à jour locale
+          if (viewMode === 'molecule') {
+            setMoleculeList((prev) =>
+              prev.map((item) =>
+                item.id === formData.id ? { ...item, ...formData } as Molecule : item
+              )
+            );
           } else {
-            return await supabase.from('lab_items').insert([payload]);
+            setEquipmentList((prev) =>
+              prev.map((item) =>
+                item.id === formData.id ? { ...item, ...formData } as LabEquipment : item
+              )
+            );
           }
-        })(),
-        {
-          loading: isEdit ? "Mise à jour..." : "Ajout en cours...",
-          success: isEdit ? "✅ Modifié avec succès !" : "✅ Ajouté avec succès !",
-          error: "❌ Erreur lors de la sauvegarde",
-        }
-      );
-
-      setIsEditing(false);
-      setFormData({ nom: '', description: '', structure: '', category: viewMode });
-
-      if (isEdit) {
-        // Mise à jour locale immédiate
-        if (viewMode === 'molecule') {
-          setMoleculeList(prev =>
-            prev.map(item => item.id === formData.id ? { ...item, ...formData } as Molecule : item)
-          );
+  
         } else {
-          setEquipmentList(prev =>
-            prev.map(item => item.id === formData.id ? { ...item, ...formData } as LabEquipment : item)
-          );
+          // ✅ Mode ajout
+          const { data: insertedItems, error: insertError } = await supabase
+            .from('lab_items')
+            .insert([{
+              nom: formData.nom,
+              description: formData.description,
+              structure: formData.structure,
+              category: viewMode,
+              formule: formData.formule,
+              niveau: formData.niveau,
+              importance: formData.importance,
+              usage: formData.usage,
+            }])
+            .select(); // 🔥 récupère l'élément ajouté directement
+  
+          if (insertError || !insertedItems || insertedItems.length === 0) {
+            throw insertError || new Error("Insertion échouée");
+          }
+  
+          const newItem = insertedItems[0];
+  
+          // Mise à jour locale immédiate
+          if (viewMode === 'molecule') {
+            setMoleculeList((prev) => [newItem, ...prev]);
+          } else {
+            setEquipmentList((prev) => [newItem, ...prev]);
+          }
         }
-      } else {
-        fetchItems(); // On recharge uniquement si nouvel ajout
-      }
-
-    } catch (error) {
-      console.error(error);
+  
+        setIsEditing(false);
+        setFormData({
+          id: undefined,
+          nom: '',
+          description: '',
+          structure: '',
+          category: viewMode,
+          formule: '',
+          niveau: '',
+          importance: '',
+          usage: '',
+        });
+  
+      }, {
+        loading: isEdit ? 'Mise à jour...' : 'Ajout en cours...',
+        success: isEdit ? '✅ Modifié avec succès !' : '✅ Ajouté avec succès !',
+        error: '❌ Erreur lors de la sauvegarde.',
+      });
+  
+    } catch (err) {
+      console.error("Erreur handleSubmit:", err);
+      toast.error("Une erreur est survenue.");
     }
   };
+  
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("Supprimer cet élément ?");
@@ -119,32 +161,34 @@ export default function Prof3DView() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+  
     const folder = viewMode === 'molecule' ? 'molecules' : 'equipments';
     const filename = `${folder}/${Date.now()}_${file.name}`;
+  
     const { error } = await supabase.storage
-      .from('structures') // ✅ Nom du bucket
+      .from('structures')
       .upload(filename, file);
-
+  
     if (error) {
       toast.error("❌ Échec de l'upload du fichier .glb");
       console.error(error);
       return;
     }
+  
+    const { data } = supabase.storage
+  .from('structures')
+  .getPublicUrl(filename);
 
-    // Obtenir l'URL publique du fichier uploadé
-    const { data: publicURL } = supabase.storage
-      .from('structures')
-      .getPublicUrl(filename);
+if (data?.publicUrl) {
+  setFormData((prev) => ({
+    ...prev,
+    structure: data.publicUrl,
+  }));
+  toast.success("✅ Fichier .glb uploadé !");
+}
 
-    if (publicURL?.publicUrl) {
-      setFormData((prev) => ({
-        ...prev,
-        structure: publicURL.publicUrl,
-      }));
-      toast.success("✅ Fichier .glb uploadé !");
-    }
   };
+  
 
 
   return (
