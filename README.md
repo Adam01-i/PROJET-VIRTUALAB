@@ -42,7 +42,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   │       ├── Eleve/                      # Interface élève (expériences, quiz, visualisation)
 │   │       └── Professeur/                 # Interface professeur (dashboard, gestion des quiz, gestions de la 3D, suivi-eleve)
 │   ├── data/                         # Données statiques ou chargées à l'init
-│   │   └── Experiences/                  # Données des expériences
+│   │   └── Experience/                  # Données des expériences
 │   │       ├── experiencesData.ts            # Liste des expériences interactives
 │   │   └── Quiz/                          # Données des quiz
 │   │       ├── quizData.ts                   # Quiz avec questions, réponses et explications
