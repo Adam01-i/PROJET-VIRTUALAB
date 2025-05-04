@@ -66,7 +66,7 @@ export const experienceData: Experience[] = [
     duree: '45 min',
     niveau: 'Première',
     image: 'https://images.unsplash.com/photo-1554475900-0a0350e3fc7b?auto=format&fit=crop&w=800&q=80',
-    simulationPath: '',
+    simulationPath: 'TitrageAcidoBasique',
     objectifs: [
       'Comprendre le principe du titrage',
       'Utiliser un indicateur coloré approprié',
