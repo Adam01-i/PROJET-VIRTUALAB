@@ -177,7 +177,7 @@ export default function ProfExpView() {
           ➕ Nouvelle expérience
         </button>
       </div>
-  
+
       <div className="flex flex-col md:flex-row gap-6">
         {/* 👉 Liste des expériences (Gauche) */}
         <div className="md:w-[60%] space-y-4 max-h-[84vh] overflow-auto">
@@ -187,11 +187,10 @@ export default function ProfExpView() {
             experiences.map((exp) => (
               <div
                 key={exp.id}
-                className={`cursor-pointer p-4 rounded-md shadow-sm border transition ${
-                  selectedExperience?.id === exp.id
+                className={`cursor-pointer p-4 rounded-md shadow-sm border transition ${selectedExperience?.id === exp.id
                     ? 'bg-purple-100 border-purple-300'
                     : 'bg-white hover:bg-gray-50 border-gray-200'
-                }`}
+                  }`}
                 onClick={() => {
                   setSelectedExperience(exp);
                   setIsEditing(false);
@@ -207,7 +206,7 @@ export default function ProfExpView() {
             ))
           )}
         </div>
-  
+
         {/* 🧾 Détails ou Formulaire (Droite) */}
         <div className="md:w-[40%] space-y-6 max-h-[84vh] overflow-auto">
           {/* 👉 Carte ProfExpCard à droite */}
@@ -221,7 +220,7 @@ export default function ProfExpView() {
               onDelete={handleDelete}
             />
           )}
-  
+
           {/* 🛠️ Formulaire juste après la carte */}
           {isEditing && formData && (
             <form
@@ -234,7 +233,7 @@ export default function ProfExpView() {
               <h3 className="text-lg font-semibold text-purple-700">
                 {formData.id ? "✏️ Modifier" : "➕ Ajouter"} une expérience
               </h3>
-  
+
               <input
                 type="text"
                 placeholder="Titre"
@@ -243,7 +242,7 @@ export default function ProfExpView() {
                 onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                 className="w-full border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
-  
+
               <textarea
                 rows={3}
                 placeholder="Description"
@@ -252,7 +251,7 @@ export default function ProfExpView() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full border border-gray-300 p-3 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
-  
+
               <div className="flex gap-4">
                 <select
                   value={formData.duree}
@@ -263,7 +262,7 @@ export default function ProfExpView() {
                     <option key={opt}>{opt}</option>
                   ))}
                 </select>
-  
+
                 <select
                   value={formData.niveau}
                   onChange={(e) => setFormData({ ...formData, niveau: e.target.value })}
@@ -274,36 +273,64 @@ export default function ProfExpView() {
                   ))}
                 </select>
               </div>
-  
+
               {/* 🎯 Upload simulation */}
-              <div className="relative">
-                <label className="inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-md cursor-pointer">
+              <div className="relative flex flex-col gap-1">
+                <label
+                  className={`inline-block ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    } bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-md w-fit`}
+                >
                   📁 Télécharger simulation
-                  <input type="file" onChange={handleFileUpload} className="hidden" />
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
                 </label>
                 {formData.simulationPath && (
                   <a
                     href={formData.simulationPath}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-3 text-sm text-blue-600 underline"
+                    className="text-sm text-blue-600 underline"
                   >
                     Voir fichier
                   </a>
                 )}
-              </div>
-  
-              {/* 🖼️ Upload image */}
-              <div className="relative">
-                <label className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-md cursor-pointer">
-                  🖼️ Télécharger image
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                </label>
-                {formData.image && (
-                  <img src={formData.image} alt="preview" className="mt-2 w-full rounded-md border" />
+                {uploading && (
+                  <p className="text-sm text-gray-500 animate-pulse">⏳ Upload en cours...</p>
                 )}
               </div>
-  
+
+              {/* 🖼️ Upload image */}
+              <div className="relative flex flex-col gap-1 mt-4">
+                <label
+                  className={`inline-block ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    } bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-md w-fit`}
+                >
+                  🖼️ Télécharger image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
+                {formData.image && (
+                  <img
+                    src={formData.image}
+                    alt="preview"
+                    className="mt-2 w-full rounded-md border"
+                  />
+                )}
+                {uploading && (
+                  <p className="text-sm text-gray-500 animate-pulse">⏳ Upload en cours...</p>
+                )}
+              </div>
+
+
               {/* 🔠 Textareas dynamiques */}
               {[
                 { label: "Objectifs", field: "objectifs" },
@@ -326,7 +353,7 @@ export default function ProfExpView() {
                   />
                 </div>
               ))}
-  
+
               <div className="flex justify-end gap-2">
                 <button
                   type="submit"
@@ -347,5 +374,5 @@ export default function ProfExpView() {
         </div>
       </div>
     </div>
-  );  
+  );
 }
