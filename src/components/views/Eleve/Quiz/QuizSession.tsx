@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Check, X, HelpCircle, RefreshCw, Award } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, X, HelpCircle, Award } from 'lucide-react';
 import type { Quiz, QuizProgress } from '../../../../types/Quiz/quiz';
 
 type QuizSessionProps = {
