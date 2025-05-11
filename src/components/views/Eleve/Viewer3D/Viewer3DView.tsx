@@ -20,7 +20,6 @@ export default function Viewer3DView() {
   const [moleculeList, setMoleculeList] = useState<Molecule[]>([]);
   const [equipmentList, setEquipmentList] = useState<LabEquipment[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchItems();
@@ -43,16 +42,13 @@ export default function Viewer3DView() {
   };
 
   const dataList = viewMode === 'molecules' ? moleculeList : equipmentList;
-  const filteredDataList = dataList.filter(item =>
-    item.nom.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const selectedItem = filteredDataList[selectedIndex] || null;
+  const selectedItem = dataList[selectedIndex] || null;
 
-  const handleNext = () => setSelectedIndex((prev) => (prev + 1) % filteredDataList.length);
-  const handlePrev = () => setSelectedIndex((prev) => (prev - 1 + filteredDataList.length) % filteredDataList.length);
+  const handleNext = () => setSelectedIndex((prev) => (prev + 1) % dataList.length);
+  const handlePrev = () => setSelectedIndex((prev) => (prev - 1 + dataList.length) % dataList.length);
 
   return (
-    <div className="w-full px-6 md:px-10 py-8 space-y-8">
+    <div className="w-full px-6 md:px-10 py-20 space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">Visualisation 3D</h2>
         <div className="flex space-x-2">
@@ -84,7 +80,6 @@ export default function Viewer3DView() {
       <div className="grid md:grid-cols-3 gap-6">
         {/* Sidebar : détails + liste */}
         <div className="space-y-6">
-          {/* Détails de l'élément sélectionné */}
           {selectedItem && (
             viewMode === 'molecules' && 'formule' in selectedItem ? (
               <MoleculeDetails molecule={selectedItem as Molecule} />
@@ -93,24 +88,16 @@ export default function Viewer3DView() {
             ) : null
           )}
 
-          {/* Liste filtrable */}
           <div className="bg-gray-50 border border-gray-200 rounded-md p-4 shadow-sm">
             <h3 className="text-base font-semibold text-gray-800 mb-3">
               {viewMode === 'molecules' ? 'Molécules disponibles' : 'Matériel disponible'}
             </h3>
-            <input
-              type="text"
-              className="w-full p-2 mb-4 border border-gray-300 rounded-md text-sm placeholder-gray-400"
-              placeholder="Rechercher..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
 
-            {filteredDataList.length === 0 ? (
-              <p className="text-gray-500 text-center text-sm">Aucun élément trouvé</p>
+            {dataList.length === 0 ? (
+              <p className="text-gray-500 text-center text-sm">Aucun élément disponible</p>
             ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {filteredDataList.map((item, index) =>
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                {dataList.map((item, index) =>
                   viewMode === 'molecules' ? (
                     <MoleculeCard
                       key={item.id}
@@ -143,7 +130,6 @@ export default function Viewer3DView() {
             />
           )}
 
-          {/* Navigation */}
           <button
             onClick={handlePrev}
             className="absolute left-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg"

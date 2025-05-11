@@ -54,14 +54,14 @@ function ImageCarouselBackground() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/eleve/experiences"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-md flex items-center justify-center gap-2 shadow hover:shadow-purple-500/20 text-sm font-medium"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-md flex items-center justify-center gap-2 shadow hover:shadow-purple-500/20 text-sm font-medium"
             >
               <Flask size={18} />
               <span>Lancer une expérience</span>
             </Link>
             <Link
               to="/eleve/quiz"
-              className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-md flex items-center justify-center gap-2 text-sm font-medium"
+              className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-md flex items-center justify-center gap-2 text-sm font-medium"
             >
               <Brain size={18} />
               <span>Évaluer mes connaissances</span>

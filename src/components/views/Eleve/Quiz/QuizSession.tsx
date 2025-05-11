@@ -70,7 +70,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
   };
 
   return (
-    <div className="max-w-[700px] mx-auto bg-white rounded-md border border-gray-200 shadow-lg">
+    <div className="max-w-[700px] mx-auto bg-white rounded-md border border-gray-200 shadow-lg my-20">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-t-md">
         <div className="flex items-center justify-between">

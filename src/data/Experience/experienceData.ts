@@ -87,5 +87,63 @@ export const experienceData: Experience[] = [
       'Calcul de la concentration de l\'acide',
       'Reproduction des résultats avec une marge d\'erreur acceptable'
     ]
+  },
+  {
+    id: '4',
+    titre: 'Titrage acido-basique avec indicateur coloré',
+    description: 'Réalisez un titrage acido-basique en utilisant un indicateur coloré pour déterminer le point d\'équivalence.',
+    duree: '45 min',
+    niveau: 'Première',
+    image: 'https://images.unsplash.com/photo-1554475900-0a0350e3fc7b?auto=format&fit=crop&w=800&q=80',
+    simulationPath: 'TitrageAcidoBasique',
+    objectifs: [
+      'Comprendre le principe du titrage',
+      'Utiliser un indicateur coloré approprié',
+      'Déterminer le point d\'équivalence',
+      'Calculer la concentration de la solution titrée'
+    ],
+    materiel: [
+      'Solution d\'acide chlorhydrique à titrer',
+      'Solution d\'hydroxyde de sodium titrante',
+      'Phénolphtaléine',
+      'Burette graduée de 25mL',
+      'Erlenmeyer de 100mL',
+      'Pipette jaugée de 10mL'
+    ],
+    resultatsAttendus: [
+      'Virage de l\'indicateur au point d\'équivalence',
+      'Détermination précise du volume équivalent',
+      'Calcul de la concentration de l\'acide',
+      'Reproduction des résultats avec une marge d\'erreur acceptable'
+    ]
+  },
+  {
+    id: '5',
+    titre: 'Titrage acido-basique avec indicateur coloré',
+    description: 'Réalisez un titrage acido-basique en utilisant un indicateur coloré pour déterminer le point d\'équivalence.',
+    duree: '45 min',
+    niveau: 'Première',
+    image: 'https://images.unsplash.com/photo-1554475900-0a0350e3fc7b?auto=format&fit=crop&w=800&q=80',
+    simulationPath: 'TitrageAcidoBasique',
+    objectifs: [
+      'Comprendre le principe du titrage',
+      'Utiliser un indicateur coloré approprié',
+      'Déterminer le point d\'équivalence',
+      'Calculer la concentration de la solution titrée'
+    ],
+    materiel: [
+      'Solution d\'acide chlorhydrique à titrer',
+      'Solution d\'hydroxyde de sodium titrante',
+      'Phénolphtaléine',
+      'Burette graduée de 25mL',
+      'Erlenmeyer de 100mL',
+      'Pipette jaugée de 10mL'
+    ],
+    resultatsAttendus: [
+      'Virage de l\'indicateur au point d\'équivalence',
+      'Détermination précise du volume équivalent',
+      'Calcul de la concentration de l\'acide',
+      'Reproduction des résultats avec une marge d\'erreur acceptable'
+    ]
   }
 ];
