@@ -24,8 +24,8 @@ export default function ExperienceView() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 py-12 space-y-8">
-      <h2 className="text-2xl font-semibold text-white">
+    <div className="max-w-[1280px] mx-auto px-28 py-12 space-y-8">
+      <h2 className="text-2xl font-bold text-black">
         Expériences disponibles
       </h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

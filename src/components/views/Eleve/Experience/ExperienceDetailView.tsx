@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, lazy, Suspense } from "react";
 import {
   FlaskRound as Flask,
   Clock,
@@ -9,10 +9,6 @@ import {
   ListChecks,
 } from "lucide-react";
 import type { Experience } from "../../../../types/Experience/experience";
-import { lazy, Suspense } from "react";
-
-
-
 
 // Fonction pour charger dynamiquement une simulation
 const loadSimulationComponent = (fileName: string) => {
@@ -43,63 +39,61 @@ export default function ExperienceDetailView({
   const renderSimulation = () => {
     if (!experience.simulationPath) {
       return (
-        <div className="text-center text-purple-200">
+        <div className="text-center text-indigo-400">
           <Flask size={40} className="mx-auto mb-2" />
           <p className="text-base font-medium">Zone de simulation interactive</p>
         </div>
       );
     }
-  
-    // Charger dynamiquement le composant simulation depuis le chemin indiqué
+
     const SimulationComponent = loadSimulationComponent(experience.simulationPath);
-  
+
     return (
-      <Suspense fallback={<div className="text-white">Chargement de la simulation...</div>}>
+      <Suspense fallback={<div className="text-gray-600">Chargement de la simulation...</div>}>
         <SimulationComponent />
       </Suspense>
     );
   };
-  
+
   const SimulationContainer = ({ height }: { height: string }) => (
-    <div
-      className={`relative ${height} bg-indigo-900/50 rounded-md flex items-center justify-center`}
-    >
+    <div className={`relative ${height} bg-gray-100 rounded-md flex items-center justify-center border border-gray-200`}>
       {renderSimulation()}
+    </div>
+  );
+
+  const Header = () => (
+    <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white rounded-t-md">
+      <div className="flex items-center gap-3">
+        <button onClick={onBack} className="text-indigo-600 hover:text-indigo-800">
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">{experience.titre}</h2>
+          <div className="flex items-center gap-4 text-gray-500 text-sm mt-1">
+            <div className="flex items-center gap-1.5">
+              <Clock size={14} />
+              <span>{experience.duree}</span>
+            </div>
+            <span>{experience.niveau}</span>
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={toggleFullscreen}
+        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-md text-sm border border-indigo-200 flex items-center gap-2"
+      >
+        {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        <span>{isFullscreen ? "Quitter" : "Plein écran"}</span>
+      </button>
     </div>
   );
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-white flex flex-col">
         <div className="flex-1 flex flex-col space-y-4">
-          <div className="flex-1 bg-white/5 backdrop-blur-md rounded-md border border-white/10">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={onBack}
-                  className="text-purple-300 hover:text-white transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">{experience.titre}</h2>
-                  <div className="flex items-center gap-4 text-purple-300 text-sm mt-1">
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={14} />
-                      <span>{experience.duree}</span>
-                    </div>
-                    <span>{experience.niveau}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={toggleFullscreen}
-                className="bg-white/5 hover:bg-white/10 text-purple-200 px-3 py-1.5 rounded-md text-sm flex items-center gap-2"
-              >
-                <Minimize2 size={16} />
-                <span>Quitter</span>
-              </button>
-            </div>
+          <div className="flex-1 bg-white rounded-md border border-gray-200">
+            <Header />
             <SimulationContainer height="h-[calc(100%-4rem)]" />
           </div>
         </div>
@@ -108,71 +102,48 @@ export default function ExperienceDetailView({
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-0 py-0">
-      <div className="grid grid-cols-4 gap-5">
+    <div className="max-w-[1280px] mx-auto px-0 py-6">
+      
+      <h2 className="text-2xl font-bold text-black mx-0 my-4">Simulation interactive</h2>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Simulation */}
-        <div className="col-span-3 space-y-5">
-          <div className="bg-white/5 backdrop-blur-md rounded-md p-4 border border-white/10 h-[650px]">
-            <div className="p-1 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={onBack}
-                  className="text-purple-300 hover:text-white transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">{experience.titre}</h2>
-                  <div className="flex items-center gap-4 text-purple-300 text-sm mt-1">
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={14} />
-                      <span>{experience.duree}</span>
-                    </div>
-                    <span>{experience.niveau}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={toggleFullscreen}
-                className="bg-white/5 hover:bg-white/10 text-purple-200 px-3 py-1.5 rounded-md text-sm flex items-center gap-2"
-              >
-                <Maximize2 size={16} />
-                <span>Plein écran</span>
-              </button>
-            </div>
-            <SimulationContainer height="h-[570px]" />
+        <div className="md:col-span-3 space-y-5">
+          <div className="bg-white border border-gray-200 rounded-md shadow-sm">
+            <Header />
+            <SimulationContainer height="h-[530px]" />
           </div>
         </div>
 
-        {/* Explications */}
-        <div className="col-span-1 space-y-5">
-          <div className="bg-white/5 backdrop-blur-md rounded-md p-4 border border-white/10 max-h-[400px] overflow-y-auto">
-            <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
+        {/* Explications & Résultats */}
+        <div className="md:col-span-1 space-y-5">
+          {/* Explications */}
+          <div className="bg-white border border-gray-200 rounded-md p-4 shadow-sm max-h-[400px] overflow-y-auto">
+            <h3 className="text-base font-semibold text-indigo-700 flex items-center gap-2 mb-3">
               <Book size={18} />
               <span>Explications</span>
             </h3>
-            <div className="space-y-4 text-sm">
+            <div className="space-y-4 text-sm text-gray-700">
               <div>
-                <h4 className="text-purple-300 font-medium mb-1">Description</h4>
-                <p className="text-purple-200">{experience.description}</p>
+                <h4 className="text-indigo-600 font-medium mb-1">Description</h4>
+                <p>{experience.description}</p>
               </div>
               <div>
-                <h4 className="text-purple-300 font-medium mb-1">Objectifs</h4>
+                <h4 className="text-indigo-600 font-medium mb-1">Objectifs</h4>
                 <ul className="space-y-1.5">
                   {experience.objectifs.map((obj, index) => (
-                    <li key={index} className="flex gap-2 text-purple-200">
-                      <div className="w-1.5 h-1.5 mt-1 rounded-full bg-purple-500 flex-shrink-0" />
+                    <li key={index} className="flex gap-2">
+                      <div className="w-1.5 h-1.5 mt-1 rounded-full bg-indigo-400 flex-shrink-0" />
                       <span>{obj}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h4 className="text-purple-300 font-medium mb-1">Matériel nécessaire</h4>
+                <h4 className="text-indigo-600 font-medium mb-1">Matériel nécessaire</h4>
                 <ul className="space-y-1.5">
                   {experience.materiel.map((mat, index) => (
-                    <li key={index} className="flex gap-2 text-purple-200">
-                      <div className="w-1.5 h-1.5 mt-1 rounded-full bg-purple-500 flex-shrink-0" />
+                    <li key={index} className="flex gap-2">
+                      <div className="w-1.5 h-1.5 mt-1 rounded-full bg-indigo-400 flex-shrink-0" />
                       <span>{mat}</span>
                     </li>
                   ))}
@@ -182,15 +153,15 @@ export default function ExperienceDetailView({
           </div>
 
           {/* Résultats attendus */}
-          <div className="bg-white/5 backdrop-blur-md rounded-md p-4 border border-white/10 max-h-[250px] overflow-y-auto">
-            <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-md p-4 shadow-sm max-h-[200px] overflow-y-auto">
+            <h3 className="text-base font-semibold text-indigo-700 flex items-center gap-2 mb-3">
               <ListChecks size={18} />
               <span>Résultats Attendus</span>
             </h3>
-            <ul className="space-y-2 text-sm text-purple-200">
+            <ul className="space-y-2 text-sm text-gray-700">
               {experience.resultatsAttendus.map((resultat, index) => (
                 <li key={index} className="flex gap-2">
-                  <div className="w-1.5 h-1.5 mt-1 rounded-full bg-purple-500 flex-shrink-0" />
+                  <div className="w-1.5 h-1.5 mt-1 rounded-full bg-indigo-400 flex-shrink-0" />
                   <span>{resultat}</span>
                 </li>
               ))}

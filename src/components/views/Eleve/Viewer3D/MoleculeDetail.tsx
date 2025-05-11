@@ -7,31 +7,31 @@ type MoleculeDetailsProps = {
 
 export default function MoleculeDetails({ molecule }: MoleculeDetailsProps) {
   return (
-    <div className="bg-white/5 backdrop-blur-lg rounded-lg p-4 border border-white/10">
-      <h3 className="text-lg font-semibold text-white mb-3">{molecule.nom}</h3>
+    <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{molecule.nom}</h3>
       
-      <div className="space-y-3 text-sm text-purple-300">
+      <div className="space-y-3 text-sm text-gray-700">
         <div className="flex items-center space-x-2">
-          <Flask size={16} />
+          <Flask size={16} className="text-indigo-500" />
           <span>{molecule.formule}</span>
         </div>
         
         {molecule.niveau && (
           <div className="flex items-center space-x-2">
-            <GraduationCap size={16} />
+            <GraduationCap size={16} className="text-indigo-500" />
             <span>{molecule.niveau}</span>
           </div>
         )}
-        
-        <div className="border-t border-white/10 pt-3 text-purple-200">
+
+        <div className="border-t border-gray-200 pt-3">
           <p>{molecule.description}</p>
         </div>
-        
+
         {molecule.importance && (
-          <div className="bg-purple-500/10 rounded-md p-3 mt-3">
+          <div className="bg-indigo-50 rounded-md p-4 mt-3 border border-indigo-100">
             <div className="flex items-start space-x-2">
-              <Info size={16} className="text-purple-300 flex-shrink-0 mt-0.5" />
-              <p className="text-purple-200 text-sm">{molecule.importance}</p>
+              <Info size={16} className="text-indigo-600 mt-0.5" />
+              <p className="text-sm text-gray-800">{molecule.importance}</p>
             </div>
           </div>
         )}

@@ -14,10 +14,10 @@ export default function ProfesseurLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { path: '/professeur/experiences', icon: Flask, label: 'Expériences' },
-    { path: '/professeur/quiz', icon: Brain, label: 'Quiz' },
-    { path: '/professeur/3D', icon: Cube, label: 'Visualisation 3D' },
-    { path: '/professeur/suivi-eleve', icon: UsersRound, label: 'Suivi des élèves' },
+    { path: '/professeur/experiences', icon: Flask, label: 'Gestion Simulations' },
+    { path: '/professeur/quiz', icon: Brain, label: 'Gestion Quiz' },
+    { path: '/professeur/3D', icon: Cube, label: 'Gestion Visualisation 3D' },
+    { path: '/professeur/suivi-eleve', icon: UsersRound, label: 'Gestion Classe' },
   ];
 
   return (
