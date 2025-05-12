@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   UserCog,
@@ -9,17 +9,11 @@ import {
   X,
 } from 'lucide-react';
 import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
-import { supabase } from '../../lib/supabaseClient';
 import UserMenu from './../../components/ui/UserMenu';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
 
   const navItems = [
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
