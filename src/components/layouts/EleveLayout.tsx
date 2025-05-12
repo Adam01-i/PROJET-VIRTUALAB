@@ -26,7 +26,7 @@ export default function EleveLayout() {
 
   const navItems = [
     { path: '/', icon: Book, label: 'Accueil' },
-    { path: '/eleve/experiences', icon: Flask, label: 'Expériences' },
+    { path: '/eleve/experiences', icon: Flask, label: 'Simulations' },
     { path: '/eleve/quiz', icon: Brain, label: 'Quiz' },
     { path: '/eleve/3d', icon: Cube, label: 'Visualisation 3D' },
     { path: '/eleve/login', icon: LogIn, label: 'Se Connecter' },

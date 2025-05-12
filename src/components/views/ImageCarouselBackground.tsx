@@ -86,7 +86,7 @@ function ImageCarouselBackground() {
       </div>
 
       {/* ✅ Ombre après les vagues */}
-      <div className="absolute bottom-[-72px] left-0 w-full h-20 bg-gradient-to-t from-black to-transparent shadow-lg z-30"></div>
+      <div className="absolute bottom-[-70px] left-0 w-full h-20 bg-gradient-to-t from-black to-transparent shadow-lg z-30"></div>
     </div>
   );
 }
