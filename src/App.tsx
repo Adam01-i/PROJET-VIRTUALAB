@@ -12,7 +12,18 @@ import ProfElevView from './components/views/Professeur/Prof-Elev/ProfElevView';
 import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
 
 import EleveLayout from './components/layouts/EleveLayout';
-import { Toaster} from 'sonner';
+import { Toaster } from 'sonner';
+
+import Login from './components/views/Auth/Login';
+import ImportProfesseurs from './components/views/Admin/ImportProfesseurs';
+import AdminGuard from './components/views/Admin/AdminGuard';
+import ChangePassword from './components/views/Auth/ChangePassword';
+import RedirectMe from './components/views/Auth/RedirectMe';
+import AdminLayout from './components/layouts/AdminLayout';
+import AdminDashboard from './components/views/Admin/AdminDashboard';
+import AdminUsers from './components/views/Admin/AdminUsers';
+import ForgotPassword from './components/views/Auth/ForgotPassword';
+
 
 function App() {
   return (
@@ -20,6 +31,21 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
       <Routes>
+        {/* Interface Admin */}
+        <Route path="/admin/*" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="import-professeurs" element={<ImportProfesseurs />} />
+        </Route>
+
+
+        {/*Interface Login */}
+        <Route path="/login" element={<Login />} />
+        {/* Interface Changer Mot de Passe */}
+        <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* Interface de Redirection */}
+        <Route path="/me" element={<RedirectMe />} />
         {/* Interface Élève */}
         <Route path="/" element={<EleveLayout />}>
           <Route index element={<AccueilView />} />

@@ -1,34 +1,38 @@
 import { useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
-  FlaskRound as Flask,
-  Brain,
-  Cuboid as Cube,
-  UsersRound,
   LayoutDashboard,
+  UserCog,
+  UsersRound,
+  FileSpreadsheet,
   Menu,
   X,
 } from 'lucide-react';
 import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
+import { supabase } from '../../lib/supabaseClient';
+import UserMenu from './../../components/ui/UserMenu';
 
-export default function ProfesseurLayout() {
+export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
   const navItems = [
-    { path: '/professeur/experiences', icon: Flask, label: 'Simulations' },
-    { path: '/professeur/quiz', icon: Brain, label: 'Quiz' },
-    { path: '/professeur/3D', icon: Cube, label: 'Visualisation 3D' },
-    { path: '/professeur/suivi-eleve', icon: UsersRound, label: 'Classe' },
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/users', icon: UsersRound, label: 'Utilisateurs' },
+    { path: '/admin/import-professeurs', icon: FileSpreadsheet, label: 'Import Professeurs' },
+    { path: '/admin/settings', icon: UserCog, label: 'Paramètres' },
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-800 relative text-base">
-      {/* 🔐 Bandeau de mot de passe obligatoire */}
-      <div className="fixed w-full top-0 z-50">
-        <MustChangePasswordBanner />
-      </div>
+      <MustChangePasswordBanner />
 
-      {/* ☰ Overlay mobile */}
+      {/* 🟣 Overlay mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
@@ -36,25 +40,25 @@ export default function ProfesseurLayout() {
         ></div>
       )}
 
-      {/* ☰ Toggle Button (mobile) */}
+      {/* ☰ Toggle button mobile */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute top-4 left-4 z-40 md:hidden text-indigo-700"
+        className="absolute top-4 left-4 z-50 md:hidden text-indigo-700"
         aria-label="Toggle menu"
       >
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* 📚 Sidebar */}
+      {/* 📂 Sidebar */}
       <aside
         className={`fixed z-40 top-0 left-0 w-64 bg-white shadow transform transition-transform duration-300 ease-in-out
-        pt-[3rem] md:pt-0 h-full md:h-screen
+        pt-[3.5rem] md:pt-0 h-full
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 md:fixed`}
       >
         <div className="flex items-center gap-2 px-5 py-4 border-b">
           <LayoutDashboard className="text-indigo-600" size={20} />
-          <h1 className="text-lg font-bold text-indigo-700 hidden md:block">VirtuaLab</h1>
+          <h1 className="text-lg font-bold text-indigo-700 hidden md:block">VirtuaLab Admin</h1>
         </div>
 
         <nav className="mt-4 flex flex-col space-y-1 px-4 text-sm">
@@ -78,8 +82,13 @@ export default function ProfesseurLayout() {
         </nav>
       </aside>
 
-      {/* 📄 Main content */}
-      <main className="flex-1 px-4 py-6 md:ml-64 w-full pt-[3rem] md:pt-6">
+      {/* 🔧 Contenu principal */}
+      <main className="flex-1 px-4 py-6 md:ml-64 pt-[4rem] md:pt-6 w-full">
+        {/* 🔘 Barre top admin avec logout */}
+        <div className="fixed w-full md:ml-64 top-0 z-40 flex items-center justify-between px-6 py-3 bg-white border-b shadow-sm">
+        <UserMenu />
+        </div>
+
         <div className="max-w-7xl mx-auto">
           <Outlet />
         </div>

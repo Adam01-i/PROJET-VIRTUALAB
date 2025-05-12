@@ -20,7 +20,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 - **Supabase** – Backend-as-a-Service avec :
   - **PostgreSQL** – Base de données relationnelle.
   - **Auth** – Authentification pour élèves et professeurs.
-  - **Storage** – Stockage de fichiers (modèles 3D, images).
+  - **Storage** – Stockage de fichiers (modèles 3D, images, Experiences).
   - **API REST** – Requêtes CRUD simples avec le client Supabase.
 
 ## 📁 Structure du projet
