@@ -69,7 +69,7 @@ export default function EleveLayout() {
       </nav>
 
       {/* ✅ Section image d'accueil */}
-      <section className="pt-14">
+      <section className="">
         <ImageCarouselBackground />
       </section>
 
