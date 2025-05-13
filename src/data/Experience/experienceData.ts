@@ -87,5 +87,36 @@ export const experienceData: Experience[] = [
       'Calcul de la concentration de l\'acide',
       'Reproduction des résultats avec une marge d\'erreur acceptable'
     ]
-  }
+  },
+  {
+  id: '4',
+  titre: 'Calorimétrie : mesure d\'énergie thermique',
+  description: 'Mesurez la quantité de chaleur échangée lors d\'une réaction chimique ou d\'un changement d\'état.',
+  duree: '45 min',
+  niveau: 'Première',
+  image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
+  simulationPath: 'Calorimétrie',
+  objectifs: [
+    'Comprendre le principe de la calorimétrie',
+    'Utiliser un calorimètre pour mesurer une variation d\'énergie thermique',
+    'Calculer la quantité de chaleur échangée à l\'aide de la formule Q = mcΔT',
+    'Analyser les erreurs expérimentales potentielles'
+  ],
+  materiel: [
+    'Calorimètre en plastique isolé',
+    'Thermomètre numérique',
+    'Bécher de 100 mL',
+    'Eau chaude et eau froide',
+    'Balance de précision',
+    'Agitateur',
+    'Chronomètre'
+  ],
+  resultatsAttendus: [
+    'Changement mesurable de température après mélange',
+    'Calcul de la quantité de chaleur échangée (Q)',
+    'Validation expérimentale de la conservation de l\'énergie',
+    'Compréhension du rôle de la capacité thermique massique'
+  ]
+}
+
 ];
