@@ -56,7 +56,7 @@ export default function ExperienceDetailView({
   };
 
   const SimulationContainer = ({ height }: { height: string }) => (
-    <div className={`relative ${height} bg-gray-100 rounded-md flex items-center justify-center border border-gray-200`}>
+    <div className={`relative ${height} bg-blue-900 rounded-md flex items-center justify-center border border-gray-200`}>
       {renderSimulation()}
     </div>
   );
