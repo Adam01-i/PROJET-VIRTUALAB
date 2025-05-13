@@ -10,9 +10,18 @@ import {
 } from "lucide-react";
 import type { Experience } from "../../../../types/Experience/experience";
 
-// Fonction pour charger dynamiquement une simulation
+// 🧠 Import dynamique supporté par Vite
+const simulationModules = import.meta.glob('../../../../simulations/*.tsx');
+
 const loadSimulationComponent = (fileName: string) => {
-  return lazy(() => import(`../../../../simulations/${fileName}`));
+  const modulePath = `../../../../simulations/${fileName}.tsx`;
+  const importer = simulationModules[modulePath];
+
+  if (!importer) {
+    throw new Error(`Fichier simulation non trouvé : ${modulePath}`);
+  }
+
+  return lazy(importer as any);
 };
 
 type ExperienceDetailViewProps = {
@@ -46,13 +55,21 @@ export default function ExperienceDetailView({
       );
     }
 
-    const SimulationComponent = loadSimulationComponent(experience.simulationPath);
+    try {
+      const SimulationComponent = loadSimulationComponent(experience.simulationPath);
 
-    return (
-      <Suspense fallback={<div className="text-gray-600">Chargement de la simulation...</div>}>
-        <SimulationComponent />
-      </Suspense>
-    );
+      return (
+        <Suspense fallback={<div className="text-gray-600">Chargement de la simulation...</div>}>
+          <SimulationComponent />
+        </Suspense>
+      );
+    } catch (error) {
+      return (
+        <div className="text-center text-red-500">
+          Erreur : {String(error)}
+        </div>
+      );
+    }
   };
 
   const SimulationContainer = ({ height }: { height: string }) => (
@@ -105,7 +122,6 @@ export default function ExperienceDetailView({
 
   return (
     <div className="max-w-[1280px] mx-auto px-0 py-20">
-
       <h2 className="text-2xl font-bold text-black mx-0 my-4">Simulation interactive</h2>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Simulation */}

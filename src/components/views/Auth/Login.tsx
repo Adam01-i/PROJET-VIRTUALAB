@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -178,7 +178,14 @@ export default function Login() {
                 )}
               </button>
             </div>
-
+            <div className="text-right mt-1">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-indigo-600 hover:underline"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
             <button
               type="submit"
               disabled={loading}

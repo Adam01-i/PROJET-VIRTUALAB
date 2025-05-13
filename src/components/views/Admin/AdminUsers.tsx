@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 

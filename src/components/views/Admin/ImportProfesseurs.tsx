@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as XLSX from 'xlsx';
-import { supabase } from '../../../lib/supabaseClient';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function ImportProfesseurs() {
   const [loading, setLoading] = React.useState(false);
@@ -29,43 +28,37 @@ export default function ImportProfesseurs() {
       toast.error("Aucun professeur à importer.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     for (const row of parsedData) {
       const { name, surname, email } = row;
-
-      const { data, error } = await supabase.auth.admin.createUser({
-        email,
-        password: 'virtualab2025',
-        email_confirm: true,
-      });
-
-      if (error) {
-        toast.error(`Erreur création : ${email} (${error.message})`);
-        continue;
-      }
-
-      const user = data.user;
-
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: user?.id,
-        name,
-        surname,
-        email,
-        role: 'professeur',
-        must_change_password: true,
-      });
-
-      if (profileError) {
-        toast.error(`Erreur profil : ${email} (${profileError.message})`);
-      } else {
-        toast.success(`✅ ${email} ajouté`);
+  
+      try {
+        const response = await fetch('/api/import-professeurs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, surname, email }),
+        });
+        
+  
+        const result = await response.json();
+  
+        if (!response.ok) {
+          console.error('Erreur API:', result); // 👈 Ajout ici
+          toast.error(`Erreur : ${email} (${result.error})`);
+        } else {
+          toast.success(`✅ ${email} ajouté`);
+        }
+      } catch (err) {
+        console.error('Erreur réseau ou serveur :', err); // 👈 Important
+        toast.error(`Erreur serveur pour ${email}`);
       }
     }
-
+  
     setLoading(false);
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
