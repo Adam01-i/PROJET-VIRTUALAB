@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import toast from 'react-hot-toast';
-import { Loader2, Save, Upload } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 
 export default function AdminAccount() {
   const [name, setName] = useState('');
@@ -15,7 +15,7 @@ export default function AdminAccount() {
     const { data: session } = await supabase.auth.getSession();
     const userId = session?.session?.user?.id;
 
-    const { data, error } = await supabase
+    const { data} = await supabase
       .from('profiles')
       .select('name, surname, role, avatar_url')
       .eq('id', userId)
