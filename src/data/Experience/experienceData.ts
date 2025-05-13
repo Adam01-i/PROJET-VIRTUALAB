@@ -124,7 +124,7 @@ export const experienceData: Experience[] = [
   description: 'Étudiez l\'oxydation des alcools primaires et secondaires en laboratoire, et observez les produits formés.',
   duree: '50 min',
   niveau: 'Première',
-  image: 'https://images.unsplash.com/photo-1581093588401-81c2b9c4d54a?auto=format&fit=crop&w=800&q=80',
+  image: 'https://images.unsplash.com/photo-1622489461232-e451cc7fcf3e?auto=format&fit=crop&w=800&q=80',
   simulationPath: 'Comoséoxygéné',
   objectifs: [
     'Différencier un alcool primaire, secondaire et tertiaire',
@@ -147,5 +147,6 @@ export const experienceData: Experience[] = [
     'Oxydation d\'un alcool secondaire en cétone',
     'Aucun changement avec un alcool tertiaire'
   ]
-},
+}
+,
 ];

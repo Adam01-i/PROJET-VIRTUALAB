@@ -1,10 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef, SetStateAction, TouchEvent } from "react"
-import { Button } from "../components/ui/button"
+import { useState, useEffect, useRef, type TouchEvent } from "react"
 import { RotateCcw, ClipboardList, LineChart, Info } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip"
+// Suppression des imports de composants shadcn UI
 
 // Définition des solutions disponibles avec des données scientifiques précises
 const SOLUTIONS = {
@@ -684,82 +682,76 @@ export default function CalorimetrieSimulation() {
           onTouchCancel={handleTouchEnd}
         >
           {/* Sélection des solutions - positionnée en haut à gauche, taille réduite */}
-          <div className="absolute top-2 left-2 w-[160px] z-10 bg-white/20 p-2 rounded-lg shadow-sm border border-white/20">
-            <h2 className="text-sm font-semibold mb-1 text-purple-200">Solutions</h2>
+          <div className="absolute top-2 left-2 w-[200px] z-10 bg-white/40 p-3 rounded-lg shadow-sm border border-white/30">
+            <h2 className="text-sm font-semibold mb-1 text-gray-900">Solutions</h2>
             <div className="space-y-1">
               <div>
-                <label className="block text-xs font-medium text-purple-200">Solution 1:</label>
-                <Select
+                <label className="block text-xs font-medium text-gray-900">Solution 1:</label>
+                {/* Remplacement du composant Select par un select HTML standard */}
+                <select
                   value={solution1}
-                  onValueChange={(value) => {
-                    if (step === 0) setSolution1(value as keyof typeof SOLUTIONS)
+                  onChange={(e) => {
+                    if (step === 0) setSolution1(e.target.value as keyof typeof SOLUTIONS)
                   }}
                   disabled={step !== 0}
+                  className="w-full h-6 text-xs bg-white/10 text-purple-100 border border-white/20 rounded px-2"
                 >
-                  <SelectTrigger className="w-full h-6 text-xs bg-white/10 text-purple-100 border-white/20">
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hcl">HCl (Acide chlorhydrique)</SelectItem>
-                    <SelectItem value="h2so4">H₂SO₄ (Acide sulfurique)</SelectItem>
-                    <SelectItem value="ch3cooh">CH₃COOH (Acide acétique)</SelectItem>
-                    <SelectItem value="na2co3">Na₂CO₃ (Carbonate de sodium)</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="hcl">HCl (Acide chlorhydrique)</option>
+                  <option value="h2so4">H₂SO₄ (Acide sulfurique)</option>
+                  <option value="ch3cooh">CH₃COOH (Acide acétique)</option>
+                  <option value="na2co3">Na₂CO₃ (Carbonate de sodium)</option>
+                </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-purple-200">Solution 2:</label>
-                <Select
+                <label className="block text-xs font-medium text-gray-900">Solution 2:</label>
+                {/* Remplacement du composant Select par un select HTML standard */}
+                <select
                   value={solution2}
-                  onValueChange={(value) => {
-                    if (step === 0) setSolution2(value as keyof typeof SOLUTIONS)
+                  onChange={(e) => {
+                    if (step === 0) setSolution2(e.target.value as keyof typeof SOLUTIONS)
                   }}
                   disabled={step !== 0}
+                  className="w-full h-6 text-xs bg-white/10 text-purple-100 border border-white/20 rounded px-2"
                 >
-                  <SelectTrigger className="w-full h-6 text-xs bg-white/10 text-purple-100 border-white/20">
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="naoh">NaOH (Hydroxyde de sodium)</SelectItem>
-                    <SelectItem value="koh">KOH (Hydroxyde de potassium)</SelectItem>
-                    <SelectItem value="ca(oh)2">Ca(OH)₂ (Hydroxyde de calcium)</SelectItem>
-                    <SelectItem value="na2co3">Na₂CO₃ (Carbonate de sodium)</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="naoh">NaOH (Hydroxyde de sodium)</option>
+                  <option value="koh">KOH (Hydroxyde de potassium)</option>
+                  <option value="ca(oh)2">Ca(OH)₂ (Hydroxyde de calcium)</option>
+                  <option value="na2co3">Na₂CO₃ (Carbonate de sodium)</option>
+                </select>
               </div>
             </div>
 
             {/* Affichage de la réaction actuelle - version compacte */}
-            <div className="mt-1 p-1 bg-indigo-900/50 rounded-md text-[10px] text-purple-200">
+            <div className="mt-1 p-1 bg-indigo-900/30 rounded-md text-[10px] text-gray-900">
               <p className="font-semibold">Réaction: {reactionEquation}</p>
               <p>ΔH: {heatOfReaction} kJ/mol</p>
             </div>
           </div>
 
           {/* Contrôles - positionnés en haut à droite, taille réduite */}
-          <div className="absolute top-2 right-2 w-[120px] z-10 bg-white/20 p-2 rounded-lg shadow-sm border border-white/20">
-            <h2 className="text-sm font-semibold mb-1 text-purple-200">Contrôles</h2>
+          <div className="absolute top-2 right-2 w-[160px] z-10 bg-white/40 p-3 rounded-lg shadow-sm border border-white/30">
+            <h2 className="text-sm font-semibold mb-1 text-gray-900">Contrôles</h2>
             <div className="space-y-1">
-              <Button
+              {/* Remplacement du composant Button par un bouton HTML standard */}
+              <button
                 onClick={calculateResults}
                 disabled={step !== 3}
-                className="w-full h-6 text-[10px] flex items-center justify-center gap-1 bg-indigo-700 hover:bg-indigo-600"
+                className="w-full h-6 text-[10px] flex items-center justify-center gap-1 bg-indigo-700 hover:bg-indigo-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ClipboardList className="h-3 w-3" />
                 Résultats
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={resetExperiment}
-                variant="outline"
-                className="w-full h-6 text-[10px] flex items-center justify-center gap-1 border-white/20 text-purple-200 hover:bg-white/10"
+                className="w-full h-6 text-[10px] flex items-center justify-center gap-1 border border-white/20 text-gray-900 hover:bg-white/20 rounded"
               >
                 <RotateCcw className="h-3 w-3" />
                 Réinitialiser
-              </Button>
+              </button>
             </div>
 
             {/* Instructions dans le panneau de contrôle - version compacte */}
-            <div className="mt-1 p-1 bg-indigo-900/50 text-[10px] rounded text-purple-200">
+            <div className="mt-1 p-1 bg-indigo-900/30 text-[10px] rounded text-gray-900">
               <p className="font-semibold">Étape {step + 1}/5:</p>
               {step === 0 && <p>Glissez le 1er bécher</p>}
               {step === 1 && <p>Glissez le 2nd bécher</p>}
@@ -771,9 +763,9 @@ export default function CalorimetrieSimulation() {
 
           {/* Mesures de température - positionnées en bas à droite, taille réduite */}
           <div
-            className={`absolute bottom-2 right-2 w-[120px] z-10 ${tempChangeEffect ? "bg-yellow-900/50 transition-colors duration-300" : "bg-white/20"} p-2 rounded-lg shadow-sm border border-white/20`}
+            className={`absolute bottom-2 right-2 w-[160px] z-10 ${tempChangeEffect ? "bg-yellow-900/50 transition-colors duration-300" : "bg-white/40"} p-3 rounded-lg shadow-sm border border-white/30`}
           >
-            <h2 className="text-sm font-semibold mb-1 flex items-center justify-between text-purple-200">
+            <h2 className="text-sm font-semibold mb-1 flex items-center justify-between text-gray-900">
               Mesures
               {isSimulationRunning && (
                 <span className="text-[8px] px-1 py-0.5 bg-red-900/50 text-red-200 rounded-full animate-pulse">
@@ -781,7 +773,7 @@ export default function CalorimetrieSimulation() {
                 </span>
               )}
             </h2>
-            <div className="space-y-0.5 text-xs text-purple-200">
+            <div className="space-y-0.5 text-xs text-gray-900">
               <div className="flex justify-between items-center">
                 <span>Temp:</span>
                 <span className={`font-mono ${isSimulationRunning ? "text-red-300 font-bold" : ""}`}>
@@ -811,9 +803,9 @@ export default function CalorimetrieSimulation() {
 
           {/* Graphique de température - en bas à gauche, taille réduite */}
           {showTempGraph && (
-            <div className="absolute bottom-2 left-2 w-[160px] bg-white/20 rounded-lg p-2 shadow-sm border border-white/20">
+            <div className="absolute bottom-2 left-2 w-[200px] bg-white/40 rounded-lg p-3 shadow-sm border border-white/30">
               <div className="flex items-center justify-between mb-0.5">
-                <h3 className="text-xs font-semibold text-purple-200">Évolution température</h3>
+                <h3 className="text-xs font-semibold text-gray-900">Évolution température</h3>
                 <LineChart className="h-3 w-3 text-red-300" />
               </div>
               <canvas ref={graphRef} width={500} height={200} className="w-full h-24"></canvas>
@@ -821,6 +813,7 @@ export default function CalorimetrieSimulation() {
           )}
 
           {/* Calorimètre - centré dans la zone d'expérience */}
+          {/* Calorimètre - centré dans la zone d'expérience avec design plus réaliste */}
           <div
             ref={calorimeter}
             className="absolute bottom-[80px] left-1/2 transform -translate-x-1/2 w-52 h-64"
@@ -839,30 +832,65 @@ export default function CalorimetrieSimulation() {
             }}
           >
             <div className="relative w-full h-full">
-              {/* Gobelet isolé */}
-              <div className="absolute bottom-0 left-0 w-full h-56 bg-gray-700 rounded-b-lg rounded-t-sm border-2 border-gray-600"></div>
+              {/* Calorimètre extérieur - aspect métallique */}
+              <div className="absolute bottom-0 left-0 w-full h-56 rounded-b-lg rounded-t-sm overflow-hidden">
+                {/* Couche externe métallique */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-400/80 to-gray-600/80 border-2 border-gray-700 backdrop-blur-sm"></div>
+
+                {/* Reflets métalliques */}
+                <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-r from-gray-300/20 via-gray-100/40 to-gray-300/20 transform -skew-y-12"></div>
+                <div className="absolute bottom-0 right-0 w-1/4 h-full bg-gradient-to-t from-gray-700/30 to-transparent"></div>
+
+                {/* Bord supérieur */}
+                <div className="absolute top-0 left-0 w-full h-3 bg-gray-800 rounded-t-sm"></div>
+
+                {/* Poignées latérales */}
+                <div className="absolute top-1/4 -left-3 w-2 h-12 bg-gray-800 rounded-l-md"></div>
+                <div className="absolute top-1/4 -right-3 w-2 h-12 bg-gray-800 rounded-r-md"></div>
+              </div>
+
+              {/* Gobelet intérieur isolé */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-[90%] h-48 bg-gradient-to-br from-gray-200/70 to-gray-300/70 rounded-b-lg rounded-t-sm border border-gray-400 overflow-hidden backdrop-blur-sm">
+                {/* Ombre intérieure */}
+                <div className="absolute inset-0 shadow-inner"></div>
+
+                {/* Graduations */}
+                <div className="absolute left-2 top-0 h-full w-1 flex flex-col justify-between items-start">
+                  <div className="relative h-full w-full">
+                    {[0, 20, 40, 60, 80, 100].map((mark, i) => (
+                      <div key={i} className="absolute flex items-center" style={{ bottom: `${mark}%` }}>
+                        <div className="w-2 h-0.5 bg-gray-600"></div>
+                        <span className="text-[7px] text-gray-600 ml-1">{mark}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {/* Liquide dans le calorimètre */}
               <div
-                className={`absolute bottom-0 left-0 w-full rounded-b-lg transition-all duration-500 ease-in-out ${getMixColor()}`}
+                className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 w-[90%] rounded-b-lg transition-all duration-500 ease-in-out ${getMixColor()}`}
                 style={{
-                  height: step === 0 ? "0" : step === 1 ? "20%" : "40%",
+                  height: step === 0 ? "0" : step === 1 ? "15%" : "30%",
                   transition: "height 1s, background-color 2s",
                 }}
               >
+                {/* Surface du liquide avec reflet */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
+
                 {/* Bulles pour l'effet de réaction */}
                 {isSimulationRunning && (
                   <>
                     <div
-                      className="absolute w-2 h-2 bg-white rounded-full animate-bubble1"
+                      className="absolute w-2 h-2 bg-white/80 rounded-full animate-bubble1"
                       style={{ left: "20%", bottom: "70%" }}
                     ></div>
                     <div
-                      className="absolute w-3 h-3 bg-white rounded-full animate-bubble2"
+                      className="absolute w-3 h-3 bg-white/80 rounded-full animate-bubble2"
                       style={{ left: "50%", bottom: "60%" }}
                     ></div>
                     <div
-                      className="absolute w-2 h-2 bg-white rounded-full animate-bubble3"
+                      className="absolute w-2 h-2 bg-white/80 rounded-full animate-bubble3"
                       style={{ left: "70%", bottom: "80%" }}
                     ></div>
 
@@ -870,11 +898,11 @@ export default function CalorimetrieSimulation() {
                     {(solution1 === "na2co3" || solution2 === "na2co3") && (
                       <>
                         <div
-                          className="absolute w-3 h-3 bg-white rounded-full animate-bubble4"
+                          className="absolute w-3 h-3 bg-white/80 rounded-full animate-bubble4"
                           style={{ left: "30%", bottom: "50%" }}
                         ></div>
                         <div
-                          className="absolute w-4 h-4 bg-white rounded-full animate-bubble5"
+                          className="absolute w-4 h-4 bg-white/80 rounded-full animate-bubble5"
                           style={{ left: "60%", bottom: "40%" }}
                         ></div>
                       </>
@@ -908,119 +936,202 @@ export default function CalorimetrieSimulation() {
                 </div>
               </div>
 
-              {/* Agitateur */}
+              {/* Agitateur plus réaliste */}
               {step >= 2 && (
-                <div
-                  className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-1 h-24 bg-gray-400"
-                  style={{
-                    transformOrigin: "top",
-                    animation: stirring ? "stir 1s infinite alternate" : "none",
-                  }}
-                >
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gray-400 rounded"></div>
+                <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2">
+                  <div
+                    className="w-1 h-24 bg-gradient-to-b from-gray-300 to-gray-400"
+                    style={{
+                      transformOrigin: "top",
+                      animation: stirring ? "stir 1s infinite alternate" : "none",
+                    }}
+                  >
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full"></div>
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
           {/* Béchers de réactifs avec animation de versement - repositionnés pour meilleure visibilité */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  ref={beaker1Ref}
-                  className={`absolute top-[250px] left-[100px] w-24 h-32 cursor-grab ${isPouring && step === 1 ? "opacity-50" : ""} ${draggedItem === "solution1" ? "z-50" : ""}`}
-                  draggable={step === 0 && !isPouring}
-                  onClick={() => handleBeakerClick("solution1")}
-                  onDragStart={(e) => {
-                    if (step !== 0 || isPouring) return
-                    e.dataTransfer.setData("text/plain", "solution1")
-                    e.dataTransfer.effectAllowed = "move"
-                  }}
-                  onTouchStart={(e) => handleTouchStart("solution1", e)}
-                  style={{
-                    touchAction: "none",
-                    transform:
-                      draggedItem === "solution1"
-                        ? `translate(${dragPosition.x}px, ${dragPosition.y}px)`
-                        : pouringBeaker === "solution1"
-                          ? `rotate(${pouringAngle}deg) translate(40px, 20px)`
-                          : "none",
-                    transformOrigin: "bottom right",
-                    transition: draggedItem === "solution1" ? "none" : "transform 0.3s ease-out",
-                  }}
-                >
-                  <div className="relative w-full h-full">
-                    <div className="absolute bottom-0 left-0 w-full h-full bg-gray-700 border-2 border-gray-600 rounded-sm"></div>
-                    <div
-                      className={`absolute bottom-0 left-0 w-full transition-height duration-500 ${sol1.color}`}
-                      style={{ height: `${(solution1Volume / 50) * 70}%` }}
-                    ></div>
-                    <div className="absolute top-0 left-0 w-full text-center text-xs font-semibold text-white">
-                      {sol1.formula} {sol1.concentration}M
-                    </div>
-                    {step === 0 && !isPouring && (
-                      <div className="absolute -bottom-6 left-0 w-full text-center text-xs text-purple-300 bg-indigo-700/50 p-1 rounded animate-pulse">
-                        Cliquez ou glissez pour verser
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{sol1.name}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  ref={beaker2Ref}
-                  className={`absolute top-[250px] right-[100px] w-24 h-32 cursor-grab ${isPouring && step === 2 ? "opacity-50" : ""} ${draggedItem === "solution2" ? "z-50" : ""}`}
-                  draggable={step === 1 && !isPouring}
-                  onClick={() => handleBeakerClick("solution2")}
-                  onDragStart={(e) => {
-                    if (step !== 1 || isPouring) return
-                    e.dataTransfer.setData("text/plain", "solution2")
-                    e.dataTransfer.effectAllowed = "move"
-                  }}
-                  onTouchStart={(e) => handleTouchStart("solution2", e)}
-                  style={{
-                    touchAction: "none",
-                    transform:
-                      draggedItem === "solution2"
-                        ? `translate(${dragPosition.x}px, ${dragPosition.y}px)`
-                        : pouringBeaker === "solution2"
-                          ? `rotate(-${pouringAngle}deg) translate(-40px, 20px)`
-                          : "none",
-                    transformOrigin: "bottom left",
-                    transition: draggedItem === "solution2" ? "none" : "transform 0.3s ease-out",
-                  }}
-                >
-                  <div className="relative w-full h-full">
-                    <div className="absolute bottom-0 left-0 w-full h-full bg-gray-700 border-2 border-gray-600 rounded-sm"></div>
-                    <div
-                      className={`absolute bottom-0 left-0 w-full transition-height duration-500 ${sol2.color}`}
-                      style={{ height: `${(solution2Volume / 50) * 70}%` }}
-                    ></div>
-                    <div className="absolute top-0 left-0 w-full text-center text-xs font-semibold text-white">
-                      {sol2.formula} {sol2.concentration}M
-                    </div>
-                    {step === 1 && !isPouring && (
-                      <div className="absolute -bottom-6 left-0 w-full text-center text-xs text-purple-300 bg-indigo-700/50 p-1 rounded animate-pulse">
-                        Cliquez ou glissez pour verser
+          <div
+            ref={beaker1Ref}
+            className={`absolute top-[250px] left-[100px] w-24 h-32 cursor-grab ${isPouring && step === 1 ? "opacity-50" : ""} ${draggedItem === "solution1" ? "z-50" : ""} group`}
+            draggable={step === 0 && !isPouring}
+            onClick={() => handleBeakerClick("solution1")}
+            onDragStart={(e) => {
+              if (step !== 0 || isPouring) return
+              e.dataTransfer.setData("text/plain", "solution1")
+              e.dataTransfer.effectAllowed = "move"
+            }}
+            onTouchStart={(e) => handleTouchStart("solution1", e)}
+            style={{
+              touchAction: "none",
+              transform:
+                draggedItem === "solution1"
+                  ? `translate(${dragPosition.x}px, ${dragPosition.y}px)`
+                  : pouringBeaker === "solution1"
+                    ? `rotate(${pouringAngle}deg) translate(40px, 20px)`
+                    : "none",
+              transformOrigin: "bottom right",
+              transition: draggedItem === "solution1" ? "none" : "transform 0.3s ease-out",
+            }}
+          >
+            {/* Info bulle simple */}
+            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {sol1.name}
+            </div>
+
+            <div className="relative w-full h-full">
+              {/* Bécher avec effet de verre */}
+              <div className="absolute bottom-0 left-0 w-full h-full overflow-hidden">
+                {/* Corps du bécher */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-200/50 to-gray-300/50 backdrop-blur-sm border border-gray-400 rounded-sm"></div>
+
+                {/* Reflets de verre */}
+                <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-r from-white/30 via-white/50 to-white/30"></div>
+                <div className="absolute bottom-0 right-0 w-1/4 h-full bg-gradient-to-t from-gray-400/20 to-transparent"></div>
+
+                {/* Bec verseur */}
+                <div className="absolute top-0 right-2 w-4 h-2 bg-gradient-to-br from-gray-200/80 to-gray-300/80 border-r border-t border-gray-400 rounded-tr-sm"></div>
+
+                {/* Graduations */}
+                <div className="absolute left-2 top-0 h-full w-1 flex flex-col justify-between items-start">
+                  <div className="relative h-full w-full">
+                    {[0, 10, 20, 30, 40, 50].map((mark, i) => (
+                      <div key={i} className="absolute flex items-center" style={{ bottom: `${mark * 2}%` }}>
+                        <div className="w-2 h-0.5 bg-gray-600/70"></div>
+                        <span className="text-[6px] text-gray-600/90 ml-0.5">{mark}</span>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{sol2.name}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+              </div>
+
+              {/* Liquide dans le bécher avec effet de ménisque */}
+              <div
+                className={`absolute bottom-0 left-0 w-full transition-height duration-500 ${sol1.color}`}
+                style={{ height: `${(solution1Volume / 50) * 70}%` }}
+              >
+                {/* Surface du liquide avec ménisque */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-white/30 rounded-[100%]"></div>
+              </div>
+
+              <div className="absolute top-0 left-0 w-full text-center text-xs font-semibold text-gray-700 bg-white/40 backdrop-blur-sm rounded-t-sm">
+                {sol1.formula} {sol1.concentration}M
+              </div>
+
+              {step === 0 && !isPouring && (
+                <div className="absolute -bottom-6 left-0 w-full text-center text-xs text-purple-300 bg-indigo-700/50 p-1 rounded animate-pulse">
+                  Cliquez ou glissez pour verser
+                </div>
+              )}
+
+              {/* Effet de flux lors du versement */}
+              {pouringBeaker === "solution1" && pouringAngle > 45 && (
+                <div className="absolute -top-1 right-0 w-1 h-0 overflow-visible">
+                  <div
+                    className={`w-2 ${sol1.color} animate-flow rounded-b-sm`}
+                    style={{
+                      height: "70px",
+                      transformOrigin: "top",
+                      transform: `rotate(${90 - pouringAngle}deg)`,
+                    }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div
+            ref={beaker2Ref}
+            className={`absolute top-[250px] right-[100px] w-24 h-32 cursor-grab ${isPouring && step === 2 ? "opacity-50" : ""} ${draggedItem === "solution2" ? "z-50" : ""} group`}
+            draggable={step === 1 && !isPouring}
+            onClick={() => handleBeakerClick("solution2")}
+            onDragStart={(e) => {
+              if (step !== 1 || isPouring) return
+              e.dataTransfer.setData("text/plain", "solution2")
+              e.dataTransfer.effectAllowed = "move"
+            }}
+            onTouchStart={(e) => handleTouchStart("solution2", e)}
+            style={{
+              touchAction: "none",
+              transform:
+                draggedItem === "solution2"
+                  ? `translate(${dragPosition.x}px, ${dragPosition.y}px)`
+                  : pouringBeaker === "solution2"
+                    ? `rotate(-${pouringAngle}deg) translate(-40px, 20px)`
+                    : "none",
+              transformOrigin: "bottom left",
+              transition: draggedItem === "solution2" ? "none" : "transform 0.3s ease-out",
+            }}
+          >
+            {/* Info bulle simple */}
+            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {sol2.name}
+            </div>
+
+            <div className="relative w-full h-full">
+              {/* Bécher avec effet de verre */}
+              <div className="absolute bottom-0 left-0 w-full h-full overflow-hidden">
+                {/* Corps du bécher */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-200/50 to-gray-300/50 backdrop-blur-sm border border-gray-400 rounded-sm"></div>
+
+                {/* Reflets de verre */}
+                <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-r from-white/30 via-white/50 to-white/30"></div>
+                <div className="absolute bottom-0 right-0 w-1/4 h-full bg-gradient-to-t from-gray-400/20 to-transparent"></div>
+
+                {/* Bec verseur */}
+                <div className="absolute top-0 left-2 w-4 h-2 bg-gradient-to-br from-gray-200/80 to-gray-300/80 border-l border-t border-gray-400 rounded-tl-sm"></div>
+
+                {/* Graduations */}
+                <div className="absolute right-2 top-0 h-full w-1 flex flex-col justify-between items-end">
+                  <div className="relative h-full w-full">
+                    {[0, 10, 20, 30, 40, 50].map((mark, i) => (
+                      <div key={i} className="absolute flex items-center" style={{ bottom: `${mark * 2}%` }}>
+                        <span className="text-[6px] text-gray-600/90 mr-0.5">{mark}</span>
+                        <div className="w-2 h-0.5 bg-gray-600/70"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Liquide dans le bécher avec effet de ménisque */}
+              <div
+                className={`absolute bottom-0 left-0 w-full transition-height duration-500 ${sol2.color}`}
+                style={{ height: `${(solution2Volume / 50) * 70}%` }}
+              >
+                {/* Surface du liquide avec ménisque */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-white/30 rounded-[100%]"></div>
+              </div>
+
+              <div className="absolute top-0 left-0 w-full text-center text-xs font-semibold text-gray-700 bg-white/40 backdrop-blur-sm rounded-t-sm">
+                {sol2.formula} {sol2.concentration}M
+              </div>
+
+              {step === 1 && !isPouring && (
+                <div className="absolute -bottom-6 left-0 w-full text-center text-xs text-purple-300 bg-indigo-700/50 p-1 rounded animate-pulse">
+                  Cliquez ou glissez pour verser
+                </div>
+              )}
+
+              {/* Effet de flux lors du versement */}
+              {pouringBeaker === "solution2" && pouringAngle > 45 && (
+                <div className="absolute -top-1 left-0 w-1 h-0 overflow-visible">
+                  <div
+                    className={`w-2 ${sol2.color} animate-flow rounded-b-sm`}
+                    style={{
+                      height: "70px",
+                      transformOrigin: "top",
+                      transform: `rotate(-${90 - pouringAngle}deg)`,
+                    }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Résultats et calculs - modal qui apparaît au centre */}
           {showResults && (
@@ -1150,9 +1261,12 @@ export default function CalorimetrieSimulation() {
                 </div>
 
                 <div className="mt-4 flex justify-center">
-                  <Button onClick={() => setShowResults(false)} className="bg-indigo-700 hover:bg-indigo-600 text-sm">
+                  <button
+                    onClick={() => setShowResults(false)}
+                    className="bg-indigo-700 hover:bg-indigo-600 text-white text-sm px-4 py-2 rounded"
+                  >
                     Fermer
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
