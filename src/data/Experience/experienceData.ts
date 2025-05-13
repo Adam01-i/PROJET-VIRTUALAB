@@ -117,6 +117,35 @@ export const experienceData: Experience[] = [
     'Validation expérimentale de la conservation de l\'énergie',
     'Compréhension du rôle de la capacité thermique massique'
   ]
-}
-
+},
+{
+  id: '5',
+  titre: 'Oxydation des composés oxygénés',
+  description: 'Étudiez l\'oxydation des alcools primaires et secondaires en laboratoire, et observez les produits formés.',
+  duree: '50 min',
+  niveau: 'Première',
+  image: 'https://images.unsplash.com/photo-1581093588401-81c2b9c4d54a?auto=format&fit=crop&w=800&q=80',
+  simulationPath: 'Comoséoxygéné',
+  objectifs: [
+    'Différencier un alcool primaire, secondaire et tertiaire',
+    'Identifier les produits d\'oxydation d\'un alcool',
+    'Utiliser un oxydant adapté (dichromate, liqueur de Fehling...)',
+    'Observer les changements de couleur ou de précipité'
+  ],
+  materiel: [
+    'Alcool éthylique (éthanol)',
+    'Alcool secondaire (ex. propan-2-ol)',
+    'Réactif de Fehling ou liqueur de Tollens',
+    'Bec Bunsen ou plaque chauffante',
+    'Tube à essai, éprouvette',
+    'Support et pinces'
+  ],
+  resultatsAttendus: [
+    'Changement de couleur du réactif oxydant',
+    'Apparition d\'un précipité (argent ou oxyde de cuivre)',
+    'Oxydation de l\'éthanol en acide éthanoïque',
+    'Oxydation d\'un alcool secondaire en cétone',
+    'Aucun changement avec un alcool tertiaire'
+  ]
+},
 ];
