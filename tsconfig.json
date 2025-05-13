@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
+    "jsx": "react-jsx",
     "target": "es5",
     "lib": ["dom", "esnext"],
-    "module": "commonjs",
+    "module": "esnext",               
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,

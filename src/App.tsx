@@ -10,20 +10,22 @@ import ProfExpView from './components/views/Professeur/Prof-Exp/ProfExpView';
 import ProfQuizView from './components/views/Professeur/Prof-Quiz/ProfQuizView';
 import ProfElevView from './components/views/Professeur/Prof-Elev/ProfElevView';
 import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
+import DashboardProfesseur from './components/views/Professeur/Dashboard/ProfesseurDashboard';
 
 import EleveLayout from './components/layouts/EleveLayout';
 import {Toaster } from 'sonner';
 
 import Login from './components/views/Auth/Login';
-import ImportProfesseurs from './components/views/Admin/ImportProfesseurs';
+import AdminProfesseur from './components/views/Admin/AdminProfesseur';
 import AdminGuard from './components/views/Admin/AdminGuard';
 import RedirectMe from './components/views/Auth/RedirectMe';
 import AdminLayout from './components/layouts/AdminLayout';
 import AdminDashboard from './components/views/Admin/AdminDashboard';
-import AdminUsers from './components/views/Admin/AdminUsers';
+import AdminUsers from './components/views/Admin/AdminEleve';
 import ForgotPassword from './components/views/Auth/ForgotPassword';
 import ResetPassword from './components/views/Auth/ResetPassword';
 import ChangePassword from './components/views/Auth/ChangePassword';
+
 
 function App() {
   return (
@@ -35,7 +37,7 @@ function App() {
         <Route path="/admin/*" element={<AdminGuard><AdminLayout /></AdminGuard>}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="import-professeurs" element={<ImportProfesseurs />} />
+          <Route path="AdminProfesseur" element={<AdminProfesseur />} />
         </Route>
 
 
@@ -57,7 +59,8 @@ function App() {
         </Route>
         {/* Interface Professeur */}
         <Route path="/professeur" element={<ProfesseurLayout />}>
-          <Route index element={<Navigate to="/professeur/experiences" replace />} />
+          <Route index element={<Navigate to="/professeur/dashboard" replace />} />
+          <Route path="/professeur/dashboard" element={<DashboardProfesseur />} />
           <Route path="experiences" element={<ProfExpView />} />
           <Route path="quiz" element={<ProfQuizView />} />
           <Route path="suivi-eleve" element={<ProfElevView />} />

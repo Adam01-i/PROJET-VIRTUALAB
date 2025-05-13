@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
-export default function ImportProfesseurs() {
+export default function AdminProfesseur() {
   const [loading, setLoading] = React.useState(false);
   const [parsedData, setParsedData] = React.useState<any[]>([]);
 

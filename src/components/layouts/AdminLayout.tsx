@@ -17,8 +17,8 @@ export default function AdminLayout() {
 
   const navItems = [
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/users', icon: UsersRound, label: 'Utilisateurs' },
-    { path: '/admin/import-professeurs', icon: FileSpreadsheet, label: 'Import Professeurs' },
+    { path: '/admin/AdminProfesseur', icon: FileSpreadsheet, label: 'Gestion Professeur ' },
+    { path: '/admin/users', icon: UsersRound, label: 'Gestion Eleve' },
     { path: '/admin/settings', icon: UserCog, label: 'Paramètres' },
   ];
 

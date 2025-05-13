@@ -10,15 +10,17 @@ import {
   X,
 } from 'lucide-react';
 import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
+import UserMenu from '../../components/ui/UserMenu';
 
 export default function ProfesseurLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { path: '/professeur/experiences', icon: Flask, label: 'Simulations' },
-    { path: '/professeur/quiz', icon: Brain, label: 'Quiz' },
-    { path: '/professeur/3D', icon: Cube, label: 'Visualisation 3D' },
-    { path: '/professeur/suivi-eleve', icon: UsersRound, label: 'Classe' },
+    { path: '/professeur/dashboard', icon: UsersRound, label: 'Dashboard' },
+    { path: '/professeur/suivi-eleve', icon: UsersRound, label: 'Gestion Classes' },
+    { path: '/professeur/experiences', icon: Flask, label: 'Gestions Simulations' },
+    { path: '/professeur/quiz', icon: Brain, label: 'Gestion Quiz' },
+    { path: '/professeur/3D', icon: Cube, label: 'Gestion 3D' },
   ];
 
   return (
@@ -54,7 +56,7 @@ export default function ProfesseurLayout() {
       >
         <div className="flex items-center gap-2 px-5 py-4 border-b">
           <LayoutDashboard className="text-indigo-600" size={20} />
-          <h1 className="text-lg font-bold text-indigo-700 hidden md:block">VirtuaLab</h1>
+          <h1 className="text-lg font-bold text-indigo-700 hidden md:block">VirtuaLaB</h1>
         </div>
 
         <nav className="mt-4 flex flex-col space-y-1 px-4 text-sm">
@@ -63,10 +65,9 @@ export default function ProfesseurLayout() {
               key={path}
               to={path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md transition-all ${
-                  isActive
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold'
-                    : 'text-gray-600 hover:bg-gray-100'
+                `flex items-center gap-3 px-3 py-2 rounded-md transition-all ${isActive
+                  ? 'bg-indigo-100 text-indigo-700 font-semibold'
+                  : 'text-gray-600 hover:bg-gray-100'
                 }`
               }
               onClick={() => setSidebarOpen(false)}
@@ -76,6 +77,10 @@ export default function ProfesseurLayout() {
             </NavLink>
           ))}
         </nav>
+        {/* 🔘 Barre top admin avec logout */}
+        <div className="fixed w-full md:ml-64 top-0 z-40 flex items-center justify-between px-6 py-3 bg-white border-b shadow-sm">
+          <UserMenu />
+        </div>
       </aside>
 
       {/* 📄 Main content */}
