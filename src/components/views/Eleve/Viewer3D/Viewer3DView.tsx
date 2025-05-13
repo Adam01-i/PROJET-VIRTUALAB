@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
-import { FlaskRound as Flask, PenTool as Tool, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  FlaskRound as Flask,
+  PenTool as Tool,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import MoleculeCard from './MoleculeCard';
 import EquipmentCard from './EquipmentCard';
 import MoleculeDetails from './MoleculeDetail';
@@ -15,7 +20,6 @@ export default function Viewer3DView() {
   const [moleculeList, setMoleculeList] = useState<Molecule[]>([]);
   const [equipmentList, setEquipmentList] = useState<LabEquipment[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchItems();
@@ -33,53 +37,39 @@ export default function Viewer3DView() {
       return;
     }
 
-    if (viewMode === 'molecules') {
-      setMoleculeList(data || []);
-    } else {
-      setEquipmentList(data || []);
-    }
-
-    setSelectedIndex(0); // Reset sur l'élément affiché
+    viewMode === 'molecules' ? setMoleculeList(data || []) : setEquipmentList(data || []);
+    setSelectedIndex(0);
   };
 
   const dataList = viewMode === 'molecules' ? moleculeList : equipmentList;
-  const filteredDataList = dataList.filter(item =>
-    item.nom.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const selectedItem = dataList[selectedIndex] || null;
 
-  const selectedItem = filteredDataList.length > 0 ? filteredDataList[selectedIndex] : null;
-
-  const handleNext = () => {
-    setSelectedIndex((prev) => (prev + 1) % filteredDataList.length);
-  };
-
-  const handlePrev = () => {
-    setSelectedIndex((prev) =>
-      (prev - 1 + filteredDataList.length) % filteredDataList.length
-    );
-  };
+  const handleNext = () => setSelectedIndex((prev) => (prev + 1) % dataList.length);
+  const handlePrev = () => setSelectedIndex((prev) => (prev - 1 + dataList.length) % dataList.length);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 text-base space-y-6">
+    <div className="w-full px-6 md:px-10 py-20 space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Visualisation 3D</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Visualisation 3D</h2>
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('molecules')}
-            className={`px-3 py-1.5 rounded-md flex items-center space-x-2 text-sm ${viewMode === 'molecules'
-              ? 'bg-purple-500 text-white'
-              : 'bg-white/5 text-purple-200 hover:bg-white/10'
-              }`}
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
+              viewMode === 'molecules'
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
           >
             <Flask size={18} />
             <span>Molécules</span>
           </button>
           <button
             onClick={() => setViewMode('equipment')}
-            className={`px-3 py-1.5 rounded-md flex items-center space-x-2 text-sm ${viewMode === 'equipment'
-              ? 'bg-purple-500 text-white'
-              : 'bg-white/5 text-purple-200 hover:bg-white/10'
-              }`}
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
+              viewMode === 'equipment'
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
           >
             <Tool size={18} />
             <span>Matériel</span>
@@ -88,7 +78,8 @@ export default function Viewer3DView() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="space-y-4">
+        {/* Sidebar : détails + liste */}
+        <div className="space-y-6">
           {selectedItem && (
             viewMode === 'molecules' && 'formule' in selectedItem ? (
               <MoleculeDetails molecule={selectedItem as Molecule} />
@@ -97,26 +88,16 @@ export default function Viewer3DView() {
             ) : null
           )}
 
-          <div className="bg-white/5 backdrop-blur-lg rounded-md p-4 border border-white/10">
-            <h3 className="text-base font-semibold text-white mb-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-4 shadow-sm">
+            <h3 className="text-base font-semibold text-gray-800 mb-3">
               {viewMode === 'molecules' ? 'Molécules disponibles' : 'Matériel disponible'}
             </h3>
 
-            <div className="mb-3">
-              <input
-                type="text"
-                className="w-full p-2 bg-white/20 rounded-md text-white placeholder:text-gray-400 text-sm"
-                placeholder="Rechercher..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {filteredDataList.length === 0 ? (
-              <p className="text-white text-center text-sm">Aucun élément disponible</p>
+            {dataList.length === 0 ? (
+              <p className="text-gray-500 text-center text-sm">Aucun élément disponible</p>
             ) : (
               <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                {filteredDataList.map((item, index) =>
+                {dataList.map((item, index) =>
                   viewMode === 'molecules' ? (
                     <MoleculeCard
                       key={item.id}
@@ -138,8 +119,9 @@ export default function Viewer3DView() {
           </div>
         </div>
 
-        <div className="relative md:col-span-2">
-          {selectedItem && selectedItem.structure && selectedItem.structure.endsWith('.glb') && (
+        {/* Zone 3D */}
+        <div className="relative md:col-span-2 bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+          {selectedItem && selectedItem.structure?.endsWith('.glb') && (
             <GLBViewer
               key={`${viewMode}-${selectedItem.id}`}
               glbUrl={selectedItem.structure}
@@ -150,18 +132,18 @@ export default function Viewer3DView() {
 
           <button
             onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg text-2xl"
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg"
             aria-label="Précédent"
           >
-            <ChevronLeft size={28} />
+            <ChevronLeft size={24} />
           </button>
 
           <button
             onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg text-2xl"
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg"
             aria-label="Suivant"
           >
-            <ChevronRight size={28} />
+            <ChevronRight size={24} />
           </button>
         </div>
       </div>

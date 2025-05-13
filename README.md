@@ -30,6 +30,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 ├── public/
 │   └── moleculs/                     # Modèles 3D .glb pour les molécules
 │   └── materiels/                    # Modèles 3D .glb pour les matériels de laboratoire
+│   └── assets/                       # Les images pour la baniere de l'application
 ├── src/
 │   ├── components/                   # Composants réutilisables
 │   │   └── layouts/                  # Layouts pour chaque type d’utilisateur
@@ -41,6 +42,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   │   └── views/                    # Vues principales selon le profil utilisateur
 │   │       ├── Eleve/                      # Interface élève (expériences, quiz, visualisation)
 │   │       └── Professeur/                 # Interface professeur (dashboard, gestion des quiz, gestions de la 3D, suivi-eleve)
+│   │       └── ImageCarouselBackground     # fichier pour l'image de la baniere de l'application
 │   ├── data/                         # Données statiques ou chargées à l'init
 │   │   └── Experience/                  # Données des expériences
 │   │       ├── experiencesData.ts            # Liste des expériences interactives
@@ -53,7 +55,9 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   │   └── use-toast.ts                  # Hook pour afficher des toasts
 │   ├── lib/                          # Fichiers de configuration partagés
 │   │   └── supabaseClient.ts             # Configuration et initialisation du client Supabase
+│   │   └── utils.ts                      # 
 │   ├── script/                       # Scripts de population ou de setup
+│   │   └── insert-experiences.ts          # Script pour insérer les simulations
 │   │   └── insert-quizzes.ts              # Script pour insérer les quiz dans Supabase
 │   │   └── insertLabItems.ts              # Script pour insérer les matériels de laboratoire
 │   ├── simulations/                  # Composants d’expériences interactives

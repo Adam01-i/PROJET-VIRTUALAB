@@ -11,18 +11,18 @@ export default function EquipmentCard({ equipment, isSelected, onSelect }: Equip
   return (
     <button
       onClick={() => onSelect(equipment)}
-      className={`w-full p-3 rounded-md transition-all duration-200 text-left text-sm ${
+      className={`w-full p-4 rounded-md border transition-all duration-200 text-left text-sm shadow-sm ${
         isSelected
-          ? 'bg-purple-500 text-white'
-          : 'bg-white/5 text-purple-200 hover:bg-white/10'
+          ? 'bg-indigo-100 border-indigo-400 text-indigo-800'
+          : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
       }`}
     >
       <div className="flex items-start justify-between">
         <div>
-          <h4 className="font-semibold mb-0 text-base">{equipment.nom}</h4>
-          <div className="opacity-80">{equipment.usage}</div>
+          <h4 className="font-semibold text-base mb-1">{equipment.nom}</h4>
+          <div className="text-gray-500 text-sm">{equipment.usage}</div>
         </div>
-        <Tool size={16} className="opacity-60" />
+        <Tool size={16} className="text-gray-400" />
       </div>
     </button>
   );

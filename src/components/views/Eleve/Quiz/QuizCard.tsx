@@ -8,36 +8,43 @@ type QuizCardProps = {
 
 export default function QuizCard({ quiz, onStart }: QuizCardProps) {
   return (
-    <div className="bg-white/5 backdrop-blur rounded-md overflow-hidden border border-white/10 hover:shadow-md transition duration-200 group">
-      <div className="h-44 overflow-hidden relative">
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition duration-300 group">
+      {/* Image plus compacte */}
+      <div className="h-36 overflow-hidden relative">
         <img 
           src={quiz.image} 
           alt={quiz.titre} 
           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-300" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-3 left-3 right-3">
-          <span className="px-2.5 py-0.5 bg-purple-500 text-white text-xs rounded-full">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute bottom-2 left-2">
+          <span className="px-2.5 py-0.5 bg-purple-600 text-white text-xs rounded-full shadow-sm">
             {quiz.niveau}
           </span>
         </div>
       </div>
-      <div className="p-5">
-        <h3 className="text-base font-semibold text-white mb-1">{quiz.titre}</h3>
-        <p className="text-purple-200 text-sm mb-3 line-clamp-2">{quiz.description}</p>
-        <div className="flex justify-between text-xs text-purple-300 mb-3">
-          <div className="flex gap-1.5 items-center">
+
+      {/* Contenu texte */}
+      <div className="p-4">
+        <h3 className="text-base font-semibold text-gray-800 mb-1">{quiz.titre}</h3>
+        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{quiz.description}</p>
+
+        {/* Détails */}
+        <div className="flex justify-between text-xs text-gray-500 mb-3">
+          <div className="flex items-center gap-1.5">
             <Brain size={14} />
             <span>{quiz.questions.length} questions</span>
           </div>
-          <div className="flex gap-1.5 items-center">
+          <div className="flex items-center gap-1.5">
             <Clock size={14} />
             <span>{quiz.duree}</span>
           </div>
         </div>
+
+        {/* Bouton */}
         <button
           onClick={() => onStart(quiz.id)}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2"
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200"
         >
           <span>Commencer</span>
           <ArrowRight size={16} />

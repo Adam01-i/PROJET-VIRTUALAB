@@ -134,12 +134,16 @@ export default function ProfExpView() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+  
     setUploading(true);
-    const filePath = `images-sim/${Date.now()}_${file.name}`;
+  
+    // ✅ Correction ici
+    const filePath = `${Date.now()}_${file.name}`;
+  
     const { error } = await supabase.storage.from("images-sim").upload(filePath, file);
-
+  
     if (error) {
+      console.error("Upload error:", error.message);
       toast.error("❌ Upload image échoué");
     } else {
       const { data } = supabase.storage.from("images-sim").getPublicUrl(filePath);
@@ -147,9 +151,10 @@ export default function ProfExpView() {
         setFormData({ ...formData, image: data.publicUrl });
       }
     }
-
+  
     setUploading(false);
   };
+  
 
   return (
     <div className="p-4 bg-gray-100 text-gray-800 min-h-screen max-w-[1280px] mx-auto text-base">

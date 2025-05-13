@@ -8,25 +8,30 @@ type ExperienceCardProps = {
 
 export default function ExperienceCard({ experience, onStart }: ExperienceCardProps) {
   return (
-    <div className="bg-white/5 backdrop-blur rounded-lg overflow-hidden border border-white/10 hover:shadow-md transition-all duration-200 group">
-      <div className="h-44 overflow-hidden relative">
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 group">
+      {/* Image plus compacte */}
+      <div className="h-36 relative overflow-hidden">
         <img 
           src={experience.image} 
           alt={experience.titre} 
           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-3 left-3 right-3">
-          <span className="px-2.5 py-0.5 bg-purple-500 text-white text-xs rounded-full">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute bottom-2 left-2">
+          <span className="px-2.5 py-0.5 bg-purple-600 text-white text-xs font-medium rounded-full shadow-sm">
             {experience.niveau}
           </span>
         </div>
       </div>
-      <div className="p-5">
-        <h3 className="text-base font-semibold mb-1 text-white">{experience.titre}</h3>
-        <p className="text-purple-200 mb-3 text-sm line-clamp-2">{experience.description}</p>
-        
-        <div className="flex items-center justify-between mb-3 text-xs text-purple-300">
+
+      {/* Contenu réduit */}
+      <div className="p-4">
+        <h3 className="text-base font-semibold text-gray-800 mb-1">{experience.titre}</h3>
+        <p className="text-gray-600 text-sm mb-2 leading-relaxed line-clamp-2">
+          {experience.description}
+        </p>
+
+        <div className="flex justify-between text-xs text-gray-500 mb-3">
           <div className="flex items-center gap-1.5">
             <Beaker size={14} />
             <span>{experience.materiel.length} éléments</span>
@@ -39,7 +44,7 @@ export default function ExperienceCard({ experience, onStart }: ExperienceCardPr
 
         <button 
           onClick={() => onStart(experience.id)}
-          className="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md text-sm font-medium transition duration-200 flex items-center justify-center gap-2"
         >
           <span>Commencer</span>
           <ArrowRight size={16} />
