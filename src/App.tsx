@@ -21,11 +21,11 @@ import AdminGuard from './components/views/Admin/AdminGuard';
 import RedirectMe from './components/views/Auth/RedirectMe';
 import AdminLayout from './components/layouts/AdminLayout';
 import AdminDashboard from './components/views/Admin/AdminDashboard';
-import AdminUsers from './components/views/Admin/AdminEleve';
+import AdminEleve from './components/views/Admin/AdminEleve';
 import ForgotPassword from './components/views/Auth/ForgotPassword';
 import ResetPassword from './components/views/Auth/ResetPassword';
 import ChangePassword from './components/views/Auth/ChangePassword';
-
+import AdminAccount from './components/views/Admin/AdminAccount';
 
 function App() {
   return (
@@ -35,9 +35,10 @@ function App() {
       <Routes>
         {/* Interface Admin */}
         <Route path="/admin/*" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
+          <Route path="AdminDashboard" element={<AdminDashboard />} />
+          <Route path="AdminEleve" element={<AdminEleve />} />
           <Route path="AdminProfesseur" element={<AdminProfesseur />} />
+          <Route path="AdminAccount" element={<AdminAccount />} />
         </Route>
 
 

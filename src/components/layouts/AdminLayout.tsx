@@ -1,89 +1,108 @@
-import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  UserCog,
   UsersRound,
   FileSpreadsheet,
-  Menu,
-  X,
+  FlaskRound as Flask,
 } from 'lucide-react';
 import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
 import UserMenu from './../../components/ui/UserMenu';
+import { useEffect, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast'; // ✅ Toast import
 
 export default function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 👉 Toast test (à supprimer si pas nécessaire)
+  useEffect(() => {
+    toast.success('Bienvenue sur le tableau de bord administrateur 🧪');
+  }, []);
 
   const navItems = [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/AdminProfesseur', icon: FileSpreadsheet, label: 'Gestion Professeur ' },
-    { path: '/admin/users', icon: UsersRound, label: 'Gestion Eleve' },
-    { path: '/admin/settings', icon: UserCog, label: 'Paramètres' },
+    { path: '/admin/AdminDashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/AdminProfesseur', icon: FileSpreadsheet, label: 'Gestion Professeur' },
+    { path: '/admin/AdminEleve', icon: UsersRound, label: 'Gestion Élève' },
+    { path: '/admin/AdminAccount', icon: UsersRound, label: 'Mon Compte' },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-800 relative text-base">
+    <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
       <MustChangePasswordBanner />
 
-      {/* 🟣 Overlay mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
+      {/* ✅ Toaster intégré */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          style: {
+            background: '#fff',
+            color: '#333',
+            border: '1px solid #ddd',
+          },
+          success: {
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#ecfdf5',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#f87171',
+              secondary: '#fef2f2',
+            },
+          },
+        }}
+      />
 
-      {/* ☰ Toggle button mobile */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute top-4 left-4 z-50 md:hidden text-indigo-700"
-        aria-label="Toggle menu"
-      >
-        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* 📂 Sidebar */}
-      <aside
-        className={`fixed z-40 top-0 left-0 w-64 bg-white shadow transform transition-transform duration-300 ease-in-out
-        pt-[3.5rem] md:pt-0 h-full
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        md:translate-x-0 md:fixed`}
-      >
-        <div className="flex items-center gap-2 px-5 py-4 border-b">
-          <LayoutDashboard className="text-indigo-600" size={20} />
-          <h1 className="text-lg font-bold text-indigo-700 hidden md:block">VirtuaLab Admin</h1>
+      {/* 🔵 Top Navbar */}
+      <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-indigo-900'}`}>
+        <div className="max-w-[1280px] mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-2">
+              <Flask size={20} className="text-purple-300" />
+              <span className="text-white font-semibold text-base">VirtuaLab</span>
+            </div>
+            <UserMenu />
+          </div>
         </div>
+      </nav>
 
-        <nav className="mt-4 flex flex-col space-y-1 px-4 text-sm">
-          {navItems.map(({ path, icon: Icon, label }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md transition-all ${
-                  isActive
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`
-              }
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Icon size={16} />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
-
-      {/* 🔧 Contenu principal */}
-      <main className="flex-1 px-4 py-6 md:ml-64 pt-[4rem] md:pt-6 w-full">
-        {/* 🔘 Barre top admin avec logout */}
-        <div className="fixed w-full md:ml-64 top-0 z-40 flex items-center justify-between px-6 py-3 bg-white border-b shadow-sm">
-        <UserMenu />
+      {/* ⚪ Sub-navbar */}
+      <nav className="mt-14 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-[1280px] mx-auto px-4">
+          <div className="flex justify-center gap-16 py-6 flex-wrap">
+            {navItems.map(({ path, icon: Icon, label }) => (
+              <NavLink
+                key={path}
+                to={path}
+                className={({ isActive }) =>
+                  `text-sm font-medium px-2 pb-1 border-b-2 transition-all flex items-center gap-1.5
+                  ${
+                    isActive
+                      ? 'text-indigo-700 border-indigo-600'
+                      : 'text-gray-500 border-transparent hover:text-indigo-500 hover:border-indigo-300'
+                  }`
+                }
+              >
+                <Icon size={16} />
+                {label}
+              </NavLink>
+            ))}
+          </div>
         </div>
+      </nav>
 
-        <div className="max-w-7xl mx-auto">
+      {/* 🌒 Contenu sombre */}
+      <main className="flex-1 bg-gray-50 md:bg-gray-100 px-4 py-8">
+        <div className="max-w-7xl mx-auto bg-white/90 rounded-md shadow p-6">
           <Outlet />
         </div>
       </main>

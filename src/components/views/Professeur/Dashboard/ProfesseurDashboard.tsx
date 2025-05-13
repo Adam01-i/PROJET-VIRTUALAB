@@ -100,7 +100,7 @@ export default function DashboardProfesseur() {
   }, []);
 
   const maxLogin = Math.max(...loginData.map(d => d.count), 1);
-  const maxQuiz = Math.max(...quizLevels.map(q => q.value), 1);
+//   const maxQuiz = Math.max(...quizLevels.map(q => q.value), 1);
   const maxSim = Math.max(...experienceNiveau.map(e => e.value), 1);
 
   return (
