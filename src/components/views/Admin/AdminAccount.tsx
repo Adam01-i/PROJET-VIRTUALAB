@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 
 export default function AdminAccount() {
   const [name, setName] = useState('');
