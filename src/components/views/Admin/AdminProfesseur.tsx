@@ -1,13 +1,11 @@
 import * as React from 'react';
 import * as XLSX from 'xlsx';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-);
-
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const PAGE_SIZE = 10;
 
@@ -63,33 +61,40 @@ export default function AdminProfesseur() {
 
   const handleImport = async () => {
     if (parsedData.length === 0) {
-      toast.error("Aucun professeur à importer.");
+      toast.error("⚠️ Aucun professeur à importer.");
       return;
     }
-
+  
     setLoading(true);
+    let count = 0;
+  
     for (const row of parsedData) {
       const { name, surname, email, avatar_url } = row;
       const role = row.role || 'professeur';
-
+  
       try {
         const response = await fetch('/api/import-professeurs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, surname, email, avatar_url, role }),
         });
-
+  
         const result = await response.json();
         if (!response.ok) toast.error(`❌ ${email} : ${result.error}`);
-        else toast.success(`✅ ${email} ajouté`);
+        else {
+          count++;
+          toast.success(`✅ ${email} ajouté`);
+        }
       } catch (err) {
-        toast.error(`Erreur pour ${email}`);
+        toast.error(`❌ Erreur réseau pour ${email}`);
       }
     }
-
+  
     await fetchProfesseurs();
     setLoading(false);
+    if (count > 0) toast.success(`${count} professeur(s) importé(s) avec succès`);
   };
+  
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(professeurs);
@@ -102,26 +107,29 @@ export default function AdminProfesseur() {
     const { error } = await supabase
       .from('professeurs_classes')
       .upsert({ professeur_id: profId, classe_id: classeId }, { onConflict: 'professeur_id,classe_id' });
-
-    if (error) toast.error("Erreur assignation");
+  
+    if (error) toast.error("❌ Erreur lors de l’assignation.");
     else {
-      toast.success("Classe assignée !");
-      fetchAssignations();
+      toast.success("✅ Classe assignée !");
+      await fetchAssignations();
+      await fetchProfesseurs(); // Ajouté pour forcer la mise à jour si besoin
     }
   };
-
+  
   const removeClasse = async (profId: string, classeId: string) => {
     const { error } = await supabase
       .from('professeurs_classes')
       .delete()
       .match({ professeur_id: profId, classe_id: classeId });
-
-    if (error) toast.error("Erreur suppression");
+  
+    if (error) toast.error("❌ Erreur lors de la suppression.");
     else {
-      toast.success("Classe retirée");
-      fetchAssignations();
+      toast.success("✅ Classe retirée !");
+      await fetchAssignations();
+      await fetchProfesseurs(); // Ajouté pour actualiser la vue
     }
   };
+  
 
   const toggleEleves = async (classeId: string) => {
     if (eleves[classeId]) {
