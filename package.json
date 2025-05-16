@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.10.5",
     "lucide-react": "^0.344.0",
+    "multer": "^1.4.5-lts.2",
     "next": "^15.3.2",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.9",

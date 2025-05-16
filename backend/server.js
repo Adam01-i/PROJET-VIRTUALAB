@@ -15,7 +15,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-app.post('/api/import-professeurs', async (req, res) => {
+app.post('/api/import-users', async (req, res) => {
   const { name, surname, email } = req.body;
 
   if (!email || !name || !surname) {
@@ -50,4 +50,4 @@ app.post('/api/import-professeurs', async (req, res) => {
 });
 
 const PORT = 3001;
-app.listen(PORT, () => console.log(`✅ API en ligne : http://localhost:${PORT}/api/import-professeurs`));
+app.listen(PORT, () => console.log(`✅ API en ligne : http://localhost:${PORT}/api/import-users`));

@@ -73,7 +73,7 @@ export default function AdminProfesseur() {
       const role = row.role || 'professeur';
   
       try {
-        const response = await fetch('/api/import-professeurs', {
+        const response = await fetch('/api/import-users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, surname, email, avatar_url, role }),
