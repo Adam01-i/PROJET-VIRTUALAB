@@ -23,7 +23,7 @@ type Props = {
 const EleveDialog: React.FC<Props> = ({ eleve }) => {
   const [classes, setClasses] = React.useState<any[]>([]);
   const [eleveClasses, setEleveClasses] = React.useState<any[]>([]);
-  const [newClasseId, setNewClasseId] = React.useState("");
+  const [newClasseId, setNewClasseId] = React.useState<string>("");
 
   const fetchClasses = async () => {
     const { data, error } = await supabase
@@ -92,7 +92,7 @@ const EleveDialog: React.FC<Props> = ({ eleve }) => {
       <DialogContent className="max-w-lg space-y-4">
         <div className="flex items-center gap-4">
           <img
-            src={eleve.avatar_url}
+            src={eleve.avatar_url || "/assets/avatars/default-avatar.png"}
             alt="avatar"
             className="w-16 h-16 rounded-full border object-cover"
           />
@@ -105,7 +105,7 @@ const EleveDialog: React.FC<Props> = ({ eleve }) => {
         </div>
 
         <div>
-          <h4 className="font-semibold mb-2">Classes assignées</h4>
+          <h4 className="font-semibold mb-2">📚 Classes assignées</h4>
           {eleveClasses.length === 0 && (
             <p className="text-sm text-gray-500">Aucune classe assignée.</p>
           )}
@@ -116,7 +116,7 @@ const EleveDialog: React.FC<Props> = ({ eleve }) => {
                 className="flex justify-between items-center text-sm"
               >
                 <span>
-                  📘 {classe.niveau} {classe.lettre || ""} ({classe.code_classe})
+                  {classe.niveau} {classe.lettre} ({classe.code_classe})
                 </span>
                 <Button
                   variant="ghost"
@@ -132,11 +132,11 @@ const EleveDialog: React.FC<Props> = ({ eleve }) => {
         </div>
 
         <div className="border-t pt-4">
-          <h4 className="font-semibold mb-2">Assigner une classe</h4>
+          <h4 className="font-semibold mb-2">➕ Assigner une classe</h4>
           <div className="flex items-center gap-2">
             <select
               className="border rounded p-2 flex-1"
-              value={newClasseId}
+              value={newClasseId || ""}
               onChange={(e) => setNewClasseId(e.target.value)}
             >
               <option value="">Sélectionner une classe</option>

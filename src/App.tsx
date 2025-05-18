@@ -21,11 +21,11 @@ import AdminUser from './components/views/Admin/Gestion User/AdminUser';
 import AdminGuard from './components/views/Admin/AdminGuard';
 import RedirectMe from './components/views/Auth/RedirectMe';
 import AdminLayout from './components/layouts/AdminLayout';
-import AdminDashboard from './components/views/Admin/AdminDashboard';
+import AdminDashboard from './components/views/Admin/Dashboard/AdminDashboard';
 import ForgotPassword from './components/views/Auth/ForgotPassword';
 import ResetPassword from './components/views/Auth/ResetPassword';
 import ChangePassword from './components/views/Auth/ChangePassword';
-import AdminAccount from './components/views/Admin/AdminAccount';
+import AdminAccount from './components/views/Admin/Mon Compte/AdminAccount';
 import AdminClasse from './components/views/Admin/Gestion Classe/AdminClasse';
 
 function App() {

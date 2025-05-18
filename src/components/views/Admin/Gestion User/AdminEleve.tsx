@@ -13,21 +13,35 @@ type AdminEleveProps = {
 export default function AdminEleve({ embedded = false }: AdminEleveProps) {
   const [parsedData, setParsedData] = React.useState<any[]>([]);
   const [eleves, setEleves] = React.useState<any[]>([]);
+  const [classes, setClasses] = React.useState<any[]>([]);
+  const [assignations, setAssignations] = React.useState<any[]>([]);
   const [search, setSearch] = React.useState('');
+  const [classeFiltre, setClasseFiltre] = React.useState<string>(''); // ✅ string only
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    fetchEleves();
+    fetchAll();
   }, []);
 
-  const fetchEleves = async () => {
-    const { data } = await supabase
+  const fetchAll = async () => {
+    const { data: elevesData } = await supabase
       .from('profiles')
       .select('id, name, surname, email, avatar_url, role, created_at')
       .eq('role', 'eleve')
       .order('surname');
-    setEleves(data || []);
+
+    const { data: classesData } = await supabase
+      .from('classes')
+      .select('id, niveau, lettre');
+
+    const { data: assignData } = await supabase
+      .from('eleves_classes')
+      .select('classe_id, eleve_id');
+
+    setEleves(elevesData || []);
+    setClasses(classesData || []);
+    setAssignations(assignData || []);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +51,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
+      const workbook = XLSX.read(data as string, { type: 'binary' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(worksheet);
       setParsedData(json as any[]);
@@ -57,7 +71,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
     for (const row of parsedData) {
       const { name, surname, email } = row;
       const role = row.role || 'eleve';
-      const avatar_url ='https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars//1747586536054.jpg'; // 🎯 valeur par défaut
+      const avatar_url = 'https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747586536054.jpg';
 
       try {
         const response = await fetch('/api/import-users', {
@@ -77,7 +91,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
       }
     }
 
-    await fetchEleves();
+    await fetchAll();
     setLoading(false);
     if (count > 0) toast.success(`${count} élève(s) importé(s) avec succès`);
   };
@@ -89,10 +103,32 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
     XLSX.writeFile(workbook, 'eleves.xlsx');
   };
 
-  const filtered = eleves.filter((e) =>
-    `${e.name} ${e.surname} ${e.email}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const getClasseNom = (eleveId: string) => {
+    const assignation = assignations.find((a) => a.eleve_id === eleveId);
+    const classe = classes.find((c) => c.id === assignation?.classe_id);
+    return classe ? `${classe.niveau} ${classe.lettre}` : '—';
+  };
+
+  const filtered = eleves.filter((e) => {
+    const fullText = `${e.name} ${e.surname} ${e.email}`.toLowerCase();
+    const classeNom = getClasseNom(e.id).toLowerCase();
+    return (
+      fullText.includes(search.toLowerCase()) &&
+      (!classeFiltre || classeNom === classeFiltre.toLowerCase())
+    );
+  });
+
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const classesOptions = [...new Set(
+    assignations
+      .map((a) => {
+        const c = classes.find((c) => c.id === a.classe_id);
+        return c ? `${c.niveau} ${c.lettre}` : null;
+      })
+      .filter((v): v is string => v !== null && v !== undefined)
+  )];
+
 
   return (
     <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-8 py-10'}>
@@ -116,16 +152,34 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
         </div>
       </div>
 
-      <input
-        type="text"
-        placeholder="Rechercher par nom, prénom ou email"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(1);
-        }}
-        className="w-full md:w-1/3 border px-4 py-2 rounded text-sm mb-4"
-      />
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="🔍 Rechercher un élève"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="border px-4 py-2 rounded text-sm w-full md:w-1/2"
+        />
+
+        <select
+          className="border px-3 py-2 rounded text-sm w-full md:w-1/3"
+          value={classeFiltre}
+          onChange={(e) => {
+            setClasseFiltre(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">Toutes les classes</option>
+          {classesOptions.map((nom) => (
+            <option key={nom} value={nom}>
+              {nom}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {paginated.map((eleve) => (
         <div key={eleve.id} className="mb-4 border rounded p-4 bg-white shadow flex justify-between items-center">
@@ -136,10 +190,9 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
               className="w-12 h-12 rounded-full object-cover border"
             />
             <div>
-              <p className="font-semibold text-lg">
-                {eleve.name} {eleve.surname}
-              </p>
+              <p className="font-semibold text-lg">{eleve.name} {eleve.surname}</p>
               <p className="text-sm text-gray-600">{eleve.email}</p>
+              <p className="text-xs text-gray-400">📘 {getClasseNom(eleve.id)}</p>
             </div>
           </div>
           <EleveDialog eleve={eleve} />

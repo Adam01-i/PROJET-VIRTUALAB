@@ -94,7 +94,7 @@ const ProfesseurDetailsDialog: React.FC<Props> = ({ prof, allClasses, refresh })
       <DialogContent className="max-w-xl space-y-4">
         <div className="flex items-center gap-4">
           <img
-            src={prof.avatar_url || "/assets/avatars/default-avatar.png"}
+            src={prof.avatar_url}
             alt={`${prof.name} ${prof.surname}`}
             className="w-16 h-16 rounded-full border object-cover"
           />
@@ -112,7 +112,7 @@ const ProfesseurDetailsDialog: React.FC<Props> = ({ prof, allClasses, refresh })
             <ul className="space-y-1">
               {classesAffectees.map((classe) => (
                 <li key={classe.id} className="flex justify-between items-center text-sm">
-                  {classe.niveau} {classe.lettre}
+                  📘 {classe.niveau} {classe.lettre}
                   <Button
                     variant="ghost"
                     size="default"
@@ -129,8 +129,9 @@ const ProfesseurDetailsDialog: React.FC<Props> = ({ prof, allClasses, refresh })
 
         <div>
           <h4 className="font-semibold mb-2">Assigner une classe</h4>
+          <div className="flex items-center gap-2">
           <select
-            className="border rounded px-3 py-1 text-sm w-full"
+            className="border rounded p-2 flex-1"
             defaultValue=""
             onChange={(e) => assignClasse(e.target.value)}
             disabled={loading}
@@ -142,6 +143,8 @@ const ProfesseurDetailsDialog: React.FC<Props> = ({ prof, allClasses, refresh })
               </option>
             ))}
           </select>
+          
+          </div>
         </div>
       </DialogContent>
     </Dialog>
