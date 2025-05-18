@@ -33,7 +33,6 @@ export default function UserMenu() {
         .eq('id', userId)
         .single();
     
-      console.log('PROFILE data =', data, 'error =', error); // 👈 ici
     
       if (error) {
         toast.error("Erreur chargement profil");
