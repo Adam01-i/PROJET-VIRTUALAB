@@ -57,7 +57,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
     for (const row of parsedData) {
       const { name, surname, email } = row;
       const role = row.role || 'eleve';
-      const avatar_url = row.avatar_url || 'default-avatar.png'; // 🎯 valeur par défaut
+      const avatar_url ='https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars//1747586536054.jpg'; // 🎯 valeur par défaut
 
       try {
         const response = await fetch('/api/import-users', {
@@ -131,7 +131,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
         <div key={eleve.id} className="mb-4 border rounded p-4 bg-white shadow flex justify-between items-center">
           <div className="flex gap-3 items-center">
             <img
-              src={`/assets/avatars/${eleve.avatar_url || 'default-avatar.png'}`}
+              src={eleve.avatar_url}
               alt="avatar"
               className="w-12 h-12 rounded-full object-cover border"
             />

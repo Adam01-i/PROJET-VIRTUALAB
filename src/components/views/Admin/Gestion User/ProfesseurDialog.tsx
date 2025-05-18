@@ -3,6 +3,7 @@ import { DialogContent } from "../../../ui/Dialog";
 import { Button } from "../../../ui/button2";
 import { toast } from "sonner";
 import { supabase } from "../../../../lib/supabaseClient";
+import { Dialog, DialogTrigger } from "../../../ui/Dialog";
 
 type Prof = {
   id: string;
@@ -84,59 +85,66 @@ const ProfesseurDetailsDialog: React.FC<Props> = ({ prof, allClasses, refresh })
   );
 
   return (
-    <DialogContent className="max-w-xl space-y-4">
-      <div className="flex items-center gap-4">
-        <img
-          src={prof.avatar_url || "/assets/avatars/default-avatar.png"}
-          alt={`${prof.name} ${prof.surname}`}
-          className="w-16 h-16 rounded-full border object-cover"
-        />
-        <div>
-          <h2 className="text-lg font-bold">{prof.name} {prof.surname}</h2>
-          <p className="text-sm text-gray-600">{prof.email}</p>
+    <Dialog>
+      {/* 🔍 Voir bouton qui ouvre le dialog */}
+      <DialogTrigger asChild>
+        <Button variant="outline">👁 Voir</Button>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-xl space-y-4">
+        <div className="flex items-center gap-4">
+          <img
+            src={prof.avatar_url || "/assets/avatars/default-avatar.png"}
+            alt={`${prof.name} ${prof.surname}`}
+            className="w-16 h-16 rounded-full border object-cover"
+          />
+          <div>
+            <h2 className="text-lg font-bold">{prof.name} {prof.surname}</h2>
+            <p className="text-sm text-gray-600">{prof.email}</p>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h4 className="font-semibold mb-2">Classes assignées</h4>
-        {classesAffectees.length === 0 ? (
-          <p className="text-sm text-gray-500">Aucune classe assignée.</p>
-        ) : (
-          <ul className="space-y-1">
-            {classesAffectees.map((classe) => (
-              <li key={classe.id} className="flex justify-between items-center text-sm">
-                {classe.niveau} {classe.lettre}
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={() => removeClasse(classe.id)}
-                  className="text-red-500"
-                >
-                  Retirer
-                </Button>
-              </li>
+        <div>
+          <h4 className="font-semibold mb-2">Classes assignées</h4>
+          {classesAffectees.length === 0 ? (
+            <p className="text-sm text-gray-500">Aucune classe assignée.</p>
+          ) : (
+            <ul className="space-y-1">
+              {classesAffectees.map((classe) => (
+                <li key={classe.id} className="flex justify-between items-center text-sm">
+                  {classe.niveau} {classe.lettre}
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    onClick={() => removeClasse(classe.id)}
+                    className="text-red-500"
+                  >
+                    Retirer
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-2">Assigner une classe</h4>
+          <select
+            className="border rounded px-3 py-1 text-sm w-full"
+            defaultValue=""
+            onChange={(e) => assignClasse(e.target.value)}
+            disabled={loading}
+          >
+            <option value="">Sélectionner une classe</option>
+            {classesDisponibles.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.niveau} {c.lettre}
+              </option>
             ))}
-          </ul>
-        )}
-      </div>
-
-      <div>
-        <h4 className="font-semibold mb-2">Assigner une classe</h4>
-        <select
-          className="border rounded px-3 py-1 text-sm w-full"
-          defaultValue=""
-          onChange={(e) => assignClasse(e.target.value)}
-          disabled={loading}
-        >
-          <option value="">Sélectionner une classe</option>
-          {classesDisponibles.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.niveau} {c.lettre}
-            </option>
-          ))}
-        </select>
-      </div>
-    </DialogContent>
+          </select>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

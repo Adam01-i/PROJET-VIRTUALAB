@@ -86,13 +86,13 @@ const EleveDialog: React.FC<Props> = ({ eleve }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Voir</Button>
+        <Button variant="outline">👁 Voir</Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-lg space-y-4">
         <div className="flex items-center gap-4">
           <img
-            src={`/assets/avatars/${eleve.avatar_url || "default-avatar.png"}`}
+            src={eleve.avatar_url}
             alt="avatar"
             className="w-16 h-16 rounded-full border object-cover"
           />

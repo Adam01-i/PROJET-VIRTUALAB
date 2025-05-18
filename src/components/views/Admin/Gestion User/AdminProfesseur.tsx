@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { supabase } from '../../../../lib/supabaseClient';
-import ProfesseurDetailsDialog from './ProfesseurDialog';
+import ProfesseurDialog from './ProfesseurDialog';
 import { Dialog, DialogTrigger } from '../../../ui/Dialog';
 import { Button } from '../../../ui/button2';
 
@@ -165,17 +165,8 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
                   <p className="text-sm text-gray-600">{prof.email}</p>
                 </div>
 
-                {/* 🔍 Voir bouton qui ouvre le dialog */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">👁 Voir</Button>
-                  </DialogTrigger>
-                  <ProfesseurDetailsDialog
-                    prof={prof}
-                    allClasses={classes}
-                    refresh={fetchAssignations}
-                  />
-                </Dialog>
+                <ProfesseurDialog prof={prof} allClasses={classes} refresh={fetchAssignations} />
+
               </div>
 
               {classesProf.length > 0 && (
