@@ -73,14 +73,14 @@ WITH CHECK (
 ###### 🏫 `classes` - Groupes pédagogiques 
 CREATE TABLE public.classes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  nom text NOT NULL,
-  code_classe text NOT NULL UNIQUE, -- identifiant humain (ex: "2A", "3B", etc.)
-  niveau text,
+  code_classe text GENERATED ALWAYS AS (niveau || ' ' || lettre) STORED UNIQUE;
+  lettre text NOT NULL;
+  niveau text NOT NULL,
   professeur_principal_id uuid,
   created_at timestamp with time zone DEFAULT now(),
 
   CONSTRAINT classes_niveau_check CHECK (
-    niveau = ANY (ARRAY['6e', '5e', '4e', '3e', '2nde', '1ère', 'Terminale'])
+    niveau = ANY (ARRAY['6e', '5e', '4e', '3e', '2nde', '1ère', 'TLe'])
   ),
   CONSTRAINT classes_prof_principal_fk FOREIGN KEY (professeur_principal_id)
     REFERENCES public.profiles (id) ON DELETE SET NULL

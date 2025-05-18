@@ -8,7 +8,7 @@ import {
 import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
 import UserMenu from './../../components/ui/UserMenu';
 import { useEffect, useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast'; // ✅ Toast import
+import {toast} from 'sonner'; // ✅ Toast import
 
 export default function AdminLayout() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,9 +27,9 @@ export default function AdminLayout() {
   }, []);
 
   const navItems = [
-    { path: '/admin/AdminDashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/AdminProfesseur', icon: FileSpreadsheet, label: 'Gestion Professeur' },
-    { path: '/admin/AdminEleve', icon: UsersRound, label: 'Gestion Élève' },
+    { path: '/admin/AdminDashboard', icon: LayoutDashboard, label: 'Dashboard Administrateur' },
+    { path: '/admin/AdminUser', icon: FileSpreadsheet, label: 'Gestion Utilisateur' },
+    { path: '/admin/AdminClasse', icon: UsersRound, label: 'Gestion Classe' },
     { path: '/admin/AdminAccount', icon: UsersRound, label: 'Mon Compte' },
   ];
 
@@ -37,30 +37,6 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
       <MustChangePasswordBanner />
 
-      {/* ✅ Toaster intégré */}
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-        toastOptions={{
-          style: {
-            background: '#fff',
-            color: '#333',
-            border: '1px solid #ddd',
-          },
-          success: {
-            iconTheme: {
-              primary: '#4ade80',
-              secondary: '#ecfdf5',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#f87171',
-              secondary: '#fef2f2',
-            },
-          },
-        }}
-      />
 
       {/* 🔵 Top Navbar */}
       <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-indigo-900'}`}>

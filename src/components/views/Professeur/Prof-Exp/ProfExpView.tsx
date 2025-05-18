@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../../lib/supabaseClient";
 import type { Experience } from "../../../../types/Experience/experience";
 import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
+import {toast} from 'sonner'; // ✅ Toast import
 import ProfExpCard from "./ProfExpCard"; // ajuste le chemin
 
 

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import ProfQuizCard from "./ProfQuizCard";
 import { supabase } from "../../../../lib/supabaseClient";
 import type { Quiz, QuizQuestion } from "../../../../types/Quiz/quiz";
-import { toast } from "sonner";
+import {toast} from 'sonner'; // ✅ Toast import
 
 export default function ProfQuizView() {
   const [quizList, setQuizList] = useState<Quiz[]>([]);

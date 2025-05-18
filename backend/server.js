@@ -16,9 +16,9 @@ const supabase = createClient(
 );
 
 app.post('/api/import-users', async (req, res) => {
-  const { name, surname, email } = req.body;
+  const { name, surname, email, role } = req.body;
 
-  if (!email || !name || !surname) {
+  if (!email || !name || !surname || !role) {
     return res.status(400).json({ error: 'Champs requis manquants' });
   }
 
@@ -36,7 +36,7 @@ app.post('/api/import-users', async (req, res) => {
       name,
       surname,
       email,
-      role: 'professeur',
+      role,
       must_change_password: true,
     });
 

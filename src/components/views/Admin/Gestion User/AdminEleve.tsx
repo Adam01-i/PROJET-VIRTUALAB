@@ -1,15 +1,16 @@
 import * as React from 'react';
 import * as XLSX from 'xlsx';
-import toast from 'react-hot-toast';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { toast } from 'sonner';
+import { supabase } from '../../../../lib/supabaseClient';
+import EleveDialog from './EleveDialog';
 
 const PAGE_SIZE = 10;
 
-export default function AdminEleve() {
+type AdminEleveProps = {
+  embedded?: boolean;
+};
+
+export default function AdminEleve({ embedded = false }: AdminEleveProps) {
   const [parsedData, setParsedData] = React.useState<any[]>([]);
   const [eleves, setEleves] = React.useState<any[]>([]);
   const [search, setSearch] = React.useState('');
@@ -54,8 +55,9 @@ export default function AdminEleve() {
     let count = 0;
 
     for (const row of parsedData) {
-      const { name, surname, email, avatar_url } = row;
+      const { name, surname, email } = row;
       const role = row.role || 'eleve';
+      const avatar_url = row.avatar_url || 'default-avatar.png'; // 🎯 valeur par défaut
 
       try {
         const response = await fetch('/api/import-users', {
@@ -70,7 +72,7 @@ export default function AdminEleve() {
           count++;
           toast.success(`✅ ${email} ajouté`);
         }
-      } catch (err) {
+      } catch {
         toast.error(`❌ Erreur réseau pour ${email}`);
       }
     }
@@ -83,8 +85,8 @@ export default function AdminEleve() {
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(eleves);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Élèves");
-    XLSX.writeFile(workbook, "eleves.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Élèves');
+    XLSX.writeFile(workbook, 'eleves.xlsx');
   };
 
   const filtered = eleves.filter((e) =>
@@ -93,7 +95,7 @@ export default function AdminEleve() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-10">
+    <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-8 py-10'}>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-indigo-700">Gestion des Élèves</h1>
         <div className="flex items-center gap-3 mt-4 md:mt-0">
@@ -103,7 +105,7 @@ export default function AdminEleve() {
             disabled={loading || parsedData.length === 0}
             className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm"
           >
-            {loading ? "Import..." : "Importer"}
+            {loading ? 'Import...' : 'Importer'}
           </button>
           <button
             onClick={handleExport}
@@ -118,14 +120,29 @@ export default function AdminEleve() {
         type="text"
         placeholder="Rechercher par nom, prénom ou email"
         value={search}
-        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
         className="w-full md:w-1/3 border px-4 py-2 rounded text-sm mb-4"
       />
 
       {paginated.map((eleve) => (
-        <div key={eleve.id} className="mb-4 border rounded p-4 bg-white shadow">
-          <p className="font-semibold text-lg">{eleve.name} {eleve.surname}</p>
-          <p className="text-sm text-gray-600">{eleve.email}</p>
+        <div key={eleve.id} className="mb-4 border rounded p-4 bg-white shadow flex justify-between items-center">
+          <div className="flex gap-3 items-center">
+            <img
+              src={`/assets/avatars/${eleve.avatar_url || 'default-avatar.png'}`}
+              alt="avatar"
+              className="w-12 h-12 rounded-full object-cover border"
+            />
+            <div>
+              <p className="font-semibold text-lg">
+                {eleve.name} {eleve.surname}
+              </p>
+              <p className="text-sm text-gray-600">{eleve.email}</p>
+            </div>
+          </div>
+          <EleveDialog eleve={eleve} />
         </div>
       ))}
 

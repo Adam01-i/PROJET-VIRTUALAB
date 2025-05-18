@@ -11,21 +11,22 @@ import ProfQuizView from './components/views/Professeur/Prof-Quiz/ProfQuizView';
 import ProfElevView from './components/views/Professeur/Prof-Elev/ProfElevView';
 import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
 import DashboardProfesseur from './components/views/Professeur/Dashboard/ProfesseurDashboard';
+import ProfesseurGuard from './components/views/Professeur/ProfesseurGuard';
 
 import EleveLayout from './components/layouts/EleveLayout';
 import {Toaster } from 'sonner';
 
 import Login from './components/views/Auth/Login';
-import AdminProfesseur from './components/views/Admin/AdminProfesseur';
+import AdminUser from './components/views/Admin/Gestion User/AdminUser';
 import AdminGuard from './components/views/Admin/AdminGuard';
 import RedirectMe from './components/views/Auth/RedirectMe';
 import AdminLayout from './components/layouts/AdminLayout';
 import AdminDashboard from './components/views/Admin/AdminDashboard';
-import AdminEleve from './components/views/Admin/AdminEleve';
 import ForgotPassword from './components/views/Auth/ForgotPassword';
 import ResetPassword from './components/views/Auth/ResetPassword';
 import ChangePassword from './components/views/Auth/ChangePassword';
 import AdminAccount from './components/views/Admin/AdminAccount';
+import AdminClasse from './components/views/Admin/Gestion Classe/AdminClasse';
 
 function App() {
   return (
@@ -36,9 +37,9 @@ function App() {
         {/* Interface Admin */}
         <Route path="/admin/*" element={<AdminGuard><AdminLayout /></AdminGuard>}>
           <Route path="AdminDashboard" element={<AdminDashboard />} />
-          <Route path="AdminEleve" element={<AdminEleve />} />
-          <Route path="AdminProfesseur" element={<AdminProfesseur />} />
+          <Route path="AdminUser" element={<AdminUser />} />
           <Route path="AdminAccount" element={<AdminAccount />} />
+          <Route path="AdminClasse" element={<AdminClasse />} />
         </Route>
 
 
@@ -58,8 +59,11 @@ function App() {
           <Route path="eleve/quiz" element={<QuizView />} />
           <Route path="eleve/3d" element={<Viewer3DView />} />
         </Route>
+
+
+        
         {/* Interface Professeur */}
-        <Route path="/professeur" element={<ProfesseurLayout />}>
+        <Route path="/professeur" element={<ProfesseurGuard><ProfesseurLayout /></ProfesseurGuard>}>
           <Route index element={<Navigate to="/professeur/dashboard" replace />} />
           <Route path="/professeur/dashboard" element={<DashboardProfesseur />} />
           <Route path="experiences" element={<ProfExpView />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
-import { toast } from 'sonner';
+import {toast} from 'sonner'; // ✅ Toast import
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');

@@ -29,7 +29,7 @@ export default function Login() {
 
       switch (profile.role) {
         case 'admin':
-          navigate('/admin/dashboard');
+          navigate('/admin/AdminDashboard');
           break;
         case 'professeur':
           navigate('/professeur/dashboard');
@@ -89,7 +89,7 @@ export default function Login() {
       toast.success('Connexion réussie 🎉');
       switch (profile.role) {
         case 'admin':
-          navigate('/admin/dashboard');
+          navigate('/admin/AdminDashboard');
           break;
         case 'professeur':
           navigate('/professeur/dashboard');

@@ -51,10 +51,9 @@ export default function EleveLayout() {
                   key={path}
                   to={path}
                   className={({ isActive }) =>
-                    `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${
-                      isActive
-                        ? 'bg-white/10 text-white font-semibold'
-                        : 'text-purple-200 hover:bg-white/5'
+                    `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${isActive
+                      ? 'bg-white/10 text-white font-semibold'
+                      : 'text-purple-200 hover:bg-white/5'
                     }`
                   }
                 >
