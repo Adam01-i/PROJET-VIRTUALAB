@@ -18,14 +18,12 @@ export default function UserMenu() {
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: session, error: sessionError } = await supabase.auth.getSession();
-      console.log('SESSION =', session); // 👈 ici
       if (sessionError) {
         toast.error("Erreur de session.");
         return;
       }
     
       const userId = session?.session?.user?.id;
-      console.log('userId =', userId); // 👈 ici
     
       if (!userId) return;
     
