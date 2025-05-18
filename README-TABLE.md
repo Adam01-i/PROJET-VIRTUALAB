@@ -379,6 +379,27 @@ USING (
   )
 );
 
+create or replace function fetch_activity_logs_filtered(
+  since timestamptz,
+  role_filter text
+)
+returns setof activity_logs
+language sql
+as $$
+  select *
+  from activity_logs
+  where created_at >= since
+  and (
+    role_filter = ''
+    or user_id in (
+      select id
+      from profiles
+      where role_filter <> ''
+        and role = split_part(role_filter, '''', 2)::role_type
+    )
+  )
+$$;
+
 
 
 
