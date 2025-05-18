@@ -3,8 +3,6 @@ import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { supabase } from '../../../../lib/supabaseClient';
 import ProfesseurDialog from './ProfesseurDialog';
-import { Dialog, DialogTrigger } from '../../../ui/Dialog';
-import { Button } from '../../../ui/button2';
 
 const PAGE_SIZE = 10;
 
