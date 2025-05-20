@@ -34,9 +34,9 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   ├── server.js                   # API POST /api/import-professeurs
 │   └── .env                        # Variables d'environnement (URL Supabase, clé Service Role)
 ├── public/
-│   └── moleculs/                   # Modèles 3D .glb pour les molécules
-│   └── materiels/                  # Modèles 3D .glb pour les matériels de laboratoire
 │   └── assets/                     # Images pour la bannière
+│   └── materiels/                  # Modèles 3D .glb pour les matériels de laboratoire
+│   └── moleculs/                   # Modèles 3D .glb pour les molécules
 ├── src/
 │   ├── components/
 │   │   └── layouts/                # Layouts utilisateur (élève / professeur)
@@ -45,6 +45,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   ├── data/                       # Données statiques (expériences, quiz)
 │   ├── hooks/                      # Hooks personnalisés
 │   ├── lib/                        # Configuration Supabase et utilitaires
+│   ├── pages/                      # fichiers d'importation import-users pour l'API
 │   ├── scripts/                     # Scripts d’initialisation
 │   ├── simulations/                # Composants de simulations interactives
 │   ├── types/                      # Typage global de l'application
