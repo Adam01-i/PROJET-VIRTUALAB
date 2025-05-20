@@ -1,4 +1,4 @@
-import { EleveActivite } from '../../../../types/EleveActivite'; // Adjust the path as needed
+import { EleveActivite } from '../../../../types/Eleve/EleveActivite'; // Adjust the path as needed
 
 interface Props {
   data: EleveActivite[];

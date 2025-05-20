@@ -2,7 +2,7 @@ interface Props {
   data: EleveActivite[];
   onSelectEleve: (eleve: EleveActivite) => void;
 }
-import { EleveActivite } from '../../../../types/EleveActivite'; // Adjust the path as needed
+import { EleveActivite } from '../../../../types/Eleve/EleveActivite'; // Adjust the path as needed
 
 export default function TopEleves({ data, onSelectEleve }: Props) {
   const top5 = data

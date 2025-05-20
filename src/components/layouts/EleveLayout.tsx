@@ -7,7 +7,7 @@ import {
   Book,
   LogIn,
 } from 'lucide-react';
-import ImageCarouselBackground from '../views/ImageCarouselBackground';
+import ImageCarouselBackground from '../ui/ImageCarouselBackground';
 import UserMenu from '../../components/ui/UserMenu';
 
 export default function EleveLayout() {
