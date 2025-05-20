@@ -22,25 +22,25 @@ export default function UserMenu() {
         toast.error("Erreur de session.");
         return;
       }
-    
+
       const userId = session?.session?.user?.id;
-    
+
       if (!userId) return;
-    
+
       const { data, error } = await supabase
         .from('profiles')
         .select('name, surname, role, avatar_url')
         .eq('id', userId)
         .single();
-    
-    
+
+
       if (error) {
         toast.error("Erreur chargement profil");
       } else {
         setProfile(data);
       }
     };
-    
+
 
     fetchProfile();
 
@@ -66,7 +66,7 @@ export default function UserMenu() {
 
   const handleAccount = () => {
     setIsOpen(false);
-    navigate('/admin/AdminAccount');
+    navigate('/account/UserAccount');
   };
 
   if (!profile) {
@@ -95,7 +95,7 @@ export default function UserMenu() {
         <div className="flex items-center">
           <span className="font-medium">{profile.name} {profile.surname} </span>
         </div>
-        
+
         <ChevronDown size={16} />
       </button>
 

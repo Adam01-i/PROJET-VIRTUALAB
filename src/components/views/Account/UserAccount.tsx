@@ -1,30 +1,38 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../../../../lib/supabaseClient';
-import {toast} from 'sonner';
-import { Loader2, Save } from 'lucide-react';
+'use client';
 
-export default function AdminAccount() {
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../../lib/supabaseClient';
+import { toast } from 'sonner';
+import { Loader2, Save, ArrowLeft } from 'lucide-react';
+
+export default function UserAccount() {
+  const navigate = useNavigate();
+
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [role, setRole] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Nouveau champ pour changer le mot de passe
+  const [newPassword, setNewPassword] = useState('');
+
   const fetchProfile = async () => {
     setLoading(true);
     const { data: session } = await supabase.auth.getSession();
     const userId = session?.session?.user?.id;
 
-    const { data} = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('name, surname, role, avatar_url')
       .eq('id', userId)
       .single();
 
     if (data) {
-      setName(data.name);
-      setSurname(data.surname);
-      setRole(data.role);
+      setName(data.name || '');
+      setSurname(data.surname || '');
+      setRole(data.role || '');
       setAvatarUrl(data.avatar_url);
     } else {
       toast.error('Erreur lors du chargement du profil.');
@@ -43,15 +51,29 @@ export default function AdminAccount() {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ name,surname, role })
+      .update({ name, surname })
       .eq('id', userId);
 
     if (error) {
       toast.error("Erreur lors de la mise à jour");
     } else {
       toast.success("Profil mis à jour !");
-      await fetchProfile(); // 🔄 Refresh view
+      await fetchProfile();
     }
+
+    // ✅ Mise à jour du mot de passe si renseigné
+    if (newPassword.trim().length >= 6) {
+      const { error: passError } = await supabase.auth.updateUser({
+        password: newPassword.trim(),
+      });
+      if (passError) {
+        toast.error("Erreur modification mot de passe");
+      } else {
+        toast.success("Mot de passe modifié ✅");
+        setNewPassword('');
+      }
+    }
+
     setLoading(false);
   };
 
@@ -92,9 +114,15 @@ export default function AdminAccount() {
     toast.success("Avatar mis à jour !");
   };
 
+  const roleLabel = {
+    eleve: 'Élève',
+    professeur: 'Professeur',
+    admin: 'Administrateur',
+  }[role] || 'Utilisateur';
+
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8 mt-6 space-y-4 px-40">
-      <h2 className="text-2xl font-bold text-indigo-700 mb-2">Mon Profil Administrateur</h2>
+      <h2 className="text-2xl font-bold text-indigo-700 mb-2">Mon Profil {roleLabel}</h2>
       <p className="text-gray-500 text-sm">Visualisez et mettez à jour vos informations personnelles.</p>
 
       <hr className="my-4 border-gray-200" />
@@ -150,14 +178,27 @@ export default function AdminAccount() {
           <label className="block text-sm font-medium text-gray-700">Rôle</label>
           <input
             type="text"
-            value={role}
+            value={roleLabel}
             disabled
             className="mt-1 block w-full bg-gray-100 text-gray-600 rounded-md border-gray-300 shadow-sm text-sm px-3 py-2"
           />
         </div>
+
+        {/* 🔐 Nouveau champ mot de passe */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Laisser vide pour ne pas modifier"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2"
+          />
+          <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
+        </div>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-4 flex gap-4">
         <button
           onClick={handleUpdate}
           disabled={loading}
@@ -174,6 +215,15 @@ export default function AdminAccount() {
               Mettre à jour
             </>
           )}
+        </button>
+
+        {/* 🔙 Bouton retour */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm px-4 py-2 text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded shadow-sm"
+        >
+          <ArrowLeft size={18} />
+          Retour
         </button>
       </div>
     </div>

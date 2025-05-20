@@ -1,217 +1,167 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
-import {
-  UsersRound,
-  FlaskRound,
-  Brain,
-  Clock4,
-  Flame,
-} from 'lucide-react';
+import CardStat from '../../../ui/CardStat';
+import GraphActivityByClasse from './GraphActivityByClasse';
+import TopEleves from './TopEleves';
+import InactiveEleves from './InactiveEleves';
+import EleveDetail from './EleveDetail';
+import { AcademicCapIcon, UserGroupIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
-export default function DashboardProfesseur() {
-  const [loginData, setLoginData] = useState<{ day: string; count: number }[]>([]);
-  const [quizLevels, setQuizLevels] = useState<{ name: string; value: number }[]>([]);
-  const [experienceNiveau, setExperienceNiveau] = useState<{ name: string; value: number }[]>([]);
-  const [moyenneTemps, setMoyenneTemps] = useState<number>(0);
-  const [elevesActifs, setElevesActifs] = useState<{ name: string; total: number }[]>([]);
+type Classe = { id: string; code_classe: string; };
+type EleveActivite = {
+  id: string; name: string; classe: string;
+  quiz: number; simulation: number; total: number;
+};
+type ActiviteClasse = { classe: string; quiz: number; simulation: number; };
+
+export default function ProfesseurDashboard() {
+  const [period, setPeriod] = useState<'7j' | '30j'>('7j');
+  const [classes, setClasses] = useState<Classe[]>([]);
+  const [selectedClasse, setSelectedClasse] = useState<string | 'all'>('all');
+  const [parClasse, setParClasse] = useState<ActiviteClasse[]>([]);
+  const [parEleve, setParEleve] = useState<EleveActivite[]>([]);
+  const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
 
   useEffect(() => {
-    const loadStats = async () => {
-      const start = new Date();
-      start.setDate(start.getDate() - 6);
+    loadData();
+  }, [period]);
 
-      const { data: users } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .eq('role', 'eleve')
-        .gte('created_at', start.toISOString());
+  async function loadData() {
+    const since = new Date();
+    since.setDate(since.getDate() - (period === '7j' ? 7 : 30));
 
-      const groupedByDay = Array.from({ length: 7 }).map((_, i) => {
-        const date = new Date(start);
-        date.setDate(start.getDate() + i);
-        const label = date.toLocaleDateString('fr-FR', {
-          weekday: 'short',
-          day: 'numeric',
-        });
-        const count =
-          users?.filter(
-            (u) =>
-              new Date(u.created_at).toDateString() === date.toDateString()
-          ).length || 0;
-        return { day: label, count };
-      });
+    // Récupérer les classes du prof
+    const { data: mesClasses, error: err1 } = await supabase.from('mes_classes').select('*');
+    if (err1 || !mesClasses) return console.error("Classes error:", err1);
+    setClasses(mesClasses);
 
-      setLoginData(groupedByDay);
+    // Récupérer les liens élèves ↔ classes
+    const { data: elevesClasses, error: err2 } = await supabase
+      .from('eleves_classes')
+      .select('eleve_id, classe_id')
+      .in('classe_id', mesClasses.map((c) => c.id));
+    if (err2 || !elevesClasses) return console.error("eleves_classes error:", err2);
 
-      const { data: quizRaw } = await supabase.from('quizzes').select('niveau');
-      const niveaux = ['Débutant', 'Intermédiaire', 'Avancé'];
-      const quizCounts = niveaux.map((niveau) => ({
-        name: niveau,
-        value: quizRaw?.filter((q) => q.niveau === niveau).length || 0,
-      }));
-      setQuizLevels(quizCounts);
+    const eleveIds = elevesClasses.map(e => e.eleve_id);
+    const classeMap: Record<string, string> = {};
+    elevesClasses.forEach(e => {
+      const cl = mesClasses.find(c => c.id === e.classe_id);
+      if (cl) classeMap[e.eleve_id] = cl.code_classe;
+    });
 
-      const { data: expRaw } = await supabase.from('experiences').select('niveau');
-      const uniqueNiveaux = [...new Set(expRaw?.map((e) => e.niveau))];
-      const expCounts = uniqueNiveaux.map((niveau) => ({
-        name: niveau,
-        value: expRaw?.filter((e) => e.niveau === niveau).length || 0,
-      }));
-      setExperienceNiveau(expCounts);
+    // Récupérer les profils
+    const { data: profils, error: err3 } = await supabase
+      .from('profiles')
+      .select('id, name, surname')
+      .in('id', eleveIds);
+    if (err3 || !profils) return console.error("Profils error:", err3);
 
-      const { data: activites } = await supabase
-        .from('activity_logs')
-        .select('user_id, duree')
-        .eq('type', 'simulation');
+    // Récupérer les logs
+    const { data: logs, error: err4 } = await supabase
+      .from('activity_logs')
+      .select('user_id, created_at, type')
+      .in('user_id', eleveIds)
+      .gte('created_at', since.toISOString());
+    if (err4 || !logs) return console.error("Logs error:", err4);
 
-      if (activites && activites.length > 0) {
-        const total = activites.reduce((acc, cur) => acc + cur.duree, 0);
-        const moy = total / new Set(activites.map((a) => a.user_id)).size;
-        setMoyenneTemps(Math.round(moy));
+    // Préparer les activités par élève
+    const eleveMap: Record<string, EleveActivite> = {};
+    for (let e of profils) {
+      const classe = classeMap[e.id] || 'Inconnue';
+      eleveMap[e.id] = {
+        id: e.id,
+        name: `${e.name ?? ''} ${e.surname ?? ''}`.trim(),
+        classe,
+        quiz: 0,
+        simulation: 0,
+        total: 0,
+      };
+    }
+
+    logs.forEach((log) => {
+      const el = eleveMap[log.user_id];
+      if (el) {
+        if (log.type === 'quiz') el.quiz++;
+        if (log.type === 'simulation') el.simulation++;
+        el.total++;
       }
+    });
 
-      const statsMap: Record<string, number> = {};
-      activites?.forEach((a) => {
-        statsMap[a.user_id] = (statsMap[a.user_id] || 0) + a.duree;
-      });
+    // Agrégation par classe
+    const classeAgg: Record<string, ActiviteClasse> = {};
+    Object.values(eleveMap).forEach((e) => {
+      if (!classeAgg[e.classe]) {
+        classeAgg[e.classe] = { classe: e.classe, quiz: 0, simulation: 0 };
+      }
+      classeAgg[e.classe].quiz += e.quiz;
+      classeAgg[e.classe].simulation += e.simulation;
+    });
 
-      const sorted = Object.entries(statsMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+    setParClasse(Object.values(classeAgg));
+    setParEleve(Object.values(eleveMap));
+  }
 
-      const eleveIds = sorted.map(([id]) => id);
-      const { data: profils } = await supabase
-        .from('profiles')
-        .select('id, name, surname')
-        .in('id', eleveIds);
-
-      const topEleves = sorted.map(([id, total]) => {
-        const profil = profils?.find((p) => p.id === id);
-        return {
-          name: `${profil?.name || 'Inconnu'} ${profil?.surname || ''}`,
-          total,
-        };
-      });
-
-      setElevesActifs(topEleves);
-    };
-
-    loadStats();
-  }, []);
-
-  const maxLogin = Math.max(...loginData.map(d => d.count), 1);
-//   const maxQuiz = Math.max(...quizLevels.map(q => q.value), 1);
-  const maxSim = Math.max(...experienceNiveau.map(e => e.value), 1);
+  const totalActivites = parEleve.reduce((acc, e) => acc + e.total, 0);
+  const filteredClasseData = selectedClasse === 'all'
+    ? parClasse
+    : parClasse.filter(c => c.classe === selectedClasse);
 
   return (
-    <div className="p-6 md:p-10 bg-gray-50 min-h-screen space-y-10">
-      <h1 className="text-3xl font-bold text-indigo-700">📊 Tableau de bord pédagogique</h1>
+    <div className="space-y-10 p-6">
+      <h1 className="text-3xl font-bold text-indigo-900">🎓 Tableau de bord professeur</h1>
 
-      {/* Section en ligne */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        {/* 📈 Connexions SVG Bar */}
-        <div className="bg-white rounded-xl border shadow-md p-5 animate-fade-in-up transition">
-          <h2 className="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <UsersRound size={18} /> Connexions élèves
-          </h2>
-          <svg width="100%" height="120">
-            {loginData.map((d, i) => {
-              const barHeight = (d.count / maxLogin) * 100;
-              return (
-                <rect
-                  key={i}
-                  x={i * 30 + 10}
-                  y={120 - barHeight}
-                  width="20"
-                  height={barHeight}
-                  fill="#6366f1"
-                  rx="4"
-                />
-              );
-            })}
-          </svg>
-        </div>
-
-        {/* 🧠 Quiz par niveau - Pie en SVG */}
-        <div className="bg-white rounded-xl border shadow-md p-5 animate-fade-in-up transition">
-          <h2 className="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Brain size={18} /> Quiz par niveau
-          </h2>
-          <ul className="space-y-2 text-sm text-gray-600">
-            {quizLevels.map((item, i) => (
-              <li key={i} className="flex justify-between">
-                <span>{item.name}</span>
-                <span className="font-semibold text-indigo-600">{item.value}</span>
-              </li>
-            ))}
-          </ul>
-          <svg viewBox="0 0 32 32" width="100%" className="mt-4">
-            {(() => {
-              const total = quizLevels.reduce((sum, v) => sum + v.value, 0) || 1;
-              let cumulative = 0;
-              return quizLevels.map((item, i) => {
-                const value = item.value / total;
-                const [startX, startY] = [Math.cos(2 * Math.PI * cumulative), Math.sin(2 * Math.PI * cumulative)];
-                cumulative += value;
-                const [endX, endY] = [Math.cos(2 * Math.PI * cumulative), Math.sin(2 * Math.PI * cumulative)];
-                const largeArc = value > 0.5 ? 1 : 0;
-                return (
-                  <path
-                    key={i}
-                    d={`M16 16 L${16 + 16 * startX} ${16 + 16 * startY} A16 16 0 ${largeArc} 1 ${16 + 16 * endX} ${16 + 16 * endY} Z`}
-                    fill={['#6366f1', '#818cf8', '#c7d2fe'][i % 3]}
-                  />
-                );
-              });
-            })()}
-          </svg>
-        </div>
-
-        {/* 🧪 Simulations - Bar Horizontal */}
-        <div className="bg-white rounded-xl border shadow-md p-5 animate-fade-in-up transition">
-          <h2 className="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <FlaskRound size={18} /> Simulations par niveau
-          </h2>
-          <ul className="space-y-2 text-sm text-gray-600">
-            {experienceNiveau.map((item, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <span className="w-24">{item.name}</span>
-                <div className="flex-1 bg-gray-200 rounded h-3 relative">
-                  <div
-                    className="absolute left-0 top-0 h-3 rounded bg-indigo-500"
-                    style={{ width: `${(item.value / maxSim) * 100}%` }}
-                  />
-                </div>
-                <span className="w-8 text-right text-indigo-700 font-medium">{item.value}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* ⏱️ Temps moyen */}
-      <div className="bg-white rounded-xl border shadow-md p-6 w-full md:w-1/2 animate-fade-in-up transition">
-        <h2 className="text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2">
-          <Clock4 size={18} /> Temps moyen passé par élève
-        </h2>
-        <p className="text-5xl font-bold text-indigo-700">{moyenneTemps} min</p>
-      </div>
-
-      {/* 🔥 Élèves les plus actifs */}
-      <div className="bg-white rounded-xl border shadow-md p-6 w-full md:w-3/4 animate-fade-in-up transition">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <Flame size={18} /> Top 5 des élèves les plus actifs
-        </h2>
-        <ul className="space-y-2 text-sm text-gray-600">
-          {elevesActifs.map((el, idx) => (
-            <li key={idx} className="flex justify-between border-b pb-1">
-              <span>{el.name}</span>
-              <span className="text-indigo-600 font-semibold">{el.total} min</span>
-            </li>
+      {/* 🔄 Sélecteur de période */}
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div>
+          <span className="mr-2 text-sm text-gray-600">Période :</span>
+          {['7j', '30j'].map(opt => (
+            <button key={opt} onClick={() => setPeriod(opt as '7j' | '30j')}
+              className={`px-3 py-1 text-sm rounded-full mr-2 border ${period === opt
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}>
+              {opt === '7j' ? '7 jours' : '30 jours'}
+            </button>
           ))}
-        </ul>
+        </div>
+
+        {/* 📌 Filtrer une classe */}
+        <div>
+          <span className="mr-2 text-sm text-gray-600">Classe :</span>
+          <select
+            onChange={(e) => setSelectedClasse(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            <option value="all">Toutes</option>
+            {classes.map((cl) => (
+              <option key={cl.id} value={cl.code_classe}>
+                {cl.code_classe}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {/* 📊 Cartes statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <CardStat label="Mes classes" count={classes.length} icon={<AcademicCapIcon className="h-6 w-6" />} />
+        <CardStat label="Élèves suivis" count={parEleve.length} icon={<UserGroupIcon className="h-6 w-6" />} />
+        <CardStat label="Activités" count={totalActivites} icon={<ChartBarIcon className="h-6 w-6" />} />
+      </div>
+
+      {/* 📈 Graphe activité */}
+      <GraphActivityByClasse data={filteredClasseData} />
+
+      {/* 🏅 Top élèves */}
+      <TopEleves data={parEleve} onSelectEleve={setSelectedEleve} />
+
+      {/* 😴 Élèves inactifs */}
+      <InactiveEleves data={parEleve} onSelectEleve={setSelectedEleve} />
+
+      {/* 🔍 Vue détaillée */}
+      {selectedEleve && <EleveDetail eleve={selectedEleve} onClose={() => setSelectedEleve(null)} />}
     </div>
   );
 }

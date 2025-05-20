@@ -1,0 +1,9 @@
+// types.ts
+export type EleveActivite = {
+  id: string;
+  name: string;
+  classe: string;
+  quiz: number;
+  simulation: number;
+  total: number;
+};

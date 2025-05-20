@@ -66,6 +66,19 @@ WITH CHECK (
   )
 );
 
+CREATE POLICY "Prof lit profils élèves de ses classes"
+ON public.profiles
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1
+    FROM public.eleves_classes ec
+    JOIN public.professeurs_classes pc ON ec.classe_id = pc.classe_id
+    WHERE ec.eleve_id = profiles.id
+      AND pc.professeur_id = auth.uid()
+  )
+);
+GRANT SELECT ON public.profiles TO authenticated;
 
 
 
@@ -128,12 +141,18 @@ FROM public.classes c
 JOIN public.profiles p ON p.id = c.professeur_principal_id
 WHERE p.role = 'professeur';
 
+CREATE OR REPLACE VIEW public.mes_classes AS
+SELECT c.*
+FROM public.classes c
+JOIN public.professeurs_classes pc ON pc.classe_id = c.id
+WHERE pc.professeur_id = auth.uid();
+ grant select on public.mes_classes to anon, authenticated;
 
 
 
 ###### `professeurs_classes` - Lien professeurs ↔️ classes 
 CREATE TABLE public.professeurs_classes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),  
   professeur_id uuid NOT NULL,
   classe_id uuid NOT NULL,
   assigned_at timestamp DEFAULT now(),
@@ -548,3 +567,23 @@ SELECT li.*
 FROM public.lab_items li
 JOIN current_user_context ctx ON true
 WHERE li.auteur_id = ctx.id OR ctx.role = 'admin';
+
+
+CREATE POLICY "Prof lit logs des élèves de ses classes"
+ON public.activity_logs
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1
+    FROM eleves_classes ec
+    JOIN professeurs_classes pc ON ec.classe_id = pc.classe_id
+    WHERE ec.eleve_id = activity_logs.user_id
+      AND pc.professeur_id = auth.uid()
+  )
+);
+
+GRANT SELECT ON public.activity_logs TO authenticated;
+
+
+
+
