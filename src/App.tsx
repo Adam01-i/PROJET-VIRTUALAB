@@ -1,32 +1,33 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import QuizView from './components/views/Eleve/Quiz/QuizView';
-import Viewer3DView from './components/views/Eleve/Viewer3D/Viewer3DView';
-import ExperienceView from './components/views/Eleve/Experience/ExperienceView';
-import AccueilView from './components/views/Eleve/Accueil/AccueilView';
-
-import ProfesseurLayout from './components/layouts/ProfesseurLayout';
-import ProfExpView from './components/views/Professeur/Prof-Exp/ProfExpView';
-import ProfQuizView from './components/views/Professeur/Prof-Quiz/ProfQuizView';
-import ProfElevView from './components/views/Professeur/Prof-Elev/ProfElevView';
-import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
-import DashboardProfesseur from './components/views/Professeur/Dashboard/ProfesseurDashboard';
-import ProfesseurGuard from './components/views/Professeur/ProfesseurGuard';
-
-import EleveLayout from './components/layouts/EleveLayout';
-import {Toaster } from 'sonner';
+import { Toaster } from 'sonner';
 
 import Login from './components/views/Auth/Login';
-import AdminUser from './components/views/Admin/Gestion User/AdminUser';
-import AdminGuard from './components/views/Admin/AdminGuard';
 import RedirectMe from './components/views/Auth/RedirectMe';
-import AdminLayout from './components/layouts/AdminLayout';
-import AdminDashboard from './components/views/Admin/Dashboard/AdminDashboard';
 import ForgotPassword from './components/views/Auth/ForgotPassword';
 import ResetPassword from './components/views/Auth/ResetPassword';
 import ChangePassword from './components/views/Auth/ChangePassword';
-import AdminAccount from './components/views/Admin/Mon Compte/AdminAccount';
+
+import EleveLayout from './components/layouts/EleveLayout';
+import AccueilView from './components/views/Eleve/Accueil/AccueilView';
+import ExperienceView from './components/views/Eleve/Experience/ExperienceView';
+import QuizView from './components/views/Eleve/Quiz/QuizView';
+import Viewer3DView from './components/views/Eleve/Viewer3D/Viewer3DView';
+
+import ProfesseurLayout from './components/layouts/ProfesseurLayout';
+import DashboardProfesseur from './components/views/Professeur/Dashboard/ProfesseurDashboard';
+import ProfElevView from './components/views/Professeur/Prof-Elev/ProfElevView';
+import ProfExpView from './components/views/Professeur/Prof-Exp/ProfExpView';
+import ProfQuizView from './components/views/Professeur/Prof-Quiz/ProfQuizView';
+import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
+import ProfesseurGuard from './components/views/Professeur/ProfesseurGuard';
+
+import AdminLayout from './components/layouts/AdminLayout';
+import AdminDashboard from './components/views/Admin/Dashboard/AdminDashboard';
+import AdminUser from './components/views/Admin/Gestion User/AdminUser';
 import AdminClasse from './components/views/Admin/Gestion Classe/AdminClasse';
+import AdminAccount from './components/views/Admin/Mon Compte/AdminAccount';
+import AdminGuard from './components/views/Admin/AdminGuard';
 
 function App() {
   return (
@@ -34,15 +35,7 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
       <Routes>
-        {/* Interface Admin */}
-        <Route path="/admin/*" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-          <Route path="AdminDashboard" element={<AdminDashboard />} />
-          <Route path="AdminUser" element={<AdminUser />} />
-          <Route path="AdminAccount" element={<AdminAccount />} />
-          <Route path="AdminClasse" element={<AdminClasse />} />
-        </Route>
-
-
+        
         {/*Interface Login */}
         <Route path="/login" element={<Login />} />
         {/* Interface Changer Mot de Passe */}
@@ -51,6 +44,7 @@ function App() {
         <Route path="/change-password" element={<ChangePassword />} />
         {/* Interface de Redirection */}
         <Route path="/me" element={<RedirectMe />} />
+
         {/* Interface Élève */}
         <Route path="/" element={<EleveLayout />}>
           <Route index element={<AccueilView />} />
@@ -60,16 +54,23 @@ function App() {
           <Route path="eleve/3d" element={<Viewer3DView />} />
         </Route>
 
+        {/* Interface Admin */}
+        <Route path="/admin/*" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+          <Route path="AdminDashboard" element={<AdminDashboard />} />
+          <Route path="AdminUser" element={<AdminUser />} />
+          <Route path="AdminAccount" element={<AdminAccount />} />
+          <Route path="AdminClasse" element={<AdminClasse />} />
+        </Route>
 
-        
         {/* Interface Professeur */}
         <Route path="/professeur" element={<ProfesseurGuard><ProfesseurLayout /></ProfesseurGuard>}>
           <Route index element={<Navigate to="/professeur/dashboard" replace />} />
           <Route path="/professeur/dashboard" element={<DashboardProfesseur />} />
+          <Route path="suivi-eleve" element={<ProfElevView />} />
           <Route path="experiences" element={<ProfExpView />} />
           <Route path="quiz" element={<ProfQuizView />} />
-          <Route path="suivi-eleve" element={<ProfElevView />} />
           <Route path="3D" element={<Prof3DView />} />
+          
         </Route>
       </Routes>
     </>

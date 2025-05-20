@@ -5,7 +5,6 @@ import {
   FileSpreadsheet,
   FlaskRound as Flask,
 } from 'lucide-react';
-import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
 import UserMenu from './../../components/ui/UserMenu';
 import { useEffect, useState } from 'react';
 import {toast} from 'sonner'; // ✅ Toast import
@@ -35,9 +34,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
-      <MustChangePasswordBanner />
-
-
       {/* 🔵 Top Navbar */}
       <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-indigo-900'}`}>
         <div className="max-w-[1280px] mx-auto px-4">

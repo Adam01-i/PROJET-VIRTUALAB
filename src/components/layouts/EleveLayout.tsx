@@ -8,7 +8,6 @@ import {
   LogIn,
 } from 'lucide-react';
 import ImageCarouselBackground from '../views/ImageCarouselBackground';
-import MustChangePasswordBanner from '../../components/ui/MustChangePasswordBanner';
 import UserMenu from '../../components/ui/UserMenu';
 
 export default function EleveLayout() {
@@ -34,9 +33,6 @@ export default function EleveLayout() {
 
   return (
     <div className="min-h-screen bg-white text-white">
-      {/* 🔐 Bandeau changement de mot de passe */}
-      <MustChangePasswordBanner />
-
       {/* ✅ Navbar élève */}
       <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : ''}`}>
         <div className="max-w-[1280px] mx-auto px-4">
