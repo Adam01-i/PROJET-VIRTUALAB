@@ -5,9 +5,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
-import {
-  PlusCircle,
-  Users,
+import { PlusCircle, Users,
   Atom,
   FlaskConical,
   Trash2,
