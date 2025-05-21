@@ -29,7 +29,7 @@ export default function AdminLayout() {
     { path: '/admin/AdminDashboard', icon: LayoutDashboard, label: 'Dashboard Administrateur' },
     { path: '/admin/AdminUser', icon: FileSpreadsheet, label: 'Gestion Utilisateur' },
     { path: '/admin/AdminClasse', icon: UsersRound, label: 'Gestion Classe' },
-    { path: '/admin/AdminAccount', icon: UsersRound, label: 'Mon Compte' },
+    // { path: '/admin/AdminAccount', icon: UsersRound, label: 'Mon Compte' },
   ];
 
   return (

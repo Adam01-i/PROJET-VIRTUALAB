@@ -4,17 +4,18 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import CardStat from '../../../ui/CardStat';
 import GraphActivityByClasse from './GraphActivityByClasse';
-import TopEleves from './TopEleves';
-import InactiveEleves from './InactiveEleves';
-import EleveDetail from './EleveDetail';
 import { AcademicCapIcon, UserGroupIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
-type Classe = { id: string; code_classe: string; };
+type Classe = { id: string; code_classe: string };
 type EleveActivite = {
-  id: string; name: string; classe: string;
-  quiz: number; simulation: number; total: number;
+  id: string;
+  name: string;
+  classe: string;
+  quiz: number;
+  simulation: number;
+  total: number;
 };
-type ActiviteClasse = { classe: string; quiz: number; simulation: number; };
+type ActiviteClasse = { classe: string; quiz: number; simulation: number };
 
 export default function ProfesseurDashboard() {
   const [period, setPeriod] = useState<'7j' | '30j'>('7j');
@@ -22,7 +23,6 @@ export default function ProfesseurDashboard() {
   const [selectedClasse, setSelectedClasse] = useState<string | 'all'>('all');
   const [parClasse, setParClasse] = useState<ActiviteClasse[]>([]);
   const [parEleve, setParEleve] = useState<EleveActivite[]>([]);
-  const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
 
   useEffect(() => {
     loadData();
@@ -32,12 +32,10 @@ export default function ProfesseurDashboard() {
     const since = new Date();
     since.setDate(since.getDate() - (period === '7j' ? 7 : 30));
 
-    // Récupérer les classes du prof
     const { data: mesClasses, error: err1 } = await supabase.from('mes_classes').select('*');
     if (err1 || !mesClasses) return console.error("Classes error:", err1);
     setClasses(mesClasses);
 
-    // Récupérer les liens élèves ↔ classes
     const { data: elevesClasses, error: err2 } = await supabase
       .from('eleves_classes')
       .select('eleve_id, classe_id')
@@ -51,14 +49,12 @@ export default function ProfesseurDashboard() {
       if (cl) classeMap[e.eleve_id] = cl.code_classe;
     });
 
-    // Récupérer les profils
     const { data: profils, error: err3 } = await supabase
       .from('profiles')
       .select('id, name, surname')
       .in('id', eleveIds);
     if (err3 || !profils) return console.error("Profils error:", err3);
 
-    // Récupérer les logs
     const { data: logs, error: err4 } = await supabase
       .from('activity_logs')
       .select('user_id, created_at, type')
@@ -66,7 +62,6 @@ export default function ProfesseurDashboard() {
       .gte('created_at', since.toISOString());
     if (err4 || !logs) return console.error("Logs error:", err4);
 
-    // Préparer les activités par élève
     const eleveMap: Record<string, EleveActivite> = {};
     for (let e of profils) {
       const classe = classeMap[e.id] || 'Inconnue';
@@ -89,7 +84,6 @@ export default function ProfesseurDashboard() {
       }
     });
 
-    // Agrégation par classe
     const classeAgg: Record<string, ActiviteClasse> = {};
     Object.values(eleveMap).forEach((e) => {
       if (!classeAgg[e.classe]) {
@@ -112,7 +106,7 @@ export default function ProfesseurDashboard() {
     <div className="space-y-10 p-6">
       <h1 className="text-3xl font-bold text-indigo-900">🎓 Tableau de bord professeur</h1>
 
-      {/* 🔄 Sélecteur de période */}
+      {/* 🔄 Sélecteur de période et filtre classe */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div>
           <span className="mr-2 text-sm text-gray-600">Période :</span>
@@ -127,7 +121,6 @@ export default function ProfesseurDashboard() {
           ))}
         </div>
 
-        {/* 📌 Filtrer une classe */}
         <div>
           <span className="mr-2 text-sm text-gray-600">Classe :</span>
           <select
@@ -144,7 +137,7 @@ export default function ProfesseurDashboard() {
         </div>
       </div>
 
-      {/* 📊 Cartes statistiques */}
+      {/* 📊 Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <CardStat label="Mes classes" count={classes.length} icon={<AcademicCapIcon className="h-6 w-6" />} />
         <CardStat label="Élèves suivis" count={parEleve.length} icon={<UserGroupIcon className="h-6 w-6" />} />
@@ -153,15 +146,6 @@ export default function ProfesseurDashboard() {
 
       {/* 📈 Graphe activité */}
       <GraphActivityByClasse data={filteredClasseData} />
-
-      {/* 🏅 Top élèves */}
-      <TopEleves data={parEleve} onSelectEleve={setSelectedEleve} />
-
-      {/* 😴 Élèves inactifs */}
-      <InactiveEleves data={parEleve} onSelectEleve={setSelectedEleve} />
-
-      {/* 🔍 Vue détaillée */}
-      {selectedEleve && <EleveDetail eleve={selectedEleve} onClose={() => setSelectedEleve(null)} />}
     </div>
   );
 }

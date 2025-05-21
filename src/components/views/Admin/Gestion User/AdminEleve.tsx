@@ -16,7 +16,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
   const [classes, setClasses] = React.useState<any[]>([]);
   const [assignations, setAssignations] = React.useState<any[]>([]);
   const [search, setSearch] = React.useState('');
-  const [classeFiltre, setClasseFiltre] = React.useState<string>(''); // ✅ string only
+  const [classeFiltre, setClasseFiltre] = React.useState<string>(''); 
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
 
