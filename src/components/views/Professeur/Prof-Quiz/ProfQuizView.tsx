@@ -1,452 +1,257 @@
-import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import ProfQuizCard from "./ProfQuizCard";
-import { supabase } from "../../../../lib/supabaseClient";
-import type { Quiz, QuizQuestion } from "../../../../types/Quiz/quiz";
-import {toast} from 'sonner'; // ✅ Toast import
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '../../../../lib/supabaseClient';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import ProfQuizCard from './ProfQuizCard';
+import type { Quiz } from '../../../../types/Quiz/quiz';
+
+const DUREE_OPTIONS = ["10 min", "20 min", "30 min", "45 min"];
+const NIVEAU_OPTIONS = ["Débutant", "Intermédiaire", "Avancé"];
 
 export default function ProfQuizView() {
-  const [quizList, setQuizList] = useState<Quiz[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [formData, setFormData] = useState<Quiz | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [, setUploading] = useState(false);
+  const [classes, setClasses] = useState<{ id: string, code_classe: string }[]>([]);
+  const [classeFilter, setClasseFilter] = useState<string>('all');
 
-  const [formData, setFormData] = useState<Quiz>({
-    id: '',
-    titre: '',
-    description: '',
-    duree: '',
-    niveau: 'Débutant',
-    image: '',
-    questions: [],
-  });
-
-  const fetchQuizzes = async () => {
-    const { data, error } = await supabase
-      .from('quizzes')
-      .select('*, questions(*)')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast.error("❌ Erreur de chargement des quiz.");
-      console.error("❌ Erreur fetch quizzes :", error);
-    } else {
-      setQuizList(data || []);
-      setSelectedQuiz(data?.[0] || null);
-    }
+  const getClasseNom = (id: string | null | undefined) => {
+    if (!id) return '—';
+    const classe = classes.find((c) => c.id === id);
+    return classe?.code_classe || '—';
   };
 
   useEffect(() => {
-    fetchQuizzes();
+    fetchClasses();
   }, []);
 
-  const handleEdit = (quiz: Quiz) => {
-    setSelectedQuiz(quiz);
-    setIsEditing(true);
-    setFormData({ ...quiz });
+  useEffect(() => {
+    fetchQuizzes();
+  }, [classeFilter]);
+
+  const fetchClasses = async () => {
+    const { data, error } = await supabase.from('mes_classes').select('id, code_classe');
+    if (!error && data) setClasses(data);
   };
 
-  const uploadQuizImage = async (file: File): Promise<string | null> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `quizzes/${fileName}`;
+  const fetchQuizzes = async () => {
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session?.session?.user?.id;
 
-    const { error } = await supabase.storage
-      .from('quiz-images')
-      .upload(filePath, file);
+    let query = supabase
+      .from('quizzes')
+      .select('*')
+      .eq('auteur_id', userId)
+      .order('created_at', { ascending: false });
 
-    if (error) {
-      toast.error("❌ Échec de l'upload de l'image");
-      return null;
-    }
+    if (classeFilter !== 'all') query = query.eq('classe_id', classeFilter);
 
-    const { data: publicUrlData } = supabase.storage
-      .from('quiz-images')
-      .getPublicUrl(`quizzes/${fileName}`);
+    const { data, error } = await query;
 
-    return publicUrlData?.publicUrl ?? null;
+    if (error) toast.error('Erreur chargement des quiz');
+    else setQuizzes(data || []);
   };
 
-  const handleDelete = async (quizId: string) => {
-    const confirmDelete = window.confirm("❗ Supprimer ce quiz ? Cette action est irréversible.");
-    if (!confirmDelete) return;
-
-    try {
-      await toast.promise(
-        Promise.all([
-          supabase.from('questions').delete().eq('quiz_id', quizId),
-          supabase.from('quizzes').delete().eq('id', quizId),
-        ]),
-        {
-          loading: 'Suppression en cours...',
-          success: '✅ Quiz supprimé avec succès.',
-          error: '❌ Échec de la suppression.',
-        }
-      );
-
-      await fetchQuizzes();
-      setSelectedQuiz(null);
-    } catch (err) {
-      toast.error("Erreur lors de la suppression.");
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (isUploadingImage) {
-      toast.error("⏳ Attendez que l'image soit entièrement uploadée.");
+  const handleSave = async () => {
+    if (!formData?.titre || !formData.description || !formData.classe_id) {
+      toast.error('Titre, description et classe requis.');
       return;
     }
 
-    if (formData.questions.length === 0) {
-      toast.error("Le quiz doit contenir au moins une question.");
-      return;
-    }
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session?.session?.user?.id;
+    const isNew = !formData.id;
 
-    try {
-      await toast.promise((async () => {
-        if (formData.id) {
-          await supabase.from('quizzes').update({
-            titre: formData.titre,
-            description: formData.description,
-            niveau: formData.niveau,
-            duree: formData.duree,
-            image: formData.image,
-          }).eq('id', formData.id);
-
-          const { data: existingQuestions } = await supabase
-            .from('questions')
-            .select('id')
-            .eq('quiz_id', formData.id);
-
-          const existingIds = (existingQuestions || []).map(q => q.id);
-          const updatedIds = formData.questions
-            .filter(q => q.id)
-            .map(q => q.id);
-          const idsToDelete = existingIds.filter(id => !updatedIds.includes(id));
-
-          if (idsToDelete.length > 0) {
-            await supabase.from('questions').delete().in('id', idsToDelete);
-          }
-
-          const upsertData = formData.questions.map(q => ({
-            id: q.id ?? uuidv4(),
-            quiz_id: formData.id,
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation,
-          }));
-
-          await supabase.from('questions').upsert(upsertData);
-        } else {
-          const { data: quizData, error: quizError } = await supabase
+    await toast.promise(
+      (async () => {
+        if (isNew) {
+          const { data: inserted, error } = await supabase
             .from('quizzes')
             .insert([{
-              titre: formData.titre,
-              description: formData.description,
-              niveau: formData.niveau,
-              duree: formData.duree,
-              image: formData.image,
+              ...formData,
+              id: uuidv4(),
+              auteur_id: userId,
+              questions: []
             }])
             .select();
-
-          const newQuizId = quizData?.[0]?.id;
-
-          if (!newQuizId || quizError) {
-            throw new Error("Erreur création du quiz.");
-          }
-
-          const insertQuestions = formData.questions.map(q => ({
-            id: q.id ?? uuidv4(),
-            quiz_id: newQuizId,
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation,
-          }));
-
-          await supabase.from('questions').insert(insertQuestions);
+          if (error || !inserted || !inserted[0]) throw new Error("Erreur lors de l'ajout.");
+        } else {
+          await supabase.from('quizzes').update(formData).eq('id', formData.id);
         }
-      })(), {
-        loading: 'Sauvegarde en cours...',
-        success: formData.id ? '✅ Quiz mis à jour !' : '✅ Nouveau quiz créé !',
-        error: '❌ Erreur lors de la sauvegarde.',
-      });
+      })(),
+      {
+        loading: "⏳ Enregistrement...",
+        success: isNew ? "✅ Quiz ajouté !" : "✅ Modifié !",
+        error: "❌ Échec de l'enregistrement.",
+      }
+    );
 
-      setIsEditing(false);
-      setFormData({
-        id: '',
-        titre: '',
-        description: '',
-        duree: '',
-        niveau: 'Débutant',
-        image: '',
-        questions: [],
-      });
+    fetchQuizzes();
+    resetForm();
+  };
 
-      await fetchQuizzes();
-    } catch (error) {
-      console.error(error);
+  const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer ce quiz ?")) return;
+    const { error } = await supabase.from('quizzes').delete().eq('id', id);
+    if (error) toast.error("Erreur suppression");
+    else {
+      toast.success("Quiz supprimé");
+      fetchQuizzes();
+      resetForm();
     }
   };
 
-  const addQuestion = () => {
-    const newQuestion: QuizQuestion = {
-      id: uuidv4(),
-      question: '',
-      options: ['', '', '', ''],
-      correctAnswer: 0,
-      explanation: ''
-    };
-    setFormData({ ...formData, questions: [...formData.questions, newQuestion] });
+  const resetForm = () => {
+    setFormData(null);
+    setIsEditing(false);
   };
 
-  const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: string | number) => {
-    const updated = [...formData.questions];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormData({ ...formData, questions: updated });
-  };
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleOptionChange = (qIndex: number, oIndex: number, value: string) => {
-    const updatedQuestions = [...formData.questions];
-    updatedQuestions[qIndex].options[oIndex] = value;
-    setFormData({ ...formData, questions: updatedQuestions });
-  };
-
-  const removeQuestion = (index: number) => {
-    const updated = [...formData.questions];
-    updated.splice(index, 1);
-    setFormData({ ...formData, questions: updated });
+    setUploading(true);
+    const filePath = `quiz-images/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("images-sim").upload(filePath, file);
+    if (!error) {
+      const { data } = supabase.storage.from("images-sim").getPublicUrl(filePath);
+      if (formData) setFormData({ ...formData, image: data.publicUrl });
+    } else toast.error("Erreur d'upload image");
+    setUploading(false);
   };
 
   return (
-    <div className="p-4 bg-gray-100 text-gray-800 min-h-screen max-w-[1280px] mx-auto text-base">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-purple-700">Gestion des quiz</h2>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-indigo-700">🧠 Mes Quiz</h2>
         <button
           onClick={() => {
             setFormData({
               id: '',
               titre: '',
               description: '',
-              duree: '',
-              niveau: 'Débutant',
+              duree: DUREE_OPTIONS[0],
+              niveau: NIVEAU_OPTIONS[0],
               image: '',
               questions: [],
+              classe_id: '',
+              auteur_id: '',
             });
-            setSelectedQuiz(null);
             setIsEditing(true);
           }}
-          className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow text-sm"
         >
           ➕ Nouveau Quiz
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-[60%] space-y-4 max-h-[84vh] overflow-auto">
-          {quizList.length === 0 ? (
-            <p className="text-gray-500">Aucun quiz trouvé.</p>
+      {/* 🔍 Filtre par classe */}
+      <div>
+        <label className="text-sm font-medium text-gray-600 mr-2">Classe :</label>
+        <select
+          className="border px-3 py-1 rounded text-sm"
+          onChange={(e) => setClasseFilter(e.target.value)}
+          value={classeFilter}
+        >
+          <option value="all">Toutes</option>
+          {classes.map((c) => (
+            <option key={c.id} value={c.id}>{c.code_classe}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          {quizzes.length === 0 ? (
+            <p className="text-gray-500 italic">Aucun quiz trouvé.</p>
           ) : (
-            quizList.map((quiz) => (
-              <div
+            quizzes.map((quiz) => (
+              <ProfQuizCard
                 key={quiz.id}
-                className={`cursor-pointer p-4 rounded-md shadow-sm border transition ${
-                  selectedQuiz?.id === quiz.id
-                    ? 'bg-purple-100 border-purple-300'
-                    : 'bg-white hover:bg-gray-50 border-gray-200'
-                }`}
-                onClick={() => {
-                  setSelectedQuiz(quiz);
-                  setIsEditing(false);
+                quiz={quiz}
+                classeNom={getClasseNom(quiz.classe_id)}
+                onEdit={(quiz) => {
+                  setFormData(quiz);
+                  setIsEditing(true);
                 }}
-              >
-                <h3 className="text-base font-semibold text-gray-800 mb-1">{quiz.titre}</h3>
-                <p className="text-sm text-gray-600 line-clamp-2 mb-2">{quiz.description}</p>
-                <div className="text-sm text-gray-500 flex gap-3">
-                  <span className="px-2 py-0.5 bg-gray-100 rounded-full">{quiz.niveau}</span>
-                  <span>{quiz.questions?.length || 0} questions</span>
-                  <span>{quiz.duree}</span>
-                </div>
-              </div>
+                onDelete={handleDelete}
+              />
             ))
+
           )}
         </div>
 
-        <div className="md:w-[40%] space-y-6 max-h-[84vh] overflow-auto">
-          {selectedQuiz && !isEditing && (
-            <ProfQuizCard
-              quiz={selectedQuiz}
-              onStart={handleEdit}
-              onDelete={() => handleDelete(selectedQuiz.id)}
+        {/* 🧾 Formulaire */}
+        {isEditing && formData && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="bg-white border p-4 rounded shadow space-y-4"
+          >
+            <h3 className="text-lg font-semibold text-indigo-600">
+              {formData.id ? "Modifier" : "Nouveau"} Quiz
+            </h3>
+
+            <input
+              required
+              placeholder="Titre"
+              value={formData.titre}
+              onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+              className="w-full border p-2 rounded"
             />
-          )}
 
-          {isEditing && (
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white rounded-md p-4 shadow-sm border space-y-5"
+            <textarea
+              required
+              placeholder="Description"
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full border p-2 rounded text-sm"
+            />
+
+            <div className="flex gap-3">
+              <select
+                value={formData.duree}
+                onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
+                className="flex-1 border p-2 rounded"
+              >
+                {DUREE_OPTIONS.map(d => <option key={d}>{d}</option>)}
+              </select>
+              <select
+                value={formData.niveau}
+                onChange={(e) => setFormData({ ...formData, niveau: e.target.value })}
+                className="flex-1 border p-2 rounded"
+              >
+                {NIVEAU_OPTIONS.map(n => <option key={n}>{n}</option>)}
+              </select>
+            </div>
+
+            <select
+              required
+              value={formData.classe_id}
+              onChange={(e) => setFormData({ ...formData, classe_id: e.target.value })}
+              className="w-full border p-2 rounded"
             >
-              <div className="space-y-3 text-sm">
-                <div>
-                  <label className="font-medium">Titre</label>
-                  <input
-                    value={formData.titre}
-                    onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                    className="w-full mt-1 p-2 border rounded-md"
-                  />
-                </div>
+              <option value="">Sélectionner une classe</option>
+              {classes.map(cl => (
+                <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
+              ))}
+            </select>
 
-                <div>
-                  <label className="font-medium">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={2}
-                    className="w-full mt-1 p-2 border rounded-md"
-                  />
-                </div>
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
+            {formData.image && <img src={formData.image} className="rounded border w-full mt-2" alt="preview" />}
 
-                <div>
-                  <label className="font-medium">Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      setIsUploadingImage(true);
-                      toast.loading("⏳ Upload image...");
-                      const url = await uploadQuizImage(file);
-                      toast.dismiss();
-                      setIsUploadingImage(false);
-
-                      if (url) {
-                        setFormData((prev) => ({ ...prev, image: url }));
-                        toast.success("✅ Image ajoutée !");
-                      } else toast.error("❌ Échec upload");
-                    }}
-                    className="w-full mt-1 p-2 border rounded-md"
-                  />
-                  {formData.image && (
-                    <img src={formData.image} alt="preview" className="mt-2 max-h-40 w-full object-contain border rounded-md" />
-                  )}
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-1/2">
-                    <label>Durée</label>
-                    <select
-                      value={formData.duree}
-                      onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="">-- Choisir --</option>
-                      <option value="15 min">15 min</option>
-                      <option value="30 min">30 min</option>
-                      <option value="45 min">45 min</option>
-                      <option value="1 h">1 h</option>
-                    </select>
-                  </div>
-                  <div className="w-1/2">
-                    <label>Niveau</label>
-                    <select
-                      value={formData.niveau}
-                      onChange={(e) =>
-                        setFormData({ ...formData, niveau: e.target.value as Quiz['niveau'] })
-                      }
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="Débutant">Débutant</option>
-                      <option value="Intermédiaire">Intermédiaire</option>
-                      <option value="Avancé">Avancé</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-base font-semibold text-gray-700">Questions</h4>
-                {formData.questions.map((q, idx) => (
-                  <div key={q.id} className="bg-gray-50 p-3 rounded-md border space-y-3 text-sm">
-                    <div className="font-medium text-purple-700">Question {idx + 1}</div>
-                    <input
-                      value={q.question}
-                      onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
-                      className="w-full p-2 border rounded-md"
-                      placeholder="Intitulé"
-                    />
-                    {q.options.map((opt, optIdx) => (
-                      <input
-                        key={optIdx}
-                        value={opt}
-                        onChange={(e) => handleOptionChange(idx, optIdx, e.target.value)}
-                        className="w-full p-2 border rounded-md"
-                        placeholder={`Option ${optIdx + 1}`}
-                      />
-                    ))}
-                    <select
-                      value={q.correctAnswer}
-                      onChange={(e) => handleQuestionChange(idx, 'correctAnswer', Number(e.target.value))}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      {q.options.map((_, i) => (
-                        <option key={i} value={i}>Bonne réponse : Option {i + 1}</option>
-                      ))}
-                    </select>
-                    <textarea
-                      value={q.explanation}
-                      onChange={(e) => handleQuestionChange(idx, 'explanation', e.target.value)}
-                      className="w-full p-2 border rounded-md"
-                      placeholder="Explication (facultatif)"
-                      rows={2}
-                    />
-                    <div className="text-right">
-                      <button
-                        onClick={() => removeQuestion(idx)}
-                        type="button"
-                        className="text-red-600 text-sm hover:underline"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addQuestion}
-                  className="text-purple-700 text-sm font-medium hover:underline"
-                >
-                  ➕ Ajouter une question
-                </button>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={isUploadingImage}
-                  className={`px-4 py-2 text-white text-sm rounded-md ${
-                    isUploadingImage
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
-                >
-                  {isUploadingImage ? 'Image...' : 'Enregistrer'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm rounded-md"
-                >
-                  Annuler
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
+            <div className="flex justify-end gap-2">
+              <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">💾 Enregistrer</button>
+              <button type="button" onClick={resetForm} className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuler</button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

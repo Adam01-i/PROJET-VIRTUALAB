@@ -1,4 +1,4 @@
-import { Beaker} from 'lucide-react';
+import { Beaker } from 'lucide-react';
 import type { Experience } from '../../../../types/Experience/experience';
 
 type ProfExpCardProps = {
@@ -13,7 +13,8 @@ export default function ProfExpCard({
   classeNom,
   onEdit,
   onDelete,
-}: ProfExpCardProps) {return (
+}: ProfExpCardProps) {
+  return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg transition">
       <div className="h-40 relative overflow-hidden">
         <img
@@ -27,7 +28,7 @@ export default function ProfExpCard({
               📘 {classeNom}
             </span>
           )}
-          
+
         </div>
       </div>
 

@@ -1,58 +1,59 @@
-import { Brain, Clock, Pencil, Trash2 } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import type { Quiz } from '../../../../types/Quiz/quiz';
 
 type ProfQuizCardProps = {
   quiz: Quiz;
-  onStart: (quiz: Quiz) => void;
-  onDelete?: () => void;
+  classeNom?: string;
+  onEdit: (quiz: Quiz) => void;
+  onDelete: (id: string) => void;
 };
 
-export default function ProfQuizCard({ quiz, onStart, onDelete }: ProfQuizCardProps) {
+export default function ProfQuizCard({
+  quiz,
+  classeNom,
+  onEdit,
+  onDelete,
+}: ProfQuizCardProps) {
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-md transition-all duration-200 border border-gray-200">
-      <div className="h-40 overflow-hidden relative">
+    <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg transition">
+      <div className="h-40 relative overflow-hidden">
         <img
           src={quiz.image}
           alt={quiz.titre}
-          className="w-full h-full object-cover transition-transform duration-300"
+          className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-3 left-3">
-          <span className="px-2.5 py-0.5 bg-purple-600 text-white text-xs rounded-full shadow">
-            {quiz.niveau}
-          </span>
+        <div className="absolute bottom-3 left-3 flex gap-2">
+          {classeNom && (
+            <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded">
+              📘 {classeNom}
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="p-4 text-gray-800 text-sm">
-        <h3 className="text-base font-semibold mb-1">{quiz.titre}</h3>
-        <p className="text-gray-600 mb-3">{quiz.description}</p>
+      <div className="p-4 space-y-2 text-sm">
+        <h3 className="font-semibold text-gray-800 flex items-center gap-1">
+          <Brain size={14} /> {quiz.titre}
+        </h3>
+        <p className="text-gray-600">{quiz.description}</p>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-gray-500">
-            <Brain size={14} />
-            <span>{quiz.questions?.length || 0} questions</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-500">
-            <Clock size={14} />
-            <span>{quiz.duree}</span>
-          </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>🧠 {quiz.questions?.length || 0} questions</span>
+          <span>⏱ {quiz.duree}</span>
         </div>
 
-        <div className="flex justify-between gap-2">
+        <div className="flex gap-2 mt-2">
           <button
-            onClick={() => onStart(quiz)}
-            className="flex items-center justify-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md w-full text-sm"
+            onClick={() => onEdit(quiz)}
+            className="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-900"
           >
-            <Pencil size={14} />
-            Modifier
+            ✏️ Modifier
           </button>
           <button
-            onClick={() => onDelete?.()}
-            className="flex items-center justify-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md w-full text-sm"
+            onClick={() => onDelete(quiz.id)}
+            className="flex-1 bg-red-600 text-white text-xs py-1.5 rounded hover:bg-red-700"
           >
-            <Trash2 size={14} />
-            Supprimer
+            🗑 Supprimer
           </button>
         </div>
       </div>

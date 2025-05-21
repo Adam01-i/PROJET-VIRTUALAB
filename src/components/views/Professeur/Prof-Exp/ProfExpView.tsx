@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import ProfExpCard from "./ProfExpCard";
 
 const DUREE_OPTIONS = ["15 min", "30 min", "45 min", "60 min"];
-const NIVEAU_OPTIONS = ["Facile", "Intermediare", "Difficile"];
+const NIVEAU_OPTIONS = ["Débutant", "Intermédiaire", "Avancé"];
 
 export default function ProfExpView() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
