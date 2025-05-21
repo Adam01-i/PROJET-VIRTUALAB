@@ -349,7 +349,64 @@ WITH CHECK (
   )
 );
 
+-- Étape 1 : Ajouter la colonne
+ALTER TABLE public.experiences
+ADD COLUMN auteur_id uuid;
 
+-- Étape 2 : Ajouter la clé étrangère
+ALTER TABLE public.experiences
+ADD CONSTRAINT fk_experience_auteur
+FOREIGN KEY (auteur_id) REFERENCES public.profiles(id)
+ON DELETE SET NULL;
+ 
+
+DROP POLICY IF EXISTS "Lecture expériences" ON public.experiences;
+
+CREATE POLICY "Lecture expériences"
+ON public.experiences
+TO public
+USING (
+  EXISTS (
+    SELECT 1 FROM current_user_context ctx
+    WHERE 
+      ctx.role = 'admin'
+      OR ctx.id = experiences.auteur_id
+      OR ctx.id IN (
+        SELECT professeur_id
+        FROM public.professeurs_classes pc
+        WHERE pc.classe_id = experiences.classe_id
+      )
+  )
+);
+DROP POLICY IF EXISTS "Modification expériences" ON public.experiences;
+
+CREATE POLICY "Modification expériences"
+ON public.experiences
+TO public
+USING (
+  EXISTS (
+    SELECT 1 FROM current_user_context ctx
+    WHERE 
+      ctx.role = 'admin'
+      OR ctx.id = experiences.auteur_id
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM current_user_context ctx
+    WHERE 
+      ctx.role = 'admin'
+      OR ctx.id = experiences.auteur_id
+  )
+);
+CREATE OR REPLACE VIEW mes_experiences AS
+SELECT *
+FROM public.experiences
+WHERE auteur_id = auth.uid();
+
+GRANT SELECT ON mes_experiences TO authenticated, anon;
+-- Crée un index (optionnel mais conseillé)
+CREATE INDEX idx_experiences_auteur_id ON public.experiences (auteur_id);
 
 
 ###### 🧭 `activity_logs` - Journal des activités utilisateurs 

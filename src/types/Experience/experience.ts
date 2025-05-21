@@ -6,10 +6,14 @@ export type Experience = {
   niveau: string;
   image: string;
   simulationPath: string;
+  classe_id: string;        
+  auteur_id?: string;       
   objectifs: string[];
   materiel: string[];
   resultatsAttendus: string[];
+  created_at?: string;
 };
+
 
 export type ExperienceStep = {
   id: string;
