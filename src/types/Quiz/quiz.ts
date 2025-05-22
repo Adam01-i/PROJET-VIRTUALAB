@@ -12,11 +12,10 @@ export type Quiz = {
   titre: string;
   description: string;
   duree: string;
-  niveau: string;
-  image: string; // 👈 DOIT ÊTRE string (pas string | undefined)
+  image: string; 
   questions: QuizQuestion[];
   classe_id: string;
-  auteur_id: string; // 👈 DOIT ÊTRE string (pas string | undefined)
+  auteur_id: string; 
   created_at?: string;
 };
 

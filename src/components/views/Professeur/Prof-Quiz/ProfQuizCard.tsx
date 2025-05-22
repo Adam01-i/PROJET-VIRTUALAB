@@ -44,11 +44,17 @@ export default function ProfQuizCard({
 
         <div className="flex gap-2 mt-2">
           <button
-            onClick={() => onEdit(quiz)}
+            onClick={() =>
+              onEdit({
+                ...quiz,
+                questions: quiz.questions ?? [],
+              })
+            }
             className="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-900"
           >
             ✏️ Modifier
           </button>
+
           <button
             onClick={() => onDelete(quiz.id)}
             className="flex-1 bg-red-600 text-white text-xs py-1.5 rounded hover:bg-red-700"

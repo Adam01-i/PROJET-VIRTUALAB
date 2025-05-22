@@ -5,7 +5,9 @@ import { supabase } from '../../../../lib/supabaseClient';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
-import { PlusCircle, Users,
+import {
+  PlusCircle,
+  Users,
   Atom,
   FlaskConical,
   Trash2,
@@ -34,7 +36,6 @@ type EleveActivite = {
 export default function ProfClasseView() {
   const [classes, setClasses] = useState<Classe[]>([]);
   const [selectedClasseId, setSelectedClasseId] = useState<string | null>(null);
-  const [selectedClasseNiveau, setSelectedClasseNiveau] = useState<string | null>(null);
   const [eleves, setEleves] = useState<Eleve[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [quizCount, setQuizCount] = useState(0);
@@ -45,15 +46,16 @@ export default function ProfClasseView() {
   const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
 
+  const selectedClasse = classes.find(c => c.id === selectedClasseId);
+  const selectedClasseCode = selectedClasse?.code_classe;
+  const selectedClasseNiveau = selectedClasse?.niveau;
+
   useEffect(() => {
     const fetchClasses = async () => {
       const { data, error } = await supabase.from('mes_classes').select('*');
       if (error) return toast.error("Erreur récupération classes");
       setClasses(data);
-      if (data.length) {
-        setSelectedClasseId(data[0].id);
-        setSelectedClasseNiveau(data[0].niveau);
-      }
+      if (data.length) setSelectedClasseId(data[0].id);
     };
     fetchClasses();
   }, []);
@@ -86,7 +88,6 @@ export default function ProfClasseView() {
       setExperiences(expData || []);
 
       const classe = classes.find((c) => c.id === selectedClasseId);
-      if (classe) setSelectedClasseNiveau(classe.niveau);
 
       const { data: logs } = await supabase
         .from('activity_logs')
@@ -123,25 +124,29 @@ export default function ProfClasseView() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!selectedClasseNiveau) return;
+      if (!selectedClasseCode || !selectedClasseNiveau) return;
 
-      const { count: quizCount } = await supabase
-        .from('quizzes')
+      // ✅ Compte les quiz via code_classe
+      const { count: quizCount, error: quizErr } = await supabase
+        .from('vue_quiz_details')
         .select('*', { count: 'exact', head: true })
-        .eq('niveau', selectedClasseNiveau);
+        .eq('code_classe', selectedClasseCode);
 
+      if (quizErr) console.error('Erreur quiz:', quizErr);
+      setQuizCount(quizCount || 0);
+
+      // ✅ Compte les objets 3D par niveau
       const { count: labCount } = await supabase
         .from('lab_items')
         .select('*', { count: 'exact', head: true })
         .eq('category', 'molecule')
         .eq('niveau', selectedClasseNiveau);
 
-      setQuizCount(quizCount || 0);
       setLab3DCount(labCount || 0);
     };
 
     fetchStats();
-  }, [selectedClasseNiveau]);
+  }, [selectedClasseCode, selectedClasseNiveau]);
 
   const handleAddEleve = async () => {
     if (!emailToAdd.trim()) return;
@@ -234,10 +239,10 @@ export default function ProfClasseView() {
   return (
     <div className="p-8 space-y-10">
       <h1 className="text-3xl font-bold text-indigo-800">🎓 Gestion de mes classes</h1>
-      
+
       {/* Sélecteur */}
       <div>
-        <label className="text-sm font-semibold text-gray-600">Sélectionner une classe :    </label>
+        <label className="text-sm font-semibold text-gray-600">Sélectionner une classe :</label>
         <select
           onChange={(e) => setSelectedClasseId(e.target.value)}
           value={selectedClasseId ?? ''}
@@ -262,8 +267,9 @@ export default function ProfClasseView() {
       {/* Élèves */}
       <div className="bg-white shadow rounded p-6">
         <h2 className="text-xl font-semibold text-indigo-700 mb-4">👥 Élèves</h2>
-        {/* Sélecteur + import */}
-        <div className='flex flex-wrap gap-4'><input type="file" accept=".xlsx" onChange={handleImportFile} className="text-sm " />
+
+        <div className='flex flex-wrap gap-4'>
+          <input type="file" accept=".xlsx" onChange={handleImportFile} className="text-sm" />
           <button
             onClick={handleImport}
             disabled={parsedData.length === 0 || loading}
@@ -273,6 +279,7 @@ export default function ProfClasseView() {
             Importer élèves
           </button>
         </div>
+
         <ul className="divide-y text-sm">
           {eleves.map((el) => (
             <li key={el.id} className="py-2 flex justify-between items-center">
@@ -289,7 +296,7 @@ export default function ProfClasseView() {
         <div className="mt-6 flex items-center gap-3">
           <input
             type="email"
-            placeholder="Ajouter a partir de l'Email de l’élève"
+            placeholder="Ajouter l’élève par email"
             value={emailToAdd}
             onChange={(e) => setEmailToAdd(e.target.value)}
             className="flex-1 px-3 py-2 border rounded text-sm"
