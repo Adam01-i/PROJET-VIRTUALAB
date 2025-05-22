@@ -1,4 +1,4 @@
-import type { Molecule } from '../../types/Viewer3D/molecule-equipment';
+import type { Molecule } from '../../types/Viewer3D/lab_items';
 
 export const molecules: Molecule[] = [
     {

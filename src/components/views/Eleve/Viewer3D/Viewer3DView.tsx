@@ -11,7 +11,7 @@ import MoleculeDetails from './MoleculeDetail';
 import EquipmentDetails from './EquipmentDetail';
 import GLBViewer from './GLBViewer';
 import { supabase } from '../../../../lib/supabaseClient';
-import type { Molecule, LabEquipment } from '../../../../types/Viewer3D/molecule-equipment';
+import type { Molecule, LabEquipment } from '../../../../types/Viewer3D/lab_items';
 
 type ViewMode = 'molecules' | 'equipment';
 

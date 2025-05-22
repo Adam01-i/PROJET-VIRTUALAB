@@ -1,4 +1,4 @@
-import type { LabEquipment } from '../../types/Viewer3D/molecule-equipment';
+import type { LabEquipment } from '../../types/Viewer3D/lab_items';
 
 export const labEquipment: LabEquipment[] = [
     {

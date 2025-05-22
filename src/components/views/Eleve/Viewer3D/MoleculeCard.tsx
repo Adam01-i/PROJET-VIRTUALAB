@@ -1,5 +1,5 @@
 import { Info } from 'lucide-react';
-import type { Molecule } from '../../../../types/Viewer3D/molecule-equipment';
+import type { Molecule } from '../../../../types/Viewer3D/lab_items';
 
 type MoleculeCardProps = {
   molecule: Molecule;

@@ -17,6 +17,7 @@ export default function ProfExpView() {
   const [, setUploading] = useState(false);
   const [classes, setClasses] = useState<{ id: string, code_classe: string }[]>([]);
   const [classeFilter, setClasseFilter] = useState<string>('all');
+  const totalExperiences = experiences.length;
   const getClasseNom = (id: string | null | undefined) => {
   if (!id) return '—';
   const classe = classes.find((c) => c.id === id);
@@ -186,6 +187,8 @@ useEffect(() => {
             <option key={c.id} value={c.id}>{c.code_classe}</option>
           ))}
         </select>
+        <span className="ml-3 text-sm text-gray-500 font-normal">| Total :  {totalExperiences}  Simulations </span>
+
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">

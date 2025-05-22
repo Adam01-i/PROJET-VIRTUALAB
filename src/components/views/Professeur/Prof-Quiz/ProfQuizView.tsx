@@ -20,6 +20,7 @@ export default function ProfQuizView() {
   const [classeFilter, setClasseFilter] = useState<string>('all');
 
   const totalQuestions = quizzes.reduce((acc, quiz) => acc + (quiz.questions?.length || 0), 0);
+  const totalQuizzes = quizzes.length;
   const toFormData = (quiz: QuizWithClasse): Quiz => ({
     id: quiz.id,
     titre: quiz.titre,
@@ -213,7 +214,6 @@ export default function ProfQuizView() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-indigo-700">
           🧠 Mes Quiz
-          <span className="ml-3 text-sm text-gray-500 font-normal">| Total : {totalQuestions} questions</span>
         </h2>
         <button
           onClick={() => {
@@ -247,6 +247,7 @@ export default function ProfQuizView() {
             <option key={c.code_classe} value={c.code_classe}>{c.code_classe}</option>
           ))}
         </select>
+        <span className="ml-3 text-sm text-gray-500 font-normal">| Total :  {totalQuizzes}  quiz | {totalQuestions} questions</span>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">

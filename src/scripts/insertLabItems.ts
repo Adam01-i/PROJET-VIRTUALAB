@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { molecules } from '../data/Viewer3D/moleculeData';
 import { labEquipment } from '../data/Viewer3D/labEquipmentData';
-import type { Molecule, LabEquipment } from '../types/Viewer3D/molecule-equipment';
+import type { Molecule, LabEquipment } from '../types/Viewer3D/lab_items';
 
 // 🔑 Clés Supabase
 const SUPABASE_URL = 'https://dviccoqpvhriwxruxjby.supabase.co';
