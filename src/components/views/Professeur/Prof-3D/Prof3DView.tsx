@@ -210,33 +210,38 @@ return (
   <div className="p-4 max-w-[1280px] mx-auto text-base text-gray-800 min-h-screen">
     {/* HEADER */}
     <div className="flex justify-between items-center mb-6">
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <button
           onClick={() => setViewMode('molecule')}
-          className={`px-9 py-0.5 rounded-md text-sm ${viewMode === 'molecule' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-purple-600 hover:bg-gray-200'}`}
-        >
+          className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              }`}
+          >
           <Flask size={16} /> Molécules
         </button>
         <button
           onClick={() => setViewMode('equipment')}
-          className={`px-9 py-0.5 rounded-md text-sm ${viewMode === 'equipment' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-purple-600 hover:bg-gray-200'}`}
-        >
+          className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              }`}
+          >
           <Tool size={16} /> Matériel
         </button>
-      </div>
-
-      <select
+        <select
         className="border px-2 py-1 rounded text-sm"
         value={classeFilter || ''}
         onChange={(e) => setClasseFilter(e.target.value || null)}
       >
-        <option value="">📚 Toutes les classes</option>
+        <option value="">Toutes les classes</option>
         {classesList.map((cl) => (
           <option key={cl.id} value={cl.id}>
             {cl.code_classe}
           </option>
         ))}
       </select>
+      </div>     
 
       <button
         onClick={() => {
@@ -265,7 +270,7 @@ return (
     {/* LISTE + DÉTAILS */}
     <div className="flex flex-col md:flex-row gap-6">
       {/* LISTE */}
-      <div className="md:w-[60%] space-y-3 max-h-[84vh] overflow-auto">
+      <div className="md:w-[60%] space-y-3 ">
         {(viewMode === 'molecule' ? moleculeList : equipmentList).length === 0 ? (
           <p className="text-gray-500">
             Aucun {viewMode === 'molecule' ? 'molécule' : 'matériel'} trouvé.
@@ -332,7 +337,7 @@ return (
       </div>
 
       {/* DÉTAILS + FORMULAIRE */}
-      <div className="md:w-[40%] space-y-4 max-h-[84vh] overflow-auto text-sm">
+      <div className="md:w-[40%] space-y-4 text-sm">
         {viewMode === 'molecule' && selectedMolecule ? (
           <>
             <ProfGLBViewer glbUrl={selectedMolecule.structure} moleculeName={selectedMolecule.nom} />
