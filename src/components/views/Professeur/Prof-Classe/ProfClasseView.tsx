@@ -136,13 +136,14 @@ export default function ProfClasseView() {
       setQuizCount(quizCount || 0);
 
       // ✅ Compte les objets 3D par niveau
-      const { count: labCount } = await supabase
+      const { count: labCount, error: labErr } = await supabase
         .from('lab_items')
         .select('*', { count: 'exact', head: true })
-        .eq('category', 'molecule')
-        .eq('niveau', selectedClasseNiveau);
+        .eq('classe_id', selectedClasseId); // ✅ champ réel
 
+      if (labErr) console.error('Erreur lab3D:', labErr);
       setLab3DCount(labCount || 0);
+
     };
 
     fetchStats();
