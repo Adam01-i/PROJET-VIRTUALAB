@@ -15,6 +15,13 @@ type Profile = {
   surname: string;
 };
 
+type ImportedEleve = {
+  name: string;
+  surname: string;
+  email: string;
+  avatar_url?: string;
+};
+
 type Props = {
   onClose: () => void;
   onSuccess: () => void;
@@ -26,9 +33,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
   const [selectedLettre, setSelectedLettre] = useState("");
   const [selectedProfId, setSelectedProfId] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
-
-  // 📦 Élèves importés localement (avant validation)
-  const [importedEleves, setImportedEleves] = useState<any[]>([]);
+  const [importedEleves, setImportedEleves] = useState<ImportedEleve[]>([]);
 
   useEffect(() => {
     const fetchProfesseurs = async () => {
@@ -37,7 +42,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
         .select("id, name, surname")
         .eq("role", "professeur");
 
-      if (!error) setProfesseurs(data);
+      if (!error && data) setProfesseurs(data);
     };
     fetchProfesseurs();
   }, []);
@@ -64,13 +69,10 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
       return;
     }
 
-    const { data, error } = await supabase.from("classes").insert([
-      {
-        niveau: selectedNiveau,
-        lettre: selectedLettre,
-        professeur_principal_id: selectedProfId,
-      },
-    ]).select("id");
+    const { data, error } = await supabase
+      .from("classes")
+      .insert([{ niveau: selectedNiveau, lettre: selectedLettre }])
+      .select("id");
 
     if (error || !data) {
       toast.error("Erreur création classe", { description: error?.message });
@@ -80,30 +82,36 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
 
     const newClasseId = data[0].id;
 
-    // 👥 Associer les élèves à la classe (locaux seulement, pas dans profiles)
-    for (const eleve of importedEleves) {
-      const { email, name, surname, avatar_url } = eleve;
-      const role = 'eleve';
+    // ➕ Lier le professeur (comme principal par défaut)
+    const { error: profError } = await supabase
+      .from("professeurs_classes")
+      .insert([{ professeur_id: selectedProfId, classe_id: newClasseId, assigned_at: new Date().toISOString() }]);
 
+    if (profError) {
+      toast.error("Erreur liaison professeur", { description: profError.message });
+      setChecking(false);
+      return;
+    }
+
+    // 👥 Importer les élèves (via API -> insert in profiles -> insert in eleves_classes)
+    for (const eleve of importedEleves) {
       try {
         const response = await fetch("/api/import-users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, surname, email, avatar_url, role }),
+          body: JSON.stringify({ ...eleve, role: "eleve" }),
         });
 
         const result = await response.json();
-
         if (response.ok && result.id) {
-          // Associer l'élève à la classe
-          await supabase.from("eleves_classes").insert([
-            { eleve_id: result.id, classe_id: newClasseId },
-          ]);
+          await supabase
+            .from("eleves_classes")
+            .insert([{ eleve_id: result.id, classe_id: newClasseId }]);
         } else {
-          toast.error(`Erreur import ${email}: ${result.error || "inconnue"}`);
+          toast.error(`❌ Erreur pour ${eleve.email} : ${result.error}`);
         }
-      } catch (err) {
-        toast.error(`Erreur réseau pour ${email}`);
+      } catch {
+        toast.error(`Erreur réseau pour ${eleve.email}`);
       }
     }
 
@@ -122,16 +130,16 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
       const data = evt.target?.result;
       const workbook = XLSX.read(data, { type: "binary" });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      setImportedEleves(json as any[]);
+      const json = XLSX.utils.sheet_to_json(worksheet) as ImportedEleve[];
+      setImportedEleves(json);
       toast.success(`📥 ${json.length} élève(s) importé(s).`);
     };
     reader.readAsBinaryString(file);
   };
 
   return (
-    <DialogContent className="max-w-3xl space-y-4">
-      <h3 className="text-xl font-bold">Créer une classe</h3>
+    <DialogContent className="max-w-3xl space-y-6">
+      <h3 className="text-xl font-bold">Créer une nouvelle classe</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
@@ -186,7 +194,9 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
 
       {importedEleves.length > 0 && (
         <div className="mt-4 border-t pt-4">
-          <h4 className="text-md font-semibold mb-2">Élèves importés ({importedEleves.length})</h4>
+          <h4 className="text-md font-semibold mb-2">
+            Élèves importés ({importedEleves.length})
+          </h4>
           <ul className="space-y-1 max-h-40 overflow-y-auto text-sm">
             {importedEleves.map((e, idx) => (
               <li key={idx} className="flex justify-between border-b py-1">
@@ -203,7 +213,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
           onClick={handleAddClasse}
           disabled={!selectedNiveau || !selectedLettre || !selectedProfId || checking}
         >
-          {checking ? "Vérification..." : "Créer la classe"}
+          {checking ? "Création en cours..." : "Créer la classe"}
         </Button>
       </div>
     </DialogContent>

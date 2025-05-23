@@ -16,21 +16,34 @@ type Eleve = {
   id: string;
   name: string;
   surname: string;
-  email?: string;
+};
+
+type ImportedEleve = {
+  name: string;
+  surname: string;
+  email: string;
   avatar_url?: string;
 };
 
 type Props = {
   classeId: string;
   classeNom: string;
+  onChange?: () => void;
 };
 
-const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom }) => {
+const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange }) => {
   const [allEleves, setAllEleves] = useState<Eleve[]>([]);
   const [elevesDansClasse, setElevesDansClasse] = useState<Eleve[]>([]);
+  const [elevesDansAutresClasses, setElevesDansAutresClasses] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [importedEleves, setImportedEleves] = useState<any[]>([]);
+  const [importedEleves, setImportedEleves] = useState<ImportedEleve[]>([]);
   const [importing, setImporting] = useState(false);
+
+  useEffect(() => {
+    fetchAllEleves();
+    fetchElevesDansClasse();
+    fetchElevesDansAutresClasses();
+  }, [classeId]);
 
   const fetchAllEleves = async () => {
     const { data, error } = await supabase
@@ -38,12 +51,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom }) => {
       .select("id, name, surname")
       .eq("role", "eleve");
 
-    if (error) {
-      toast.error("Erreur chargement élèves", { description: error.message });
-      return;
-    }
-
-    setAllEleves(data);
+    if (!error && data) setAllEleves(data);
   };
 
   const fetchElevesDansClasse = async () => {
@@ -52,29 +60,41 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom }) => {
       .select("eleve:eleve_id(id, name, surname)")
       .eq("classe_id", classeId);
 
-    if (error) {
-      toast.error("Erreur chargement classe", { description: error.message });
-      return;
+    if (!error && data) {
+      setElevesDansClasse(data.map((ec: any) => ec.eleve));
     }
-
-    setElevesDansClasse(data.map((ec: any) => ec.eleve));
   };
 
-  useEffect(() => {
-    fetchAllEleves();
-    fetchElevesDansClasse();
-  }, [classeId]);
+  const fetchElevesDansAutresClasses = async () => {
+    const { data } = await supabase
+      .from("eleves_classes")
+      .select("eleve_id")
+      .neq("classe_id", classeId);
+
+    if (data) setElevesDansAutresClasses(data.map((e) => e.eleve_id));
+  };
 
   const addEleveToClasse = async (eleveId: string) => {
+    const { data: existing } = await supabase
+      .from("eleves_classes")
+      .select("classe_id")
+      .eq("eleve_id", eleveId);
+
+    if (existing && existing.length > 0) {
+      return toast.error("Élève déjà assigné à une classe.");
+    }
+
     const { error } = await supabase
       .from("eleves_classes")
-      .insert([{ eleve_id: eleveId, classe_id: classeId }]);
+      .insert([{ eleve_id: eleveId, classe_id: classeId, assigned_at: new Date().toISOString() }]);
 
     if (error) {
-      toast.error("Erreur ajout", { description: error.message });
+      toast.error("Erreur lors de l'ajout", { description: error.message });
     } else {
-      toast.success("Élève ajouté");
+      toast.success("Élève ajouté !");
       fetchElevesDansClasse();
+      fetchElevesDansAutresClasses();
+      onChange?.();
     }
   };
 
@@ -85,144 +105,139 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom }) => {
       .match({ eleve_id: eleveId, classe_id: classeId });
 
     if (error) {
-      toast.error("Erreur suppression", { description: error.message });
+      toast.error("Erreur lors de la suppression", { description: error.message });
     } else {
-      toast.success("Élève retiré");
+      toast.success("Élève retiré !");
       fetchElevesDansClasse();
+      fetchElevesDansAutresClasses();
+      onChange?.();
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
+    reader.onload = (evt) => {
+      const workbook = XLSX.read(evt.target?.result, { type: "binary" });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      setImportedEleves(json as any[]);
+      const json = XLSX.utils.sheet_to_json(worksheet) as ImportedEleve[];
+      setImportedEleves(json);
+      toast.success(`${json.length} élève(s) chargé(s).`);
     };
     reader.readAsBinaryString(file);
   };
 
   const handleImport = async () => {
-    if (importedEleves.length === 0) {
-      toast.error("Aucun élève à importer.");
-      return;
-    }
+    if (importedEleves.length === 0) return toast.error("Aucun élève à importer.");
 
     setImporting(true);
     let count = 0;
 
-    for (const row of importedEleves) {
-      const { name, surname, email, avatar_url } = row;
-      const role = row.role || "eleve";
-
+    for (const eleve of importedEleves) {
       try {
         const response = await fetch("/api/import-users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, surname, email, avatar_url, role }),
+          body: JSON.stringify({ ...eleve, role: "eleve" }),
         });
 
         const result = await response.json();
+
         if (response.ok && result.id) {
           await supabase
             .from("eleves_classes")
-            .insert([{ eleve_id: result.id, classe_id: classeId }]);
+            .insert([{ eleve_id: result.id, classe_id: classeId, assigned_at: new Date().toISOString() }]);
           count++;
         } else {
-          toast.error(`Erreur : ${email} — ${result.error}`);
+          toast.error(`Erreur pour ${eleve.email} : ${result.error}`);
         }
-      } catch (err) {
-        toast.error(`Erreur réseau pour ${email}`);
+      } catch {
+        toast.error(`Erreur réseau pour ${eleve.email}`);
       }
     }
 
-    await fetchAllEleves();
-    await fetchElevesDansClasse();
     setImporting(false);
-    toast.success(`${count} élève(s) importé(s) et ajoutés à la classe.`);
+    fetchAllEleves();
+    fetchElevesDansClasse();
+    fetchElevesDansAutresClasses();
+    toast.success(`${count} élève(s) importé(s) !`);
+    onChange?.();
   };
 
   const filteredEleves = allEleves.filter(
     (eleve) =>
       `${eleve.name} ${eleve.surname}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !elevesDansClasse.some((e) => e.id === eleve.id)
+      !elevesDansClasse.some((e) => e.id === eleve.id) &&
+      !elevesDansAutresClasses.includes(eleve.id)
   );
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          Gérer les élèves
-        </Button>
+        <Button variant="outline">Gérer les élèves</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl space-y-4">
-        <h2 className="text-lg font-bold">Élèves de {classeNom}</h2>
+      <DialogContent className="max-w-2xl space-y-5">
+        <h3 className="text-xl font-bold">🎒 Élèves de {classeNom}</h3>
 
-        {/* 📥 Importer par fichier */}
-        <div className="border-t pt-4 space-y-2">
+        {/* 🗂 Import fichier */}
+        <div>
           <h4 className="font-semibold">Importer des élèves (.xlsx)</h4>
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-4 mt-2">
             <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} />
             <Button onClick={handleImport} disabled={importing || importedEleves.length === 0}>
-              {importing ? "Import..." : "Importer"}
+              {importing ? "Importation..." : "Importer"}
             </Button>
           </div>
-          {importedEleves.length > 0 && (
-            <ul className="text-sm max-h-24 overflow-y-auto">
+        </div>
+
+        {importedEleves.length > 0 && (
+          <div className="border-t pt-3">
+            <h4 className="font-semibold text-sm mb-2">Élèves détectés ({importedEleves.length})</h4>
+            <ul className="text-sm max-h-24 overflow-y-auto space-y-1">
               {importedEleves.map((e, i) => (
-                <li key={i}>
-                  {e.name} {e.surname} - <span className="text-gray-500">{e.email}</span>
+                <li key={i} className="flex justify-between">
+                  {e.name} {e.surname}
+                  <span className="text-gray-500">{e.email}</span>
                 </li>
               ))}
             </ul>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* 🔄 Liste actuelle */}
+        {/* 👨‍🎓 Élèves existants */}
         <div>
-          <h4 className="font-semibold mb-1">Élèves actuels ({elevesDansClasse.length})</h4>
-          <ul className="max-h-40 overflow-y-auto space-y-1">
-            {elevesDansClasse.length === 0 && <p className="text-sm">Aucun élève.</p>}
-            {elevesDansClasse.map((eleve) => (
-              <li key={eleve.id} className="flex justify-between items-center text-sm">
-                {eleve.name} {eleve.surname}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeEleveFromClasse(eleve.id)}
-                >
-                  <UserMinus className="w-4 h-4 text-red-500" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* ➕ Ajouter un élève */}
-        <div>
-          <h4 className="font-semibold mb-1">Ajouter un élève existant</h4>
+          <h4 className="font-semibold">Ajouter un élève existant</h4>
           <Input
             placeholder="Rechercher par nom"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="mb-2"
           />
-          <ul className="max-h-40 overflow-y-auto space-y-1">
-            {filteredEleves.length === 0 && <p className="text-sm">Aucun résultat</p>}
+          <ul className="max-h-40 overflow-y-auto space-y-1 text-sm">
+            {filteredEleves.length === 0 && <p>Aucun résultat.</p>}
             {filteredEleves.map((eleve) => (
-              <li key={eleve.id} className="flex justify-between items-center text-sm">
+              <li key={eleve.id} className="flex justify-between items-center">
                 {eleve.name} {eleve.surname}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => addEleveToClasse(eleve.id)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => addEleveToClasse(eleve.id)}>
                   <UserPlus className="w-4 h-4 text-green-500" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Liste actuelle */}
+        <div>
+          <h4 className="font-semibold mt-4">Élèves actuels ({elevesDansClasse.length})</h4>
+          <ul className="max-h-40 overflow-y-auto space-y-1 text-sm">
+            {elevesDansClasse.length === 0 && <p>Aucun élève assigné.</p>}
+            {elevesDansClasse.map((eleve) => (
+              <li key={eleve.id} className="flex justify-between items-center">
+                {eleve.name} {eleve.surname}
+                <Button variant="ghost" size="icon" onClick={() => removeEleveFromClasse(eleve.id)}>
+                  <UserMinus className="w-4 h-4 text-red-500" />
                 </Button>
               </li>
             ))}
