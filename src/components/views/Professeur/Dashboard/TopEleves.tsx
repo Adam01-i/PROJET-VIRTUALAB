@@ -1,11 +1,12 @@
+import { EleveActivite } from '../../../../types/Eleve/EleveActivite';
+
 interface Props {
   data: EleveActivite[];
   onSelectEleve: (eleve: EleveActivite) => void;
 }
-import { EleveActivite } from '../../../../types/Eleve/EleveActivite'; // Adjust the path as needed
 
 export default function TopEleves({ data, onSelectEleve }: Props) {
-  const top5 = data
+  const top5 = [...data]
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
@@ -17,10 +18,10 @@ export default function TopEleves({ data, onSelectEleve }: Props) {
           <li
             key={el.id}
             onClick={() => onSelectEleve(el)}
-            className="cursor-pointer hover:bg-gray-100 px-2 py-1 flex justify-between text-gray-700"
+            className="cursor-pointer hover:bg-gray-100 px-2 py-1 flex justify-between text-gray-700 rounded-md transition"
           >
             <span>{i + 1}. {el.name}</span>
-            <span>{el.total} activités</span>
+            <span className="text-sm font-medium">{el.total} activités</span>
           </li>
         ))}
       </ul>

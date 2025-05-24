@@ -13,16 +13,17 @@ export default function QuizView() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [prenom, setPrenom] = useState('');
+  const [resultsMap, setResultsMap] = useState<Map<string, { score: number, total: number, completed_at: string }>>(new Map());
+  const [cumulativeScore, setCumulativeScore] = useState({ score: 0, total: 0, percentage: 0 });
+  const [showOnlyUncompleted, setShowOnlyUncompleted] = useState(false);
 
-  const fetchQuizzesForEleve = async () => {
+  const refreshData = async () => {
     setLoading(true);
-
     const { data: session } = await supabase.auth.getSession();
     const user = session?.session?.user;
-
     if (!user) return;
 
-    // ✅ Récupérer l’élève
+    // Profil
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, role')
@@ -36,7 +37,7 @@ export default function QuizView() {
 
     setPrenom(profile.name || '');
 
-    // ✅ Récupérer la classe de l’élève
+    // Classe
     const { data: ec } = await supabase
       .from('eleves_classes')
       .select('classe_id')
@@ -44,40 +45,71 @@ export default function QuizView() {
       .single();
 
     const classeId = ec?.classe_id;
-
     if (!classeId) {
       setLoading(false);
       return;
     }
 
-    // ✅ Charger les quiz de cette classe
-    const { data: quizzes, error } = await supabase
+    // Quiz
+    const { data: quizzes } = await supabase
       .from('quizzes')
       .select('*, questions(*)')
       .eq('classe_id', classeId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Erreur chargement quiz :', error);
-    } else {
-      setQuizList(quizzes || []);
-    }
+    setQuizList(quizzes || []);
+
+    // Résultats
+    const { data: results } = await supabase
+      .from('quiz_results')
+      .select('*')
+      .eq('eleve_id', user.id);
+
+    const resultMap = new Map();
+    let totalScore = 0;
+    let totalPossible = 0;
+
+    results?.forEach(result => {
+      resultMap.set(result.quiz_id, {
+        score: result.score,
+        total: result.total,
+        completed_at: result.completed_at,
+      });
+      totalScore += result.score;
+      totalPossible += result.total;
+    });
+
+    setResultsMap(resultMap);
+
+    setCumulativeScore({
+      score: totalScore,
+      total: totalPossible,
+      percentage: totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0,
+    });
 
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchQuizzesForEleve();
+    refreshData();
   }, []);
 
   const handleStartQuiz = (quizId: string) => setActiveQuiz(quizId);
-  const handleCompleteQuiz = (score: number) => console.log(`Score : ${score}`);
+
+  const handleCompleteQuiz = async () => {
+    setActiveQuiz(null);
+    await refreshData();
+  };
 
   const currentQuiz = activeQuiz ? quizList.find(q => q.id === activeQuiz) : null;
 
-  const totalPages = Math.ceil(quizList.length / ITEMS_PER_PAGE);
+  const filteredQuizList = showOnlyUncompleted
+    ? quizList.filter((quiz) => !resultsMap.has(quiz.id))
+    : quizList;
+
+  const totalPages = Math.ceil(filteredQuizList.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentPageData = quizList.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const currentPageData = filteredQuizList.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -99,20 +131,39 @@ export default function QuizView() {
     <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-20 space-y-10">
       <h2 className="text-2xl font-bold text-gray-800">Bienvenue {prenom} 👋 – Quiz disponibles</h2>
 
+      {/* ✅ Progression cumulée */}
+      <div className="bg-purple-50 border border-purple-100 p-4 rounded-md text-sm text-purple-800">
+        Progression cumulée : <strong>{cumulativeScore.score} / {cumulativeScore.total}</strong> 
+        ({cumulativeScore.percentage}%)
+      </div>
+
+      {/* ✅ Filtre quiz non faits */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setShowOnlyUncompleted(prev => !prev)}
+          className="text-sm text-indigo-600 underline hover:text-indigo-800"
+        >
+          {showOnlyUncompleted ? '🔁 Voir tous les quiz' : '⏳ Voir uniquement les quiz non faits'}
+        </button>
+      </div>
+
       {loading ? (
         <p className="text-gray-700">Chargement en cours...</p>
-      ) : quizList.length === 0 ? (
-        <p className="text-gray-700">Aucun quiz disponible pour ta classe pour le moment.</p>
+      ) : filteredQuizList.length === 0 ? (
+        <p className="text-gray-700">Aucun quiz trouvé avec les filtres sélectionnés.</p>
       ) : (
         <>
-          {/* ✅ Cartes paginées */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentPageData.map((quiz) => (
-              <QuizCard key={quiz.id} quiz={quiz} onStart={handleStartQuiz} />
+              <QuizCard
+                key={quiz.id}
+                quiz={quiz}
+                onStart={handleStartQuiz}
+                scoreInfo={resultsMap.get(quiz.id) || undefined}
+              />
             ))}
           </div>
 
-          {/* ✅ Pagination */}
           <div className="flex items-center justify-center gap-3 mt-6">
             <button
               onClick={() => goToPage(currentPage - 1)}

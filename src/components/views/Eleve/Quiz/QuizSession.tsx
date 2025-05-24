@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Check, X, HelpCircle, Award } from 'lucide-react';
 import type { Quiz, QuizProgress } from '../../../../types/Quiz/quiz';
+import { supabase } from '../../../../lib/supabaseClient'; // 👈 Assure-toi que ce chemin est correct
 
 type QuizSessionProps = {
   quiz: Quiz;
@@ -53,7 +54,24 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
   const handleNext = () => {
     if (progress.currentQuestion === quiz.questions.length - 1) {
       setProgress(prev => ({ ...prev, completed: true }));
-      onComplete(progress.score);
+      const saveScore = async () => {
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+
+  if (!user) return;
+
+  await supabase.from('quiz_results').insert({
+    eleve_id: user.id,
+    quiz_id: quiz.id,
+    score: progress.score,
+    total: quiz.questions.length,
+  });
+
+  onComplete(progress.score);
+};
+
+saveScore();
+
     } else {
       setProgress(prev => ({
         ...prev,

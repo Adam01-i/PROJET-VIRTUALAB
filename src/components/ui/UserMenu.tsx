@@ -93,7 +93,7 @@ export default function UserMenu() {
           <User2 size={20} className="text-white" />
         )}
         <div className="flex items-center">
-          <span className="font-medium">{profile.name} {profile.surname} </span>
+          <span className="font-medium">{profile.surname} {profile.name} </span>
         </div>
 
         <ChevronDown size={16} />
@@ -111,9 +111,9 @@ export default function UserMenu() {
             ) : (
               <User2 size={32} className="text-indigo-600" />
             )}
-            <div className="text-sm">
-              <div className="font-semibold">{profile.name}</div>
-              <div className="font-semibold">{profile.surname}</div>
+            <div className="text-sm">              
+              <div className="font-semibold text-gray-500">{profile.surname}</div>
+              <div className="font-semibold text-gray-500">{profile.name}</div>
               <div className="text-xs text-gray-500">{profile.role}</div>
             </div>
           </div>

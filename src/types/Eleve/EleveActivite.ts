@@ -1,4 +1,3 @@
-// types.ts
 export type EleveActivite = {
   id: string;
   name: string;
