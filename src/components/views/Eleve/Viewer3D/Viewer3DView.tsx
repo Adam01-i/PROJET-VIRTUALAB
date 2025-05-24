@@ -20,37 +20,78 @@ export default function Viewer3DView() {
   const [moleculeList, setMoleculeList] = useState<Molecule[]>([]);
   const [equipmentList, setEquipmentList] = useState<LabEquipment[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [prenom, setPrenom] = useState('');
 
   useEffect(() => {
     fetchItems();
   }, [viewMode]);
 
   const fetchItems = async () => {
+    setLoading(true);
+    const { data: session } = await supabase.auth.getSession();
+    const user = session?.session?.user;
+
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'eleve') return;
+
+    setPrenom(profile.name || '');
+
+    const { data: ec } = await supabase
+      .from('eleves_classes')
+      .select('classe_id')
+      .eq('eleve_id', user.id)
+      .single();
+
+    const classeId = ec?.classe_id;
+
+    if (!classeId) {
+      setLoading(false);
+      return;
+    }
+
+    const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
+
     const { data, error } = await supabase
       .from('lab_items')
       .select('*')
-      .eq('category', viewMode === 'molecules' ? 'molecule' : 'equipment')
+      .eq('category', category)
+      .eq('classe_id', classeId)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Erreur de chargement :", error);
-      return;
+    } else {
+      viewMode === 'molecules'
+        ? setMoleculeList(data || [])
+        : setEquipmentList(data || []);
+      setSelectedIndex(0);
     }
 
-    viewMode === 'molecules' ? setMoleculeList(data || []) : setEquipmentList(data || []);
-    setSelectedIndex(0);
+    setLoading(false);
   };
 
   const dataList = viewMode === 'molecules' ? moleculeList : equipmentList;
   const selectedItem = dataList[selectedIndex] || null;
 
-  const handleNext = () => setSelectedIndex((prev) => (prev + 1) % dataList.length);
-  const handlePrev = () => setSelectedIndex((prev) => (prev - 1 + dataList.length) % dataList.length);
+  const handleNext = () =>
+    setSelectedIndex((prev) => (prev + 1) % dataList.length);
+  const handlePrev = () =>
+    setSelectedIndex((prev) => (prev - 1 + dataList.length) % dataList.length);
 
   return (
     <div className="w-full px-6 md:px-10 py-20 space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Visualisation 3D</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Bienvenue {prenom} – Visualisation 3D
+        </h2>
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('molecules')}
@@ -80,21 +121,26 @@ export default function Viewer3DView() {
       <div className="grid md:grid-cols-3 gap-6">
         {/* Sidebar : détails + liste */}
         <div className="space-y-6">
-          {selectedItem && (
-            viewMode === 'molecules' && 'formule' in selectedItem ? (
+          {selectedItem &&
+            (viewMode === 'molecules' ? (
               <MoleculeDetails molecule={selectedItem as Molecule} />
-            ) : viewMode === 'equipment' && 'usage' in selectedItem ? (
+            ) : (
               <EquipmentDetails equipment={selectedItem as LabEquipment} />
-            ) : null
-          )}
+            ))}
 
           <div className="bg-gray-50 border border-gray-200 rounded-md p-4 shadow-sm">
             <h3 className="text-base font-semibold text-gray-800 mb-3">
-              {viewMode === 'molecules' ? 'Molécules disponibles' : 'Matériel disponible'}
+              {viewMode === 'molecules'
+                ? 'Molécules disponibles'
+                : 'Matériel disponible'}
             </h3>
 
-            {dataList.length === 0 ? (
-              <p className="text-gray-500 text-center text-sm">Aucun élément disponible</p>
+            {loading ? (
+              <p className="text-sm text-gray-500">Chargement...</p>
+            ) : dataList.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center">
+                Aucun élément disponible
+              </p>
             ) : (
               <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                 {dataList.map((item, index) =>
@@ -119,9 +165,9 @@ export default function Viewer3DView() {
           </div>
         </div>
 
-        {/* Zone 3D */}
+        {/* Viewer 3D */}
         <div className="relative md:col-span-2 bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
-          {selectedItem && selectedItem.structure?.endsWith('.glb') && (
+          {selectedItem?.structure?.endsWith('.glb') && (
             <GLBViewer
               key={`${viewMode}-${selectedItem.id}`}
               glbUrl={selectedItem.structure}

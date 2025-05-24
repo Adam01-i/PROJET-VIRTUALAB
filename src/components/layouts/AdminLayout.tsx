@@ -80,43 +80,7 @@ export default function AdminLayout() {
       </main>
       {/* === FOOTER === */}
       <footer className="bg-indigo-900/95 text-white z-40">
-        <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          <div>
-            <h4 className="text-xl font-bold mb-3">VirtuaLab</h4>
-            <p className="text-sm text-indigo-100 leading-relaxed">
-              Plateforme immersive pour l'apprentissage de la chimie : expériences virtuelles, visualisations 3D, quiz interactifs et plus encore.
-            </p>
-          </div>
-
-          <div>
-            <h5 className="text-base font-semibold mb-4">Navigation</h5>
-            <ul className="space-y-2 text-sm text-indigo-100">
-              <li><NavLink to="/eleve/experiences" className="hover:text-white transition">Expériences</NavLink></li>
-              <li><NavLink to="/eleve/quiz" className="hover:text-white transition">Quiz</NavLink></li>
-              <li><NavLink to="/eleve/3d" className="hover:text-white transition">Visualisation 3D</NavLink></li>
-            </ul>
-          </div>
-
-          <div>
-            <h5 className="text-base font-semibold mb-4">Ressources</h5>
-            <ul className="space-y-2 text-sm text-indigo-100">
-              <li><a href="#" className="hover:text-white transition">Fiches de révision</a></li>
-              <li><a href="#" className="hover:text-white transition">Simulations guidées</a></li>
-              <li><a href="#" className="hover:text-white transition">Programme officiel</a></li>
-              <li><a href="#" className="hover:text-white transition">Support</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h5 className="text-base font-semibold mb-4">Contact</h5>
-            <ul className="space-y-2 text-sm text-indigo-100">
-              <li>Email : <a href="mailto:VirtuaLaB@edu.sn" className="hover:text-white">VirtuaLaB@edu.sn</a></li>
-              <li>Tél. : <a href="tel:+221777777777" className="hover:text-white">+221 77 777 77 77</a></li>
-              <li>Adresse : Bambey, Diourbel, Sénégal</li>
-            </ul>
-          </div>
-        </div>
-
+        
         <div className="border-t border-indigo-700 text-center text-sm text-indigo-200 py-4">
           © {new Date().getFullYear()} VirtuaLaB. Tous droits réservés.
         </div>

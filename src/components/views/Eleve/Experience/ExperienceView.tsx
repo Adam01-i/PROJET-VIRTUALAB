@@ -1,22 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { experienceData } from '../../../../data/Experience/experienceData';
 import ExperienceCard from './ExperienceCard';
 import ExperienceDetailView from './ExperienceDetailView';
+import { supabase } from '../../../../lib/supabaseClient';
 
 const ITEMS_PER_PAGE = 3;
 
 export default function ExperienceView() {
   const [activeExperience, setActiveExperience] = useState<string | null>(null);
+  const [experiences, setExperiences] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [prenom, setPrenom] = useState('');
 
   const handleStartExperience = (experienceId: string) => {
     setActiveExperience(experienceId);
   };
 
-  const totalPages = Math.ceil(experienceData.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(experiences.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentData = experienceData.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const currentData = experiences.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -24,9 +27,62 @@ export default function ExperienceView() {
     }
   };
 
+  useEffect(() => {
+    const fetchExperiencesForEleve = async () => {
+      setLoading(true);
+      const { data: session } = await supabase.auth.getSession();
+      const user = session?.session?.user;
+
+      if (!user) return;
+
+      // ➤ Récupérer nom (facultatif, pour personnalisation)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role !== 'eleve') return;
+
+      setPrenom(profile.name || '');
+
+      // ➤ Récupérer la classe de l’élève
+      const { data: classeLink } = await supabase
+        .from('eleves_classes')
+        .select('classe_id')
+        .eq('eleve_id', user.id)
+        .single();
+
+      const classeId = classeLink?.classe_id;
+
+      if (!classeId) return;
+
+      // ➤ Charger les expériences pour cette classe
+      const { data: classeExperiences } = await supabase
+        .from('mes_experiences_eleve')
+        .select('*')
+        .eq('classe_id', classeId)
+        .order('created_at', { ascending: false });
+
+      if (classeExperiences) {
+        setExperiences(classeExperiences);
+      }
+
+      setLoading(false);
+    };
+
+    fetchExperiencesForEleve();
+  }, []);
+
   const currentExperience = activeExperience
-    ? experienceData.find(e => e.id === activeExperience)
+    ? experiences.find((e) => e.id === activeExperience)
     : null;
+
+  if (loading) {
+    return (
+      <div className="text-center py-20 text-gray-500">Chargement des expériences...</div>
+    );
+  }
 
   if (currentExperience) {
     return (
@@ -38,55 +94,66 @@ export default function ExperienceView() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-20 py-20 space-y-10">
-      <h2 className="text-2xl font-bold text-gray-800">Expériences disponibles</h2>
+    <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-20 space-y-10">
+      {/* ✅ Titre personnalisé */}
+      <h2 className="text-2xl font-bold text-gray-800">
+        Bienvenue {prenom} 👋 – Expériences disponibles
+      </h2>
 
-      {/* Cartes paginées */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentData.map((experience) => (
-          <ExperienceCard
-            key={experience.id}
-            experience={experience}
-            onStart={handleStartExperience}
-          />
-        ))}
-      </div>
+      {experiences.length === 0 ? (
+        <div className="text-gray-500 text-center py-12">
+          Aucune expérience disponible pour ta classe pour le moment.
+        </div>
+      ) : (
+        <>
+          {/* ✅ Cartes paginées */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentData.map((experience) => (
+              <ExperienceCard
+                key={experience.id}
+                experience={experience}
+                onStart={handleStartExperience}
+              />
+            ))}
+          </div>
 
-      {/* Pagination numérotée */}
-      <div className="flex items-center justify-center gap-3 mt-6">
-        <button
-          onClick={() => goToPage(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
-        >
-          <ChevronLeft size={16} />
-        </button>
-
-        {[...Array(totalPages)].map((_, index) => {
-          const pageNum = index + 1;
-          return (
+          {/* ✅ Pagination */}
+          <div className="flex items-center justify-center gap-3 mt-6">
             <button
-              key={pageNum}
-              onClick={() => goToPage(pageNum)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                currentPage === pageNum
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-              }`}
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
             >
-              {pageNum}
+              <ChevronLeft size={16} />
             </button>
-          );
-        })}
 
-        <button
-          onClick={() => goToPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
+            {[...Array(totalPages)].map((_, index) => {
+              const pageNum = index + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => goToPage(pageNum)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                    currentPage === pageNum
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

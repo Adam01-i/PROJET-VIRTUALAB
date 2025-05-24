@@ -60,7 +60,7 @@ export default function UserMenu() {
       toast.error("Erreur lors de la déconnexion.");
     } else {
       toast.success("Déconnecté avec succès 👋");
-      navigate('/login');
+      navigate('/');
     }
   };
 

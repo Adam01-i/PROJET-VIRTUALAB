@@ -35,7 +35,7 @@ export default function Login() {
           navigate('/professeur/dashboard');
           break;
         case 'eleve':
-          navigate('/eleve/dashboard');
+          navigate('/eleve');
           break;
         default:
           navigate('/');
@@ -95,7 +95,7 @@ export default function Login() {
           navigate('/professeur/dashboard');
           break;
         case 'eleve':
-          navigate('/eleve/dashboard');
+          navigate('/eleve');
           break;
         default:
           toast.error("Rôle non reconnu.");
