@@ -50,15 +50,25 @@ export default function ProfClasseView() {
   const selectedClasseCode = selectedClasse?.code_classe;
   const selectedClasseNiveau = selectedClasse?.niveau;
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      const { data, error } = await supabase.from('mes_classes').select('*');
-      if (error) return toast.error("Erreur récupération classes");
-      setClasses(data);
-      if (data.length) setSelectedClasseId(data[0].id);
-    };
-    fetchClasses();
-  }, []);
+useEffect(() => {
+  const fetchClasses = async () => {
+    const { data, error } = await supabase.from('mes_classes').select('*');
+
+    if (error || !Array.isArray(data)) {
+      console.error("Erreur récupération classes :", error);
+      toast.error("❌ Impossible de charger les classes", {
+        description: error?.message || "Erreur inconnue",
+      });
+      return;
+    }
+
+    setClasses(data);
+    if (data.length) setSelectedClasseId(data[0].id);
+  };
+
+  fetchClasses();
+}, []);
+
 
   useEffect(() => {
     if (!selectedClasseId) return;

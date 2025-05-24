@@ -1,8 +1,8 @@
-import * as React from 'react';
-import * as XLSX from 'xlsx';
-import { toast } from 'sonner';
-import { supabase } from '../../../../lib/supabaseClient';
-import ProfesseurDialog from './ProfesseurDialog';
+import * as React from "react";
+import * as XLSX from "xlsx";
+import { toast } from "sonner";
+import { supabase } from "../../../../lib/supabaseClient";
+import ProfesseurDialog from "./ProfesseurDialog";
 
 const PAGE_SIZE = 10;
 
@@ -11,11 +11,11 @@ type AdminProfesseurProps = {
 };
 
 export default function AdminProfesseur({ embedded = false }: AdminProfesseurProps) {
-  const [parsedData, setParsedData] = React.useState<any[]>([]);
   const [professeurs, setProfesseurs] = React.useState<any[]>([]);
   const [classes, setClasses] = React.useState<any[]>([]);
   const [assignations, setAssignations] = React.useState<any[]>([]);
-  const [search, setSearch] = React.useState('');
+  const [parsedData, setParsedData] = React.useState<any[]>([]);
+  const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
 
@@ -24,38 +24,59 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
   }, []);
 
   const fetchAll = async () => {
-    await fetchProfesseurs();
-    await fetchClasses();
-    await fetchAssignations();
+    await Promise.all([
+      fetchProfesseurs(),
+      fetchClasses(),
+      fetchAssignations(),
+    ]);
   };
 
   const fetchProfesseurs = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, name, surname, email, avatar_url, role, created_at')
-      .eq('role', 'professeur')
-      .order('surname');
-    setProfesseurs(data || []);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name, surname, email, avatar_url, role, created_at")
+      .eq("role", "professeur")
+      .order("surname");
+
+    if (error) {
+      toast.error("Erreur chargement professeurs", { description: error.message });
+    } else {
+      setProfesseurs(data || []);
+    }
   };
 
   const fetchClasses = async () => {
-    const { data } = await supabase.from('classes').select('id, niveau, lettre');
-    setClasses(data || []);
+    const { data, error } = await supabase
+      .from("classes")
+      .select("id, niveau, lettre");
+
+    if (error) {
+      toast.error("Erreur chargement classes", { description: error.message });
+    } else {
+      setClasses(data || []);
+    }
   };
 
   const fetchAssignations = async () => {
-    const { data } = await supabase.from('professeurs_classes').select('professeur_id, classe_id');
-    setAssignations(data || []);
+    const { data, error } = await supabase
+      .from("professeurs_classes")
+      .select("professeur_id, classe_id");
+
+    if (error) {
+      toast.error("Erreur chargement assignations", { description: error.message });
+    } else {
+      setAssignations(data || []);
+    }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async (evt) => {
+    reader.onload = (evt) => {
       const data = evt.target?.result;
-      const workbook = XLSX.read(data as string, { type: 'binary' });
+      const workbook = XLSX.read(data as string, { type: "binary" });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(worksheet);
       setParsedData(json as any[]);
@@ -74,19 +95,20 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
 
     for (const row of parsedData) {
       const { name, surname, email } = row;
-      const role = row.role || 'professeur';
+      const role = row.role || "professeur";
       const avatar_url = "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars//1747523215141.png";
 
       try {
-        const response = await fetch('/api/import-users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/import-users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, surname, email, avatar_url, role }),
         });
 
-        const result = await response.json();
-        if (!response.ok) toast.error(`❌ ${email} : ${result.error}`);
-        else {
+        const result = await res.json();
+        if (!res.ok) {
+          toast.error(`❌ ${email} : ${result.error}`);
+        } else {
           count++;
           toast.success(`✅ ${email} ajouté`);
         }
@@ -113,11 +135,16 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-8 py-10'}>
+    <div className={embedded ? "" : "min-h-screen bg-gray-50 px-8 py-10"}>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-indigo-700">Gestion des Professeurs</h1>
         <div className="flex items-center gap-3 mt-4 md:mt-0">
-          <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="text-sm text-gray-700" />
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileUpload}
+            className="text-sm text-gray-700"
+          />
           <button
             onClick={handleImport}
             disabled={loading || parsedData.length === 0}
@@ -138,7 +165,10 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
         type="text"
         placeholder="Rechercher par nom, prénom ou email"
         value={search}
-        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
         className="w-full md:w-1/3 border px-4 py-2 rounded text-sm mb-4"
       />
 
@@ -163,8 +193,11 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
                   <p className="text-sm text-gray-600">{prof.email}</p>
                 </div>
 
-                <ProfesseurDialog prof={prof} allClasses={classes} refresh={fetchAssignations} />
-
+                <ProfesseurDialog
+                  prof={prof}
+                  allClasses={classes}
+                  refresh={fetchAssignations}
+                />
               </div>
 
               {classesProf.length > 0 && (
@@ -186,7 +219,7 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
 
       <div className="flex justify-between items-center mt-6">
         <span className="text-sm text-gray-600">
-          {filtered.length} professeur{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
+          {filtered.length} professeur{filtered.length > 1 ? "s" : ""} trouvé
         </span>
         <div className="space-x-2">
           <button

@@ -33,59 +33,67 @@ const AdminClasse: React.FC = () => {
     const { data, error } = await supabase
       .from("classes")
       .select(`
-    id,
-    code_classe,
-    created_at,
-    professeurs_classes (
-      assigned_at,
-      professeur:professeur_id (
         id,
-        name,
-        surname
-      )
-    )
-  `);
+        code_classe,
+        created_at,
+        professeurs_classes (
+          assigned_at,
+          professeur_id,
+          is_principal
+        )
+      `);
 
-
-    if (error) {
+    if (error || !Array.isArray(data)) {
       toast.error("Erreur de chargement des classes", {
-        description: error.message,
+        description: error?.message || "Aucune donnée reçue.",
       });
       return;
     }
 
-    console.log("Données brutes reçues de Supabase :", data);
+    // Récupérer uniquement les professeurs principaux
+    const principalProfIds = new Set<string>();
+    for (const classe of data) {
+      const profs = Array.isArray(classe.professeurs_classes)
+        ? classe.professeurs_classes
+        : [];
+      const principal = profs.find((p) => p.is_principal);
+      if (principal) {
+        principalProfIds.add(principal.professeur_id);
+      }
+    }
 
-    const { data: studentCounts, error: countError } = await supabase
-      .from("eleves_classes")
-      .select("classe_id", { count: "exact", head: false });
+    const idsToQuery = Array.from(principalProfIds);
+    const { data: profsData, error: profError } = await supabase
+      .from("profiles")
+      .select("id, name, surname")
+      .in("id", idsToQuery);
 
-    if (countError) {
-      toast.error("Erreur lors du comptage des élèves", {
-        description: countError.message,
+    if (profError) {
+      toast.error("Erreur chargement des professeurs", {
+        description: profError.message,
       });
       return;
     }
 
-    const studentCountMap = studentCounts.reduce((acc: any, row: any) => {
-      acc[row.classe_id] = (acc[row.classe_id] || 0) + 1;
-      return acc;
-    }, {});
+    const profMap = Object.fromEntries(
+      (profsData || []).map((p) => [p.id, p])
+    );
 
     const formatted: Classe[] = data.map((c: any) => {
-      const profs = Array.isArray(c.professeurs_classes) ? c.professeurs_classes : [];
-      const sortedTeachers = profs.sort(
-        (a: { assigned_at: string }, b: { assigned_at: string }) =>
-          new Date(a.assigned_at).getTime() - new Date(b.assigned_at).getTime()
-      );
-      const firstProf = sortedTeachers[0]?.professeur ?? null;
+      const profs = Array.isArray(c.professeurs_classes)
+        ? c.professeurs_classes
+        : [];
+
+      const principal = profs.find((p) => p.is_principal);
+      const profId = principal?.professeur_id;
+      const profPrincipal = profId && profMap[profId] ? profMap[profId] : null;
 
       return {
         id: c.id,
         code_classe: c.code_classe,
         created_at: c.created_at,
-        professeur_principal: firstProf,
-        students_count: studentCountMap[c.id] || 0,
+        professeur_principal: profPrincipal,
+        students_count: 0, // TODO: Récupérer réellement via join
         teachers_count: profs.length,
       };
     });
@@ -99,7 +107,6 @@ const AdminClasse: React.FC = () => {
 
   const handleDeleteClasse = async (id: string) => {
     const { error } = await supabase.from("classes").delete().eq("id", id);
-
     if (error) {
       toast.error("Suppression impossible", { description: error.message });
     } else {
@@ -135,70 +142,77 @@ const AdminClasse: React.FC = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {classes.map((classe) => (
-          <Card
-            key={classe.id}
-            className="bg-white shadow-md hover:shadow-xl transition-shadow border border-gray-200"
-          >
-            <CardContent className="p-5 space-y-3">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-blue-700">
-                  🏷️ {classe.code_classe}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteClasse(classe.id)}
-                  title="Supprimer la classe"
-                >
-                  <Trash2 className="w-5 h-5 text-red-600 hover:text-red-800" />
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Users className="w-4 h-4" />
-                <span>{classe.students_count} élève(s)</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <BookOpenCheck className="w-4 h-4" />
-                <span>{classe.teachers_count} professeur(s)</span>
-              </div>
-
-              {classe.professeur_principal ? (
-                <div className="flex items-center gap-2 text-sm text-emerald-700">
-                  <UserCircle className="w-4 h-4" />
-                  Professeur principal : {classe.professeur_principal.name}{" "}
-                  {classe.professeur_principal.surname}
+      {classes.length === 0 ? (
+        <div className="text-center text-gray-500 italic">
+          Aucune classe enregistrée.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {classes.map((classe) => (
+            <Card
+              key={classe.id}
+              className="bg-white shadow-md hover:shadow-xl transition-shadow border border-gray-200"
+            >
+              <CardContent className="p-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold text-blue-700">
+                    🏷️ {classe.code_classe}
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteClasse(classe.id)}
+                    title="Supprimer la classe"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-600 hover:text-red-800" />
+                  </Button>
                 </div>
-              ) : (
-                <div className="text-sm text-orange-500 flex items-center gap-1">
-                  <UserCircle className="w-4 h-4" />
-                  Aucun professeur principal assigné
+
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <Users className="w-4 h-4" />
+                  <span>{classe.students_count} élève(s)</span>
                 </div>
-              )}
 
-              <p className="text-xs text-gray-400 italic">
-                Créée le {new Date(classe.created_at).toLocaleDateString()}
-              </p>
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <BookOpenCheck className="w-4 h-4" />
+                  <span>{classe.teachers_count} professeur(s)</span>
+                </div>
 
-              <div className="flex gap-2 mt-3">
-                <GestionElevesDialog
-                  classeId={classe.id}
-                  classeNom={classe.code_classe}
-                  onChange={fetchClasses}
-                />
-                <GestionProfesseursDialog
-                  classeId={classe.id}
-                  classeNom={classe.code_classe}
-                  onChange={fetchClasses}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                {classe.professeur_principal ? (
+                  <div className="flex items-center gap-2 text-sm text-emerald-700">
+                    <UserCircle className="w-4 h-4" />
+                    Professeur principal :{" "}
+                    {classe.professeur_principal.name}{" "}
+                    {classe.professeur_principal.surname}
+                  </div>
+                ) : (
+                  <div className="text-sm text-orange-500 flex items-center gap-1">
+                    <UserCircle className="w-4 h-4" />
+                    Aucun professeur principal assigné
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-400 italic">
+                  Créée le {new Date(classe.created_at).toLocaleDateString()}
+                </p>
+
+                <div className="flex gap-2 mt-3">
+                  <GestionElevesDialog
+                    classeId={classe.id}
+                    classeNom={classe.code_classe}
+                    onChange={fetchClasses}
+                  />
+                  <GestionProfesseursDialog
+                    classeId={classe.id}
+                    classeNom={classe.code_classe}
+                    onChange={fetchClasses}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
