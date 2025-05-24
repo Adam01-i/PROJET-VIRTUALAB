@@ -1,10 +1,10 @@
 import { PenTool as Tool } from 'lucide-react';
-import type { LabEquipment } from '../../../../types/Viewer3D/lab_items';
+import type { lab_items } from '../../../../types/Viewer3D/lab_items';
 
 type EquipmentCardProps = {
-  equipment: LabEquipment;
+  equipment: lab_items;
   isSelected: boolean;
-  onSelect: (equipment: LabEquipment) => void;
+  onSelect: (equipment: lab_items) => void;
 };
 
 export default function EquipmentCard({ equipment, isSelected, onSelect }: EquipmentCardProps) {

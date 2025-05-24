@@ -1,10 +1,10 @@
 import { Info } from 'lucide-react';
-import type { Molecule } from '../../../../types/Viewer3D/lab_items';
+import type { lab_items } from '../../../../types/Viewer3D/lab_items';
 
 type MoleculeCardProps = {
-  molecule: Molecule;
+  molecule: lab_items;
   isSelected: boolean;
-  onSelect: (molecule: Molecule) => void;
+  onSelect: (molecule: lab_items) => void;
 };
 
 export default function MoleculeCard({ molecule, isSelected, onSelect }: MoleculeCardProps) {

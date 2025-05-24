@@ -1,8 +1,8 @@
-import { LabEquipment } from '../../../../types/Viewer3D/lab_items';
+import { lab_items } from '../../../../types/Viewer3D/lab_items';
 import { PenTool as Tool } from 'lucide-react';
 
 type EquipmentDetailsProps = {
-  equipment: LabEquipment;
+  equipment: lab_items;
 };
 
 export default function EquipmentDetails({ equipment }: EquipmentDetailsProps) {

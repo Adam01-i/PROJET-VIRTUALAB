@@ -11,14 +11,14 @@ import MoleculeDetails from './MoleculeDetail';
 import EquipmentDetails from './EquipmentDetail';
 import GLBViewer from './GLBViewer';
 import { supabase } from '../../../../lib/supabaseClient';
-import type { Molecule, LabEquipment } from '../../../../types/Viewer3D/lab_items';
+import type { lab_items } from '../../../../types/Viewer3D/lab_items';
 
 type ViewMode = 'molecules' | 'equipment';
 
 export default function Viewer3DView() {
   const [viewMode, setViewMode] = useState<ViewMode>('molecules');
-  const [moleculeList, setMoleculeList] = useState<Molecule[]>([]);
-  const [equipmentList, setEquipmentList] = useState<LabEquipment[]>([]);
+  const [moleculeList, setMoleculeList] = useState<lab_items[]>([]);
+  const [equipmentList, setEquipmentList] = useState<lab_items[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [prenom, setPrenom] = useState('');
@@ -31,16 +31,40 @@ export default function Viewer3DView() {
     setLoading(true);
     const { data: session } = await supabase.auth.getSession();
     const user = session?.session?.user;
+    const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
 
-    if (!user) return;
+    // 🔓 Mode invité : tous les éléments de la catégorie
+    if (!user) {
+      const { data, error } = await supabase
+        .from('lab_items')
+        .select('*')
+        .eq('category', category)
+        .order('created_at', { ascending: false });
 
+      if (error) {
+        console.error("Erreur de chargement (public) :", error);
+      } else {
+        viewMode === 'molecules'
+          ? setMoleculeList(data || [])
+          : setEquipmentList(data || []);
+        setSelectedIndex(0);
+      }
+
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Élève connecté
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, role')
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'eleve') return;
+    if (profile?.role !== 'eleve') {
+      setLoading(false);
+      return;
+    }
 
     setPrenom(profile.name || '');
 
@@ -56,8 +80,6 @@ export default function Viewer3DView() {
       setLoading(false);
       return;
     }
-
-    const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
 
     const { data, error } = await supabase
       .from('lab_items')
@@ -90,7 +112,7 @@ export default function Viewer3DView() {
     <div className="w-full px-6 md:px-10 py-20 space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">
-          Bienvenue {prenom} – Visualisation 3D
+          {prenom ? `Bienvenue ${prenom} – Visualisation 3D` : 'Visualisation 3D (mode invité)'}
         </h2>
         <div className="flex space-x-2">
           <button
@@ -119,13 +141,12 @@ export default function Viewer3DView() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Sidebar : détails + liste */}
         <div className="space-y-6">
           {selectedItem &&
             (viewMode === 'molecules' ? (
-              <MoleculeDetails molecule={selectedItem as Molecule} />
+              <MoleculeDetails molecule={selectedItem as lab_items} />
             ) : (
-              <EquipmentDetails equipment={selectedItem as LabEquipment} />
+              <EquipmentDetails equipment={selectedItem as lab_items} />
             ))}
 
           <div className="bg-gray-50 border border-gray-200 rounded-md p-4 shadow-sm">
@@ -147,14 +168,14 @@ export default function Viewer3DView() {
                   viewMode === 'molecules' ? (
                     <MoleculeCard
                       key={item.id}
-                      molecule={item as Molecule}
+                      molecule={item as lab_items}
                       isSelected={selectedIndex === index}
                       onSelect={() => setSelectedIndex(index)}
                     />
                   ) : (
                     <EquipmentCard
                       key={item.id}
-                      equipment={item as LabEquipment}
+                      equipment={item as lab_items}
                       isSelected={selectedIndex === index}
                       onSelect={() => setSelectedIndex(index)}
                     />
@@ -165,7 +186,6 @@ export default function Viewer3DView() {
           </div>
         </div>
 
-        {/* Viewer 3D */}
         <div className="relative md:col-span-2 bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
           {selectedItem?.structure?.endsWith('.glb') && (
             <GLBViewer

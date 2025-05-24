@@ -21,9 +21,25 @@ export default function QuizView() {
     setLoading(true);
     const { data: session } = await supabase.auth.getSession();
     const user = session?.session?.user;
-    if (!user) return;
 
-    // Profil
+    // 🔓 Mode invité : charger tous les quiz publics
+    if (!user) {
+      const { data: allQuizzes, error } = await supabase
+        .from('quizzes')
+        .select('*, questions(*)')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Erreur chargement quiz publics :", error);
+      } else {
+        setQuizList(allQuizzes || []);
+      }
+
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Utilisateur connecté
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, role')
@@ -37,7 +53,6 @@ export default function QuizView() {
 
     setPrenom(profile.name || '');
 
-    // Classe
     const { data: ec } = await supabase
       .from('eleves_classes')
       .select('classe_id')
@@ -50,7 +65,7 @@ export default function QuizView() {
       return;
     }
 
-    // Quiz
+    // Quiz de la classe
     const { data: quizzes } = await supabase
       .from('quizzes')
       .select('*, questions(*)')
@@ -59,7 +74,7 @@ export default function QuizView() {
 
     setQuizList(quizzes || []);
 
-    // Résultats
+    // Résultats de l'élève
     const { data: results } = await supabase
       .from('quiz_results')
       .select('*')
@@ -129,23 +144,27 @@ export default function QuizView() {
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-20 space-y-10">
-      <h2 className="text-2xl font-bold text-gray-800">Bienvenue {prenom} 👋 – Quiz disponibles</h2>
+      <h2 className="text-2xl font-bold text-gray-800">
+        {prenom ? `Bienvenue ${prenom} 👋 – Quiz disponibles` : 'Quiz disponibles (mode invité)'}
+      </h2>
 
-      {/* ✅ Progression cumulée */}
-      <div className="bg-purple-50 border border-purple-100 p-4 rounded-md text-sm text-purple-800">
-        Progression cumulée : <strong>{cumulativeScore.score} / {cumulativeScore.total}</strong> 
-        ({cumulativeScore.percentage}%)
-      </div>
+      {prenom && (
+        <div className="bg-purple-50 border border-purple-100 p-4 rounded-md text-sm text-purple-800">
+          Progression cumulée : <strong>{cumulativeScore.score} / {cumulativeScore.total}</strong> 
+          ({cumulativeScore.percentage}%)
+        </div>
+      )}
 
-      {/* ✅ Filtre quiz non faits */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => setShowOnlyUncompleted(prev => !prev)}
-          className="text-sm text-indigo-600 underline hover:text-indigo-800"
-        >
-          {showOnlyUncompleted ? '🔁 Voir tous les quiz' : '⏳ Voir uniquement les quiz non faits'}
-        </button>
-      </div>
+      {prenom && (
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowOnlyUncompleted(prev => !prev)}
+            className="text-sm text-indigo-600 underline hover:text-indigo-800"
+          >
+            {showOnlyUncompleted ? '🔁 Voir tous les quiz' : '⏳ Voir uniquement les quiz non faits'}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-gray-700">Chargement en cours...</p>

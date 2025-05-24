@@ -1,8 +1,8 @@
-import { Molecule } from '../../../../types/Viewer3D/lab_items';
-import { FlaskRound as Flask, GraduationCap, Info } from 'lucide-react';
+import { lab_items } from '../../../../types/Viewer3D/lab_items';
+import { FlaskRound as Flask, Info } from 'lucide-react';
 
 type MoleculeDetailsProps = {
-  molecule: Molecule;
+  molecule: lab_items;
 };
 
 export default function MoleculeDetails({ molecule }: MoleculeDetailsProps) {
@@ -15,13 +15,6 @@ export default function MoleculeDetails({ molecule }: MoleculeDetailsProps) {
           <Flask size={16} className="text-indigo-500" />
           <span>{molecule.formule}</span>
         </div>
-        
-        {molecule.niveau && (
-          <div className="flex items-center space-x-2">
-            <GraduationCap size={16} className="text-indigo-500" />
-            <span>{molecule.niveau}</span>
-          </div>
-        )}
 
         <div className="border-t border-gray-200 pt-3">
           <p>{molecule.description}</p>

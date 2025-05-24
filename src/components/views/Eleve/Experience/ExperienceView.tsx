@@ -28,25 +28,42 @@ export default function ExperienceView() {
   };
 
   useEffect(() => {
-    const fetchExperiencesForEleve = async () => {
+    const fetchExperiences = async () => {
       setLoading(true);
       const { data: session } = await supabase.auth.getSession();
       const user = session?.session?.user;
 
-      if (!user) return;
+      // 🟣 Mode invité (aucun utilisateur)
+      if (!user) {
+        const { data: allExperiences, error } = await supabase
+          .from('experiences')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      // ➤ Récupérer nom (facultatif, pour personnalisation)
+        if (error) {
+          console.error("Erreur chargement public :", error);
+        } else {
+          setExperiences(allExperiences || []);
+        }
+
+        setLoading(false);
+        return;
+      }
+
+      // 🟢 Utilisateur connecté → élève
       const { data: profile } = await supabase
         .from('profiles')
         .select('name, role')
         .eq('id', user.id)
         .single();
 
-      if (profile?.role !== 'eleve') return;
+      if (profile?.role !== 'eleve') {
+        setLoading(false);
+        return;
+      }
 
       setPrenom(profile.name || '');
 
-      // ➤ Récupérer la classe de l’élève
       const { data: classeLink } = await supabase
         .from('eleves_classes')
         .select('classe_id')
@@ -55,11 +72,13 @@ export default function ExperienceView() {
 
       const classeId = classeLink?.classe_id;
 
-      if (!classeId) return;
+      if (!classeId) {
+        setLoading(false);
+        return;
+      }
 
-      // ➤ Charger les expériences pour cette classe
       const { data: classeExperiences } = await supabase
-        .from('mes_experiences_eleve')
+        .from('experiences')
         .select('*')
         .eq('classe_id', classeId)
         .order('created_at', { ascending: false });
@@ -71,7 +90,7 @@ export default function ExperienceView() {
       setLoading(false);
     };
 
-    fetchExperiencesForEleve();
+    fetchExperiences();
   }, []);
 
   const currentExperience = activeExperience
@@ -95,14 +114,14 @@ export default function ExperienceView() {
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-20 space-y-10">
-      {/* ✅ Titre personnalisé */}
+      {/* ✅ Titre dynamique selon contexte */}
       <h2 className="text-2xl font-bold text-gray-800">
-        Bienvenue {prenom} 👋 – Expériences disponibles
+        {prenom ? `Bienvenue ${prenom} 👋 – Expériences de ta classe` : "Expériences disponibles (mode invité)"}
       </h2>
 
       {experiences.length === 0 ? (
         <div className="text-gray-500 text-center py-12">
-          Aucune expérience disponible pour ta classe pour le moment.
+          Aucune expérience disponible pour le moment.
         </div>
       ) : (
         <>
