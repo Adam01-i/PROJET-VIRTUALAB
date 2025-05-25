@@ -4,5 +4,5 @@ export type EleveActivite = {
   classe: string;
   quiz: number;
   simulation: number;
-  total: number;
+  total_score: number; 
 };

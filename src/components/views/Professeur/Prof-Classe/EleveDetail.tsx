@@ -1,37 +1,94 @@
-import { Dialog } from '@headlessui/react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../../../lib/supabaseClient';
 import { EleveActivite } from '../../../../types/Eleve/EleveActivite';
 
+type QuizResult = {
+  quiz_title: string;
+  correct_answers: number;
+  total_questions: number;
+  date_completed: string;
+};
+
 type Props = {
-  eleve: EleveActivite | null;
+  eleve: EleveActivite;
   onClose: () => void;
 };
 
 export default function EleveDetail({ eleve, onClose }: Props) {
-  if (!eleve) return null;
+  const [results, setResults] = useState<QuizResult[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('mes_resultats_quiz')
+        .select('*')
+        .eq('eleve_id', eleve.id)
+        .order('date_completed', { ascending: false });
+
+      if (!error && data) {
+        setResults(data);
+      } else if (error) {
+        console.error('Erreur fetch quiz results:', error);
+      }
+      setLoading(false);
+    };
+
+    fetchResults();
+  }, [eleve]);
 
   return (
-    <Dialog open={!!eleve} onClose={onClose} className="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-30">
-      <Dialog.Panel className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-        <Dialog.Title className="text-xl font-semibold mb-4 text-indigo-700">
-          👤 Détails de {eleve.name}
-        </Dialog.Title>
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+      <div className="bg-white p-6 rounded-xl shadow-lg max-w-2xl w-full space-y-4">
+        <h2 className="text-xl font-bold text-indigo-800">
+          📊 Détails de {eleve.name}
+        </h2>
 
-        <div className="space-y-2 text-gray-700 text-sm">
-          <p><strong>📚 Classe :</strong> {eleve.classe}</p>
-          <p><strong>📝 Quiz complétés :</strong> {eleve.quiz}</p>
-          <p><strong>🧪 Simulations :</strong> {eleve.simulation}</p>
-          <p><strong>📊 Activités totales :</strong> {eleve.total}</p>
-        </div>
+        {loading ? (
+          <p className="text-gray-500">Chargement des résultats...</p>
+        ) : results.length === 0 ? (
+          <p className="text-gray-500 italic">Aucun quiz réalisé récemment.</p>
+        ) : (
+          <div className="space-y-3">
+            {results.map((r, i) => {
+              const ratio = (r.correct_answers / r.total_questions) * 100;
+              const recommend =
+                ratio < 50
+                  ? '🔁 Revoir les notions de base.'
+                  : ratio < 75
+                  ? '👍 Bon travail, peut encore progresser.'
+                  : '🌟 Excellent niveau !';
 
-        <div className="mt-6 flex justify-end">
+              return (
+                <div
+                  key={i}
+                  className="border rounded-md p-4 bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  <div className="flex justify-between font-semibold text-indigo-700">
+                    <span>{r.quiz_title}</span>
+                    <span>{r.correct_answers}/100</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    ✅ {r.correct_answers}/{r.total_questions} bonnes réponses — 🗓️{' '}
+                    {new Date(r.date_completed).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm italic text-gray-500 mt-1">{recommend}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex justify-end pt-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
           >
             Fermer
           </button>
         </div>
-      </Dialog.Panel>
-    </Dialog>
+      </div>
+    </div>
   );
 }

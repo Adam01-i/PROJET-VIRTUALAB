@@ -7,7 +7,7 @@ interface Props {
 
 export default function TopEleves({ data, onSelectEleve }: Props) {
   const top5 = [...data]
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => b.total_score - a.total_score)
     .slice(0, 5);
 
   return (
@@ -21,10 +21,11 @@ export default function TopEleves({ data, onSelectEleve }: Props) {
             className="cursor-pointer hover:bg-gray-100 px-2 py-1 flex justify-between text-gray-700 rounded-md transition"
           >
             <span>{i + 1}. {el.name}</span>
-            <span className="text-sm font-medium">{el.total} activités</span>
+            <span className="text-sm font-medium">{el.total_score} pts</span>
           </li>
         ))}
       </ul>
     </div>
   );
 }
+
