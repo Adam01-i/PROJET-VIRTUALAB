@@ -3,7 +3,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGri
 export default function GraphActivityByClasse({ data }: { data: any[] }) {
   return (
     <div className="bg-white p-6 rounded-xl shadow">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">🏫 Activité par Classe</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Activité par Classe</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />

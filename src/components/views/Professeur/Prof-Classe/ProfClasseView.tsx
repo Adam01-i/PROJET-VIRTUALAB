@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 
 import CardStat from '../../../ui/CardStat';
-import TopEleves from '../Dashboard/TopEleves';
-import EleveDetail from '../Dashboard/EleveDetail';
+import TopEleves from './TopEleves';
+import EleveDetail from './EleveDetail';
 
 type Classe = { id: string; code_classe: string; niveau: string };
 type Eleve = { id: string; name: string; surname: string; email: string };
