@@ -146,9 +146,9 @@ useEffect(() => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-indigo-600">🧪 Mes simulations</h2>
+        <h1 className="text-3xl font-bold text-indigo-800">Mes Simulations</h1>
         <button
           onClick={() => {
             setFormData({
@@ -174,9 +174,9 @@ useEffect(() => {
 
       {/* 🔍 Filtre par classe */}
       <div>
-        <label className="text-sm font-medium text-gray-600 mr-2">Classe :</label>
+        <label className="text-sx font-semibold text-gray-600 mr-2">Classe :</label>
         <select
-          className="border px-3 py-1 rounded text-sm"
+          className="border px-3 py-1 rounded text-x font-semibold bg-white text-indigo-600"
           onChange={(e) => {
             setClasseFilter(e.target.value);
           }}
@@ -219,7 +219,7 @@ useEffect(() => {
               handleSave();
             }}
             className="bg-white border p-4 rounded shadow space-y-4 overflow-hidden"
-            style={{ maxHeight: "80vh", overflowY: "auto" }}
+            style={{ maxHeight: "75vh", overflowY: "auto" }}
           >
             <h3 className="text-lg font-semibold text-indigo-700">
               {formData.id ? "Modifier" : "Nouvelle"} simulation

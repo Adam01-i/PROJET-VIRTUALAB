@@ -109,7 +109,7 @@ export default function Viewer3DView() {
     setSelectedIndex((prev) => (prev - 1 + dataList.length) % dataList.length);
 
   return (
-    <div className="w-full px-6 md:px-10 py-20 space-y-8">
+    <div className="w-full px-6 md:px-10 py-6 space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">
           {prenom ? `Bienvenue ${prenom} – Visualisation 3D` : 'Visualisation 3D (mode invité)'}
@@ -163,7 +163,7 @@ export default function Viewer3DView() {
                 Aucun élément disponible
               </p>
             ) : (
-              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1"> 
                 {dataList.map((item, index) =>
                   viewMode === 'molecules' ? (
                     <MoleculeCard

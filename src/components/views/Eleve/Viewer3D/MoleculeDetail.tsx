@@ -1,5 +1,5 @@
 import { lab_items } from '../../../../types/Viewer3D/lab_items';
-import { FlaskRound as Flask, Info } from 'lucide-react';
+import { FlaskRound as Flask } from 'lucide-react';
 
 type MoleculeDetailsProps = {
   molecule: lab_items;
@@ -22,10 +22,8 @@ export default function MoleculeDetails({ molecule }: MoleculeDetailsProps) {
 
         {molecule.importance && (
           <div className="bg-indigo-50 rounded-md p-4 mt-3 border border-indigo-100">
-            <div className="flex items-start space-x-2">
-              <Info size={16} className="text-indigo-600 mt-0.5" />
+              <h4 className="text-sm font-medium text-indigo-700 mb-2">Importance</h4>
               <p className="text-sm text-gray-800">{molecule.importance}</p>
-            </div>
           </div>
         )}
       </div>

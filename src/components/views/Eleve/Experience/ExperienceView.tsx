@@ -113,7 +113,7 @@ export default function ExperienceView() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-20 space-y-10">
+    <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-24 space-y-10">
       {/* ✅ Titre dynamique selon contexte */}
       <h2 className="text-2xl font-bold text-gray-800">
         {prenom ? `Bienvenue ${prenom} 👋 – Expériences de ta classe` : "Expériences disponibles (mode invité)"}

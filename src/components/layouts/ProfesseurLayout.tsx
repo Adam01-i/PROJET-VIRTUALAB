@@ -60,7 +60,7 @@ export default function ProfesseurLayout() {
           </div>
 
           {/* 📄 Contenu (OUTLET) */}
-          <main className="flex-1 overflow-y-auto pt-20">
+          <main className="flex-1 overflow-y-auto pt-14">
             <div className="max-w-7xl mx-auto">
               <Outlet />
             </div>

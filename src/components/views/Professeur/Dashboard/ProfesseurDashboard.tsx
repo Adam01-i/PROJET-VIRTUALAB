@@ -107,13 +107,13 @@ export default function ProfesseurDashboard() {
     : parClasse.filter((c) => c.classe === selectedClasse);
 
   return (
-    <div className="space-y-10 p-6">
-      <h1 className="text-3xl font-bold text-indigo-900">🎓 Tableau de bord professeur</h1>
+    <div className="space-y-4 p-6">
+      <h1 className="text-3xl font-bold text-indigo-800">Tableau de bord </h1>
 
       {/* 🔄 Sélecteurs */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div>
-          <span className="mr-2 text-sm text-gray-600">Période :</span>
+          <span className="mr-2 text-x font-semibold text-gray-600">Période :</span>
           {['7j', '30j'].map((opt) => (
             <button
               key={opt}
@@ -130,11 +130,11 @@ export default function ProfesseurDashboard() {
         </div>
 
         <div>
-          <span className="mr-2 text-sm text-gray-600">Classe :</span>
+          <span className="mr-2 text-x font-semibold text-gray-600">Classe :</span>
           <select
             onChange={(e) => setSelectedClasse(e.target.value)}
             value={selectedClasse}
-            className="border rounded px-2 py-1 text-sm"
+            className="border rounded px-2 py-1 font-semibold text-x bg-white text-indigo-600"
           >
             <option value="all">Toutes</option>
             {classes.map((cl) => (

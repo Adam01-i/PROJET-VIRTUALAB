@@ -6,19 +6,16 @@ import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 import {
-  PlusCircle,
   Users,
   Atom,
   FlaskConical,
   Trash2,
-  Loader2,
   FileText,
   UploadCloud,
 } from 'lucide-react';
 
 import CardStat from '../../../ui/CardStat';
 import TopEleves from '../Dashboard/TopEleves';
-import InactiveEleves from '../Dashboard/InactiveEleves';
 import EleveDetail from '../Dashboard/EleveDetail';
 
 type Classe = { id: string; code_classe: string; niveau: string };
@@ -40,7 +37,6 @@ export default function ProfClasseView() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [quizCount, setQuizCount] = useState(0);
   const [lab3DCount, setLab3DCount] = useState(0);
-  const [emailToAdd, setEmailToAdd] = useState('');
   const [loading, setLoading] = useState(false);
   const [parEleve, setParEleve] = useState<EleveActivite[]>([]);
   const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
@@ -159,36 +155,6 @@ useEffect(() => {
     fetchStats();
   }, [selectedClasseCode, selectedClasseNiveau]);
 
-  const handleAddEleve = async () => {
-    if (!emailToAdd.trim()) return;
-    setLoading(true);
-
-    const { data: user } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', emailToAdd.trim())
-      .single();
-
-    if (!user) {
-      toast.error("Élève introuvable avec cet email.");
-      setLoading(false);
-      return;
-    }
-
-    const { error } = await supabase.from('eleves_classes').insert({
-      eleve_id: user.id,
-      classe_id: selectedClasseId,
-    });
-
-    if (error) toast.error("Échec de l'ajout");
-    else {
-      toast.success("Élève ajouté !");
-      setEmailToAdd('');
-    }
-
-    setLoading(false);
-  };
-
   const handleRemoveEleve = async (eleveId: string) => {
     const { error } = await supabase
       .from('eleves_classes')
@@ -248,16 +214,16 @@ useEffect(() => {
   };
 
   return (
-    <div className="p-8 space-y-10">
-      <h1 className="text-3xl font-bold text-indigo-800">🎓 Gestion de mes classes</h1>
+    <div className="p-6 space-y-4">
+      <h1 className="text-3xl font-bold text-indigo-800">Mes Classes</h1>
 
       {/* Sélecteur */}
       <div>
-        <label className="text-sm font-semibold text-gray-600">Sélectionner une classe :</label>
+        <label className="text-x font-semibold text-gray-600">Classe :   </label>
         <select
           onChange={(e) => setSelectedClasseId(e.target.value)}
           value={selectedClasseId ?? ''}
-          className="mt-1 px-3 py-1 border rounded text-sm bg-indigo-600 text-white"
+          className="mt-1 px-3 py-1 border rounded text-x font-semibold bg-white text-indigo-600"
         >
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
@@ -304,28 +270,10 @@ useEffect(() => {
           ))}
         </ul>
 
-        <div className="mt-6 flex items-center gap-3">
-          <input
-            type="email"
-            placeholder="Ajouter l’élève par email"
-            value={emailToAdd}
-            onChange={(e) => setEmailToAdd(e.target.value)}
-            className="flex-1 px-3 py-2 border rounded text-sm"
-          />
-          <button
-            onClick={handleAddEleve}
-            disabled={loading}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded"
-          >
-            {loading ? <Loader2 className="animate-spin" size={16} /> : <PlusCircle size={16} />}
-            Ajouter
-          </button>
-        </div>
       </div>
 
       {/* Activité élève */}
       <TopEleves data={parEleve} onSelectEleve={setSelectedEleve} />
-      <InactiveEleves data={parEleve} onSelectEleve={setSelectedEleve} />
       {selectedEleve && <EleveDetail eleve={selectedEleve} onClose={() => setSelectedEleve(null)} />}
     </div>
   );

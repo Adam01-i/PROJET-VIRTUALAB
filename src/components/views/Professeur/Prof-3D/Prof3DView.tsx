@@ -209,8 +209,10 @@ export default function Prof3DView() {
   };
 
   return (
-    <div className="p-4 max-w-[1280px] mx-auto text-base text-gray-800 min-h-screen">
+    <div className="p-6 text-base text-gray-800 pt-6 space-y-4">
       {/* HEADER */}
+      <h1 className="text-3xl font-bold text-indigo-800">Mes Object 3D</h1>
+
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
           <button
@@ -234,7 +236,7 @@ export default function Prof3DView() {
             <span className="ml-3 text-sm text-black font-normal">  | Total :  {nombreDeMateriels} </span>
           </button>
           <select
-            className="border px-2 py-1 rounded text-sm"
+            className="border px-2 py-1 rounded text-x font-semibold bg-white text-indigo-600"
             value={classeFilter || ''}
             onChange={(e) => setClasseFilter(e.target.value || null)}
           >
@@ -352,19 +354,16 @@ export default function Prof3DView() {
               <ProfGLBViewer glbUrl={selectedEquipment.structure} moleculeName={selectedEquipment.nom} />
               <ProfMaterielsDetails equipment={selectedEquipment} />
             </>
-          ) : (
-            <p className="text-gray-400 italic">
-              Sélectionne un élément à gauche pour voir sa visualisation 3D et ses détails.
-            </p>
-          )}
+          ) : null}
 
-          {isEditing && (
+          {isEditing &&(
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSubmit();
               }}
-              className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"
+              className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"              
+            style={{ maxHeight: "75vh", overflowY: "auto" }}
             >
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">Nom</label>

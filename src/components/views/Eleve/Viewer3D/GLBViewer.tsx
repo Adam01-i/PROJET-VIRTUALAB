@@ -59,7 +59,7 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName, materielsName
     <div
       ref={viewerRef}
       className="relative w-full bg-gradient-to-br from-purple-700 to-purple-300 rounded-lg overflow-hidden"
-      style={{ height: isFullscreen ? '100vh' : '590px' }}
+      style={{ height: isFullscreen ? '100vh' : '545px' }}
     >
       {/* Nom affiché en haut à gauche */}
       {label && (

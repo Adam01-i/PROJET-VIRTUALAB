@@ -5,13 +5,13 @@ export type Experience = {
   duree: string;
   niveau: string;
   image: string;
-  simulationPath: string;
-  classe_id: string;        
-  auteur_id?: string;       
+  simulationPath: string;  
   objectifs: string[];
   materiel: string[];
   resultatsAttendus: string[];
   created_at?: string;
+  classe_id: string;        
+  auteur_id?: string;     
 };
 
 

@@ -51,7 +51,7 @@ export default function AccueilView() {
   }, []);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 py-20 bg-white">
+    <div className="max-w-[1280px] mx-auto px-4 py-16 bg-white">
       {/* ✅ Bloc personnalisé pour l’élève */}
       {isEleve && (
         <div className="mb-16 bg-indigo-50 border border-indigo-100 p-6 rounded-xl shadow-sm">
@@ -65,7 +65,7 @@ export default function AccueilView() {
       )}
 
       {/* === Cartes principales === */}
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-8 pt-40">
         <FeatureCard
           to="/eleve/experiences"
           icon={<Flask size={28} className="text-purple-600" />}
@@ -87,7 +87,7 @@ export default function AccueilView() {
       </div>
 
       {/* === Avantages + Description === */}
-      <section className="py-40 bg-white">
+      <section className="pt-52 pb-l8 bg-white">
         <div className="max-w-[1280px] mx-auto grid md:grid-cols-2 gap-12 items-start">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Card title="Autonomie & Pratique" text="Répétez les expériences à volonté, avancez à votre rythme et maîtrisez les notions à votre façon." />
