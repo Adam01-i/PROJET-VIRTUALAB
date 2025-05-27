@@ -73,7 +73,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="px-4 mt-24">
-      <h1 className="text-3xl font-extrabold text-indigo-900 mb-4">🎛️ Tableau de bord pédagogique</h1>
+      <h1 className="text-3xl font-extrabold text-indigo-900 mb-4">🎛️ Tableau de bord Administrateur</h1>
 
       {/* 🔢 Statistiques de base */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
