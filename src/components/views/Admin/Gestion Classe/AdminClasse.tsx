@@ -99,7 +99,7 @@ const formatted: Classe[] = data.map((c: any) => {
   };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="mt-20 p-6 space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-extrabold tracking-tight text-gray-800">
           🎓 Gestion des classes

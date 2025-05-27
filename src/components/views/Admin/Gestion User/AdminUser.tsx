@@ -7,7 +7,7 @@ export default function AdminUser() {
   const [tab, setTab] = useState('professeurs');
 
   return (
-    <div className="px-4 md:px-8 py-6">
+    <div className="mt-20 px-4 md:px-8 py-6">
       <Tabs defaultValue={tab} onValueChange={setTab} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="professeurs" className="text-sm md:text-base">

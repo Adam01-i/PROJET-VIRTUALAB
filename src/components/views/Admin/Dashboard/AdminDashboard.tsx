@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-10 px-4 py-6">
+    <div className="px-4 mt-24">
       <h1 className="text-3xl font-extrabold text-indigo-900 mb-4">🎛️ Tableau de bord pédagogique</h1>
 
       {/* 🔢 Statistiques de base */}
@@ -82,14 +82,15 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* 🏫 Activité par classe */}
+      <ActivityByClass classes={classes} />
+
       {/* 📊 Activité par professeur */}
       <ActivityByProf professeurs={professeurs} />
 
       {/* 👨‍🎓 Activité par élève */}
       <ActivityByEleve eleves={eleves} />
 
-      {/* 🏫 Activité par classe */}
-      <ActivityByClass classes={classes} />
     </div>
   );
 }

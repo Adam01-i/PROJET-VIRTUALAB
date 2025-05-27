@@ -19,7 +19,7 @@ type Classe = {
 };
 
 type ActivityLog = {
-  date: string;
+  classe: string;
   simulation: number;
   quiz: number;
   objet3d: number;
@@ -30,7 +30,8 @@ type Props = {
 };
 
 export default function ActivityByClass({ classes }: Props) {
-  const [classeFilters, setClasseFilters] = useState({ classeId: 'toutes', dateRange: '7j' });
+  const [dateRange, setDateRange] = useState<'7j' | '30j' | 'tout'>('7j');
+  const [selectedClasseId, setSelectedClasseId] = useState<'toutes' | string>('toutes');
   const [activityByClasse, setActivityByClasse] = useState<ActivityLog[]>([]);
 
   const buttonClass = (active: boolean) =>
@@ -41,77 +42,81 @@ export default function ActivityByClass({ classes }: Props) {
     }`;
 
   useEffect(() => {
-    const fetchClasseActivity = async () => {
-      const days =
-        classeFilters.dateRange === '7j' ? 7 :
-        classeFilters.dateRange === '30j' ? 30 :
-        365;
+    const fetchActivity = async () => {
+      const days = dateRange === '7j' ? 7 : dateRange === '30j' ? 30 : 365;
+      const since = new Date();
+      since.setDate(since.getDate() - days);
 
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
+      const { data: elevesClasse, error: err1 } = await supabase
+        .from('eleves_classes')
+        .select('eleve_id, classe_id');
 
-      let { data: logs } = await supabase
+      if (err1 || !elevesClasse) return;
+
+      const eleveClasseMap: Record<string, string> = {};
+      elevesClasse.forEach(({ eleve_id, classe_id }) => {
+        const code = classes.find((c) => c.id === classe_id)?.code_classe;
+        if (code) {
+          if (selectedClasseId !== 'toutes' && classe_id !== selectedClasseId) return;
+          eleveClasseMap[eleve_id] = code;
+        }
+      });
+
+      const eleveIds = Object.keys(eleveClasseMap);
+      if (eleveIds.length === 0) {
+        setActivityByClasse([]);
+        return;
+      }
+
+      const { data: logs, error: err2 } = await supabase
         .from('activity_logs')
-        .select('created_at, type, user_id')
-        .gte('created_at', startDate.toISOString());
+        .select('user_id, created_at, type')
+        .in('user_id', eleveIds)
+        .gte('created_at', since.toISOString());
 
-      // 🎯 Filtrage classe → élève
-      if (classeFilters.classeId !== 'toutes') {
-        const { data: elevesClasse } = await supabase
-          .from('eleves_classes')
-          .select('eleve_id')
-          .eq('classe_id', classeFilters.classeId);
+      if (err2 || !logs) return;
 
-        const ids = elevesClasse?.map((e) => e.eleve_id);
-        logs = logs?.filter((log) => ids?.includes(log.user_id)) ?? [];
-      }
+      const agg: Record<string, ActivityLog> = {};
+      Object.values(eleveClasseMap).forEach((classe) => {
+        if (!agg[classe]) {
+          agg[classe] = { classe, simulation: 0, quiz: 0, objet3d: 0 };
+        }
+      });
 
-      const grouped: ActivityLog[] = [];
-      for (let i = 0; i <= days; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() - (days - i));
-        grouped.push({
-          date: date.toISOString().split('T')[0],
-          simulation: 0,
-          quiz: 0,
-          objet3d: 0,
-        });
-      }
+      logs.forEach(({ user_id, type }) => {
+        const classe = eleveClasseMap[user_id];
+        if (!classe || !agg[classe]) return;
+        if (type === 'simulation') agg[classe].simulation++;
+        else if (type === 'quiz') agg[classe].quiz++;
+        else if (type === 'objet3d') agg[classe].objet3d++;
+      });
 
-      for (const log of logs || []) {
-        const dateKey = log.created_at.split('T')[0];
-        const row = grouped.find((r) => r.date === dateKey);
-        if (!row) continue;
-
-        if (log.type === 'simulation') row.simulation += 1;
-        else if (log.type === 'quiz') row.quiz += 1;
-        else if (log.type === 'objet3d') row.objet3d += 1;
-      }
-
-      setActivityByClasse(grouped);
+      setActivityByClasse(Object.values(agg));
     };
 
-    fetchClasseActivity();
-  }, [classeFilters]);
+    fetchActivity();
+  }, [dateRange, selectedClasseId, classes]);
 
   return (
-    <div className="mt-12 bg-white shadow rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-gray-700 mb-2">🏫 Activité par classe (Simulations, Quiz, Objets 3D)</h2>
+    <div className="bg-white shadow rounded-xl p-6 space-y-2">
+      <h2 className="text-2xl font-semibold text-gray-700 mb-2">Activité par classe</h2>
 
-      <div className="flex gap-2 flex-wrap mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        {/* 🔁 Période */}
         {['7j', '30j', 'tout'].map((opt) => (
           <button
             key={opt}
-            onClick={() => setClasseFilters((f) => ({ ...f, dateRange: opt }))}
-            className={buttonClass(classeFilters.dateRange === opt)}
+            onClick={() => setDateRange(opt as '7j' | '30j' | 'tout')}
+            className={buttonClass(dateRange === opt)}
           >
             {opt === '7j' ? '7 jours' : opt === '30j' ? '30 jours' : 'Tout'}
           </button>
         ))}
 
+        {/* 🎚️ Classe */}
         <select
-          value={classeFilters.classeId}
-          onChange={(e) => setClasseFilters((f) => ({ ...f, classeId: e.target.value }))}
+          value={selectedClasseId}
+          onChange={(e) => setSelectedClasseId(e.target.value)}
           className="border rounded px-3 py-1 text-sm shadow-sm text-gray-700"
         >
           <option value="toutes">Toutes les classes</option>
@@ -123,10 +128,10 @@ export default function ActivityByClass({ classes }: Props) {
         </select>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart data={activityByClasse}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis dataKey="date" stroke="#4B5563" />
+          <XAxis dataKey="classe" stroke="#4B5563" />
           <YAxis stroke="#4B5563" allowDecimals={false} />
           <Tooltip />
           <Legend />

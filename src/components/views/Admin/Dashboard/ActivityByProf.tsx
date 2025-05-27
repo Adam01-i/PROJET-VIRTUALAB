@@ -73,8 +73,8 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
     }`;
 
   return (
-    <div className="mt-12 bg-white shadow rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-gray-700 mb-2">👩‍🏫 Activité par professeur</h2>
+    <div className="mt-24 bg-white shadow rounded-xl p-6 space-y-6">
+      <h2 className="text-2xl font-semibold text-gray-700 mb-2">Activité par professeur</h2>
       <div className="flex gap-2 flex-wrap mb-4">
         {['7j', '30j', 'tout'].map((opt) => (
           <button

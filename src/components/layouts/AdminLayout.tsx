@@ -48,7 +48,7 @@ export default function AdminLayout() {
       </nav>
 
       {/* ⚪ Sub-navbar */}
-      <nav className="mt-16 bg-white border-b border-gray-200 shadow-sm">
+      <nav className="fixed w-full z-10 mt-16 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-[1280px] mx-auto px-4">
           <div className="flex justify-center gap-16 py-6 flex-wrap">
             {navItems.map(({ path, icon: Icon, label }) => (

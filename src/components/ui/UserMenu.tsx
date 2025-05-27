@@ -100,7 +100,7 @@ export default function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
+        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border ">
           <div className="flex items-center gap-3 px-4 py-3 border-b">
             {profile.avatar_url ? (
               <img
