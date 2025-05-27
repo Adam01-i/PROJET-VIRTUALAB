@@ -1,7 +1,9 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Check, X, HelpCircle, Award } from 'lucide-react';
 import type { Quiz, QuizProgress } from '../../../../types/Quiz/quiz';
-import { supabase } from '../../../../lib/supabaseClient'; // 👈 Assure-toi que ce chemin est correct
+import { supabase } from '../../../../lib/supabaseClient';
 
 type QuizSessionProps = {
   quiz: Quiz;
@@ -51,27 +53,45 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     }));
   };
 
+  const logActivity = async (type: 'quiz', meta: any = {}) => {
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session?.session?.user?.id;
+    if (!userId) return;
+
+    await supabase.from('activity_logs').insert({
+      user_id: userId,
+      type,
+      duree: 600 - timeLeft,
+      meta,
+    });
+  };
+
   const handleNext = () => {
     if (progress.currentQuestion === quiz.questions.length - 1) {
       setProgress(prev => ({ ...prev, completed: true }));
+
       const saveScore = async () => {
-  const { data: session } = await supabase.auth.getSession();
-  const user = session?.session?.user;
+        const { data: session } = await supabase.auth.getSession();
+        const user = session?.session?.user;
+        if (!user) return;
 
-  if (!user) return;
+        await supabase.from('quiz_results').insert({
+          eleve_id: user.id,
+          quiz_id: quiz.id,
+          score: progress.score,
+          total: quiz.questions.length,
+        });
 
-  await supabase.from('quiz_results').insert({
-    eleve_id: user.id,
-    quiz_id: quiz.id,
-    score: progress.score,
-    total: quiz.questions.length,
-  });
+        // ✅ Log dans activity_logs
+        await logActivity('quiz', {
+          quiz_id: quiz.id,
+          titre: quiz.titre,
+        });
 
-  onComplete(progress.score);
-};
+        onComplete(progress.score);
+      };
 
-saveScore();
-
+      saveScore();
     } else {
       setProgress(prev => ({
         ...prev,
@@ -143,8 +163,7 @@ saveScore();
             const isCorrect = index === currentQuestion.correctAnswer;
             const isSelected = progress.answers[progress.currentQuestion] === index;
 
-            let baseClasses =
-              'w-full p-3 rounded-md border transition-all text-left text-sm';
+            let baseClasses = 'w-full p-3 rounded-md border transition-all text-left text-sm';
             let stateClasses = 'bg-white/10 hover:bg-white/20 text-gray-600 border-gray-300';
 
             if (hasAnswered) {

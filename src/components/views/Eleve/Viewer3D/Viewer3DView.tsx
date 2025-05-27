@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import {
   FlaskRound as Flask,
@@ -27,87 +29,115 @@ export default function Viewer3DView() {
     fetchItems();
   }, [viewMode]);
 
-const fetchItems = async () => {
-  setLoading(true);
-  const { data: session } = await supabase.auth.getSession();
-  const user = session?.session?.user;
-  const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
+  const logActivity = async (item: lab_items) => {
+    const { data: session } = await supabase.auth.getSession();
+    const user = session?.session?.user;
+    if (!user) return;
 
-  // 🔓 Mode invité : tous les éléments publics
-  if (!user) {
+    await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      type: 'simulation',
+      meta: {
+        lab_item_id: item.id,
+        nom: item.nom,
+        category: item.category,
+      },
+    });
+  };
+
+  const fetchItems = async () => {
+    setLoading(true);
+    const { data: session } = await supabase.auth.getSession();
+    const user = session?.session?.user;
+    const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
+
+    if (!user) {
+      const { data, error } = await supabase
+        .from('vue_lab_items_details')
+        .select('*')
+        .eq('category', category)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Erreur de chargement (invité) :", error);
+      } else {
+        viewMode === 'molecules'
+          ? setMoleculeList(data || [])
+          : setEquipmentList(data || []);
+        setSelectedIndex(0);
+      }
+
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'eleve') {
+      setLoading(false);
+      return;
+    }
+
+    setPrenom(profile.name || '');
+
+    const { data: ec } = await supabase
+      .from('eleves_classes')
+      .select('classe_id')
+      .eq('eleve_id', user.id)
+      .single();
+
+    const classeId = ec?.classe_id;
+    if (!classeId) {
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('vue_lab_items_details')
       .select('*')
       .eq('category', category)
+      .eq('classe_id', classeId)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Erreur de chargement (invité) :", error);
+      console.error("Erreur de chargement :", error);
     } else {
       viewMode === 'molecules'
         ? setMoleculeList(data || [])
         : setEquipmentList(data || []);
       setSelectedIndex(0);
+
+      // Log de la première sélection automatiquement
+      if (data && data[0]) {
+        await logActivity(data[0]);
+      }
     }
 
     setLoading(false);
-    return;
-  }
-
-  // ✅ Élève connecté
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'eleve') {
-    setLoading(false);
-    return;
-  }
-
-  setPrenom(profile.name || '');
-
-  const { data: ec } = await supabase
-    .from('eleves_classes')
-    .select('classe_id')
-    .eq('eleve_id', user.id)
-    .single();
-
-  const classeId = ec?.classe_id;
-
-  if (!classeId) {
-    setLoading(false);
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from('vue_lab_items_details')
-    .select('*')
-    .eq('category', category)
-    .eq('classe_id', classeId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error("Erreur de chargement :", error);
-  } else {
-    viewMode === 'molecules'
-      ? setMoleculeList(data || [])
-      : setEquipmentList(data || []);
-    setSelectedIndex(0);
-  }
-
-  setLoading(false);
-};
-
+  };
 
   const dataList = viewMode === 'molecules' ? moleculeList : equipmentList;
   const selectedItem = dataList[selectedIndex] || null;
 
-  const handleNext = () =>
-    setSelectedIndex((prev) => (prev + 1) % dataList.length);
-  const handlePrev = () =>
-    setSelectedIndex((prev) => (prev - 1 + dataList.length) % dataList.length);
+  const handleSelect = async (index: number) => {
+    setSelectedIndex(index);
+    const item = dataList[index];
+    if (item) await logActivity(item);
+  };
+
+  const handleNext = () => {
+    const nextIndex = (selectedIndex + 1) % dataList.length;
+    handleSelect(nextIndex);
+  };
+
+  const handlePrev = () => {
+    const prevIndex = (selectedIndex - 1 + dataList.length) % dataList.length;
+    handleSelect(prevIndex);
+  };
 
   return (
     <div className="w-full px-6 md:px-10 py-6 space-y-8">
@@ -164,21 +194,21 @@ const fetchItems = async () => {
                 Aucun élément disponible
               </p>
             ) : (
-              <div className="space-y-2 max-h-40 overflow-y-auto pr-1"> 
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                 {dataList.map((item, index) =>
                   viewMode === 'molecules' ? (
                     <MoleculeCard
                       key={item.id}
                       molecule={item as lab_items}
                       isSelected={selectedIndex === index}
-                      onSelect={() => setSelectedIndex(index)}
+                      onSelect={() => handleSelect(index)}
                     />
                   ) : (
                     <EquipmentCard
                       key={item.id}
                       equipment={item as lab_items}
                       isSelected={selectedIndex === index}
-                      onSelect={() => setSelectedIndex(index)}
+                      onSelect={() => handleSelect(index)}
                     />
                   )
                 )}

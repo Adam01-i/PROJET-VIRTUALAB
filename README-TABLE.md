@@ -521,6 +521,10 @@ using (
   WHERE ((ec.eleve_id = activity_logs.user_id) AND (pc.professeur_id = auth.uid()))))
 );
 
+create policy "Admin lit tout"
+on "public"."activity_logs"
+to authenticated
+using (true);
 
 
 
@@ -734,3 +738,16 @@ select
 from
   quizzes q
   left join classes c on q.classe_id = c.id;
+
+######
+create view public.vue_activity_logs_with_roles as
+select 
+  al.id,
+  al.user_id,
+  al.type,
+  al.duree,
+  al.meta,
+  al.created_at,
+  p.role
+from activity_logs al
+left join profiles p on al.user_id = p.id;

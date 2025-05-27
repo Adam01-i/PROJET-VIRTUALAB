@@ -72,7 +72,7 @@ export default function AdminDashboard() {
     fetchCountsAndClasses();
   }, []);
 
-  // 🟣 ACTIVITÉ PAR RÔLE
+  // 🔴 CORRECTIF PRINCIPAL ICI 🔽
   useEffect(() => {
     const fetchRoleActivity = async () => {
       const days = roleFilters.dateRange === '7j' ? 7 : roleFilters.dateRange === '30j' ? 30 : 365;
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
 
       const { data: logs } = await supabase
         .from('activity_logs')
-        .select('type, created_at, user:profiles!activity_logs_user_id_fkey(role)')
+        .select('type, created_at, profiles(role)')
         .gte('created_at', startDate.toISOString());
 
       const roles = ['professeur', 'eleve', 'admin'];
@@ -92,9 +92,8 @@ export default function AdminDashboard() {
       }));
 
       for (const log of logs || []) {
-        // Explicitly type log.user as any to avoid 'never' error
-        const user = log.user as { role?: string } | { role?: string }[] | null | undefined;
-        const role = Array.isArray(user) ? user[0]?.role : user?.role;
+        const raw = log.profiles as { role?: string } | { role?: string }[] | null | undefined;
+        const role = Array.isArray(raw) ? raw[0]?.role : raw?.role;
         if (!role) continue;
 
         if (roleFilters.role !== 'tous' && role !== roleFilters.role) continue;
@@ -110,7 +109,6 @@ export default function AdminDashboard() {
     fetchRoleActivity();
   }, [roleFilters]);
 
-  // 🔵 ACTIVITÉ PAR CLASSE
   useEffect(() => {
     const fetchClasseActivity = async () => {
       const days = classeFilters.dateRange === '7j' ? 7 : classeFilters.dateRange === '30j' ? 30 : 365;
@@ -178,7 +176,6 @@ export default function AdminDashboard() {
     <div className="space-y-10 px-4 py-6">
       <h1 className="text-3xl font-extrabold text-indigo-900 mb-4">🎛️ Tableau de bord</h1>
 
-      {/* Cartes statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cards.map((card, index) => (
           <CardStat key={index} label={card.label} count={card.count} icon={card.icon} />
