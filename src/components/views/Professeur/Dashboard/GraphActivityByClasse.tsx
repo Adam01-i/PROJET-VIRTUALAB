@@ -31,10 +31,10 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
       : data.filter((d) => d.classe === selectedClasse);
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow space-y-6">
+    <div className="mt-12 bg-white p-6 rounded-xl shadow space-y-6">
       {/* 🔎 Titre + filtre */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-800">Activité par Classe</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">Activité par Classe</h2>
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-600">Classe :</label>
           <select

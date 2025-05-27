@@ -110,11 +110,11 @@ export default function ProfesseurDashboard() {
   const totalActivites = parEleve.reduce((acc, e) => acc + e.total_score, 0);
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="p-6">
       <h1 className="text-3xl font-bold text-indigo-800">Tableau de bord Professeur</h1>
 
       {/* 📊 Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <CardStat label="Mes classes" count={classes.length} icon={<AcademicCapIcon className="h-6 w-6" />} />
         <CardStat label="Élèves suivis" count={parEleve.length} icon={<UserGroupIcon className="h-6 w-6" />} />
         <CardStat label="Activités" count={totalActivites} icon={<ChartBarIcon className="h-6 w-6" />} />

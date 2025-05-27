@@ -43,11 +43,11 @@ export default function GraphActivityParEleve({ data, classes }: Props) {
     : data.filter((e) => e.classe === selectedClasse);
 
   return (
-    <div className="mt-12 bg-white rounded-xl shadow p-6 space-y-6">
+    <div className="mt-24 mb-20 bg-white rounded-xl shadow p-6 space-y-6">
       {/* 📌 Titre + filtre */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-700">
-          📊 Activité par Élève
+        <h2 className="text-2xl font-semibold text-gray-700">
+           Activité par Élève
           {selectedClasse !== 'all' && ` — Classe ${selectedClasse}`}
         </h2>
         <div className="flex items-center gap-2">
