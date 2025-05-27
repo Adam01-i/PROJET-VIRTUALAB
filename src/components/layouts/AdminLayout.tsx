@@ -36,7 +36,7 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
       {/* 🔵 Top Navbar */}
       <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-indigo-900'}`}>
-        <div className="max-w-[1280px] mx-auto px-4">
+        <div className="max-w-[1280px] mx-auto px-4 py-1">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
               <Flask size={20} className="text-purple-300" />
@@ -48,7 +48,7 @@ export default function AdminLayout() {
       </nav>
 
       {/* ⚪ Sub-navbar */}
-      <nav className="mt-14 bg-white border-b border-gray-200 shadow-sm">
+      <nav className="mt-16 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-[1280px] mx-auto px-4">
           <div className="flex justify-center gap-16 py-6 flex-wrap">
             {navItems.map(({ path, icon: Icon, label }) => (

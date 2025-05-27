@@ -31,17 +31,8 @@ const AdminClasse: React.FC = () => {
 
   const fetchClasses = async () => {
     const { data, error } = await supabase
-      .from("classes")
-      .select(`
-        id,
-        code_classe,
-        created_at,
-        professeurs_classes (
-          assigned_at,
-          professeur_id,
-          is_principal
-        )
-      `);
+      .from("vue_classes_completes")
+      .select("*");
 
     if (error || !Array.isArray(data)) {
       toast.error("Erreur de chargement des classes", {
@@ -50,23 +41,17 @@ const AdminClasse: React.FC = () => {
       return;
     }
 
-    // Récupérer uniquement les professeurs principaux
-    const principalProfIds = new Set<string>();
-    for (const classe of data) {
-      const profs = Array.isArray(classe.professeurs_classes)
-        ? classe.professeurs_classes
-        : [];
-      const principal = profs.find((p) => p.is_principal);
-      if (principal) {
-        principalProfIds.add(principal.professeur_id);
-      }
-    }
+    // Récupérer les ID de professeurs principaux
+    // Étape : filtrer les ID valides
+const principalProfIds = data
+  .map((classe) => classe.professeur_principal_id)
+  .filter((id): id is string => !!id); // <== évite les nulls
 
-    const idsToQuery = Array.from(principalProfIds);
+
     const { data: profsData, error: profError } = await supabase
       .from("profiles")
       .select("id, name, surname")
-      .in("id", idsToQuery);
+      .in("id", principalProfIds);
 
     if (profError) {
       toast.error("Erreur chargement des professeurs", {
@@ -79,27 +64,25 @@ const AdminClasse: React.FC = () => {
       (profsData || []).map((p) => [p.id, p])
     );
 
-    const formatted: Classe[] = data.map((c: any) => {
-      const profs = Array.isArray(c.professeurs_classes)
-        ? c.professeurs_classes
-        : [];
+const formatted: Classe[] = data.map((c: any) => {
+  const profPrincipal = c.professeur_principal_id
+    ? profMap[c.professeur_principal_id] || null
+    : null;
 
-      const principal = profs.find((p) => p.is_principal);
-      const profId = principal?.professeur_id;
-      const profPrincipal = profId && profMap[profId] ? profMap[profId] : null;
+  return {
+    id: c.id,
+    code_classe: c.code_classe,
+    created_at: c.created_at,
+    professeur_principal: profPrincipal,
+    students_count: c.students_count,
+    teachers_count: c.teachers_count,
+  };
+});
 
-      return {
-        id: c.id,
-        code_classe: c.code_classe,
-        created_at: c.created_at,
-        professeur_principal: profPrincipal,
-        students_count: 0, // TODO: Récupérer réellement via join
-        teachers_count: profs.length,
-      };
-    });
 
     setClasses(formatted);
   };
+
 
   useEffect(() => {
     fetchClasses();

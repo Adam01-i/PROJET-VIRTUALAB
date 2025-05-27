@@ -18,6 +18,7 @@ export default function EleveLayout() {
 
   const fullWidthPaths = ["/eleve/experiences", "/eleve/3d", "/eleve/quiz"];
   const isFullWidth = fullWidthPaths.some(path => location.pathname.includes(path));
+  
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 500);

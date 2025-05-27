@@ -15,47 +15,57 @@ export default function ProfExpView() {
   const [formData, setFormData] = useState<Experience | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [, setUploading] = useState(false);
-  const [classes, setClasses] = useState<{ id: string, code_classe: string }[]>([]);
+  const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([]);
   const [classeFilter, setClasseFilter] = useState<string>('all');
+  const [userId, setUserId] = useState<string | null>(null);
+
   const totalExperiences = experiences.length;
-  const getClasseNom = (id: string | null | undefined) => {
-  if (!id) return '—';
-  const classe = classes.find((c) => c.id === id);
-  return classe?.code_classe || '—';
-};
 
-
-useEffect(() => {
-  const fetchClasses = async () => {
-    const { data, error } = await supabase.from('mes_classes').select('id, code_classe');
-    if (error) {
-      console.error("❌ Erreur récupération classes :", error);
-    } else {
-      setClasses(data);
-    }
+  const getClasseNom = (code: string | null | undefined) => {
+    return code || '—';
   };
 
-  fetchClasses();
-}, []);
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      setUserId(session?.session?.user?.id ?? null);
+    };
+
+    const fetchClasses = async () => {
+      const { data, error } = await supabase.from('mes_classes').select('id, code_classe');
+      if (error) {
+        console.error("❌ Erreur récupération classes :", error);
+      } else {
+        setClasses(data);
+      }
+    };
+
+    fetchSession();
+    fetchClasses();
+  }, []);
 
   useEffect(() => {
-    fetchExperiences();
-  }, [classeFilter]);
+    if (userId) fetchExperiences();
+  }, [classeFilter, userId]);
 
   const fetchExperiences = async () => {
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session?.session?.user?.id;
+    if (!userId) return;
 
-    let query = supabase.from("experiences").select("*").eq("auteur_id", userId).order("created_at", { ascending: false });
+    let query = supabase
+      .from("vue_experience_details")
+      .select("*")
+      .eq("auteur_id", userId)
+      .order("created_at", { ascending: false });
 
     if (classeFilter !== 'all') {
-      query = query.eq("classe_id", classeFilter);
+      query = query.eq("code_classe", classeFilter);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      toast.error("Erreur chargement expériences");
+      toast.error("Erreur chargement expériences", { description: error.message });
+      console.error("🔴 Supabase error:", error);
     } else {
       setExperiences(data || []);
     }
@@ -67,8 +77,11 @@ useEffect(() => {
       return;
     }
 
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session?.session?.user?.id;
+    if (!userId) {
+      toast.error("Utilisateur non authentifié.");
+      return;
+    }
+
     const isNew = !formData.id;
 
     await toast.promise(
@@ -112,9 +125,9 @@ useEffect(() => {
 
   const resetForm = () => {
     setFormData(null);
-    setFormData(null);
     setIsEditing(false);
   };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -163,6 +176,7 @@ useEffect(() => {
               objectifs: [],
               materiel: [],
               resultatsAttendus: [],
+              is_public: false
             });
             setIsEditing(true);
           }}
@@ -177,18 +191,15 @@ useEffect(() => {
         <label className="text-sx font-semibold text-gray-600 mr-2">Classe :</label>
         <select
           className="border px-3 py-1 rounded text-x font-semibold bg-white text-indigo-600"
-          onChange={(e) => {
-            setClasseFilter(e.target.value);
-          }}
+          onChange={(e) => setClasseFilter(e.target.value)}
           value={classeFilter}
         >
           <option value="all">Toutes</option>
           {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.code_classe}</option>
+            <option key={c.id} value={c.code_classe}>{c.code_classe}</option>
           ))}
         </select>
-        <span className="ml-3 text-sm text-gray-500 font-normal">| Total :  {totalExperiences}  Simulations </span>
-
+        <span className="ml-3 text-sm text-gray-500 font-normal">| Total : {totalExperiences} Simulations</span>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -200,7 +211,7 @@ useEffect(() => {
               <ProfExpCard
                 key={exp.id}
                 experience={exp}
-                classeNom={getClasseNom(exp.classe_id)} // 👈 ici
+                classeNom={getClasseNom(exp.code_classe)}
                 onEdit={(e) => {
                   setFormData(e);
                   setIsEditing(true);

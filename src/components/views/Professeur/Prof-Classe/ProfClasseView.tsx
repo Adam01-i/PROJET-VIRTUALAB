@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
-
 import {
   Users,
   Atom,
@@ -20,23 +19,22 @@ import EleveDetail from './EleveDetail';
 
 type Classe = { id: string; code_classe: string; niveau: string };
 type Eleve = { id: string; name: string; surname: string; email: string };
-type Experience = { id: string; titre: string; niveau: string };
 type EleveActivite = {
   id: string;
   name: string;
   classe: string;
   quiz: number;
   simulation: number;
-  total: number;
+  total_score: number;
 };
 
 export default function ProfClasseView() {
   const [classes, setClasses] = useState<Classe[]>([]);
   const [selectedClasseId, setSelectedClasseId] = useState<string | null>(null);
   const [eleves, setEleves] = useState<Eleve[]>([]);
-  const [experiences, setExperiences] = useState<Experience[]>([]);
   const [quizCount, setQuizCount] = useState(0);
   const [lab3DCount, setLab3DCount] = useState(0);
+  const [experienceCount, setExperienceCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [parEleve, setParEleve] = useState<EleveActivite[]>([]);
   const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
@@ -46,25 +44,22 @@ export default function ProfClasseView() {
   const selectedClasseCode = selectedClasse?.code_classe;
   const selectedClasseNiveau = selectedClasse?.niveau;
 
-useEffect(() => {
-  const fetchClasses = async () => {
-    const { data, error } = await supabase.from('mes_classes').select('*');
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const { data, error } = await supabase.from('mes_classes').select('*');
+      if (error || !Array.isArray(data)) {
+        toast.error("❌ Impossible de charger les classes", {
+          description: error?.message || "Erreur inconnue",
+        });
+        return;
+      }
 
-    if (error || !Array.isArray(data)) {
-      console.error("Erreur récupération classes :", error);
-      toast.error("❌ Impossible de charger les classes", {
-        description: error?.message || "Erreur inconnue",
-      });
-      return;
-    }
+      setClasses(data);
+      if (data.length) setSelectedClasseId(data[0].id);
+    };
 
-    setClasses(data);
-    if (data.length) setSelectedClasseId(data[0].id);
-  };
-
-  fetchClasses();
-}, []);
-
+    fetchClasses();
+  }, []);
 
   useEffect(() => {
     if (!selectedClasseId) return;
@@ -78,11 +73,6 @@ useEffect(() => {
         .select('eleve_id, profiles(id, name, surname, email)')
         .eq('classe_id', selectedClasseId);
 
-      const { data: expData } = await supabase
-        .from('experiences')
-        .select('id, titre, niveau')
-        .eq('classe_id', selectedClasseId);
-
       const mappedEleves = elevesData?.map((e: any) => ({
         id: e.profiles.id,
         name: e.profiles.name,
@@ -91,7 +81,6 @@ useEffect(() => {
       })) || [];
 
       setEleves(mappedEleves);
-      setExperiences(expData || []);
 
       const classe = classes.find((c) => c.id === selectedClasseId);
 
@@ -109,7 +98,7 @@ useEffect(() => {
           classe: classe?.code_classe || 'Inconnue',
           quiz: 0,
           simulation: 0,
-          total: 0,
+          total_score: 0,
         };
       }
 
@@ -118,7 +107,7 @@ useEffect(() => {
         if (el) {
           if (log.type === 'quiz') el.quiz++;
           if (log.type === 'simulation') el.simulation++;
-          el.total++;
+          el.total_score++;
         }
       });
 
@@ -132,7 +121,6 @@ useEffect(() => {
     const fetchStats = async () => {
       if (!selectedClasseCode || !selectedClasseNiveau) return;
 
-      // ✅ Compte les quiz via code_classe
       const { count: quizCount, error: quizErr } = await supabase
         .from('vue_quiz_details')
         .select('*', { count: 'exact', head: true })
@@ -141,15 +129,21 @@ useEffect(() => {
       if (quizErr) console.error('Erreur quiz:', quizErr);
       setQuizCount(quizCount || 0);
 
-      // ✅ Compte les objets 3D par niveau
-      const { count: labCount, error: labErr } = await supabase
-        .from('lab_items')
+      const { count: expCount, error: expErr } = await supabase
+        .from('vue_experience_details')
         .select('*', { count: 'exact', head: true })
-        .eq('classe_id', selectedClasseId); // ✅ champ réel
+        .eq('code_classe', selectedClasseCode);
+
+      if (expErr) console.error('Erreur expériences:', expErr);
+      setExperienceCount(expCount || 0);
+
+      const { count: labCount, error: labErr } = await supabase
+        .from('vue_lab_items_details')
+        .select('*', { count: 'exact', head: true })
+        .eq('code_classe', selectedClasseCode);
 
       if (labErr) console.error('Erreur lab3D:', labErr);
       setLab3DCount(labCount || 0);
-
     };
 
     fetchStats();
@@ -217,9 +211,8 @@ useEffect(() => {
     <div className="p-6 space-y-4">
       <h1 className="text-3xl font-bold text-indigo-800">Mes Classes</h1>
 
-      {/* Sélecteur */}
       <div>
-        <label className="text-x font-semibold text-gray-600">Classe :   </label>
+        <label className="text-x font-semibold text-gray-600">Classe : </label>
         <select
           onChange={(e) => setSelectedClasseId(e.target.value)}
           value={selectedClasseId ?? ''}
@@ -233,18 +226,15 @@ useEffect(() => {
         </select>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <CardStat label="Élèves" count={eleves.length} icon={<Users className="h-6 w-6" />} />
-        <CardStat label="Expériences" count={experiences.length} icon={<FlaskConical className="h-6 w-6" />} />
+        <CardStat label="Expériences" count={experienceCount} icon={<FlaskConical className="h-6 w-6" />} />
         <CardStat label="Quiz" count={quizCount} icon={<FileText className="h-6 w-6" />} />
         <CardStat label="Objets 3D" count={lab3DCount} icon={<Atom className="h-6 w-6" />} />
       </div>
 
-      {/* Élèves */}
       <div className="bg-white shadow rounded p-6">
         <h2 className="text-xl font-semibold text-indigo-700 mb-4">👥 Élèves</h2>
-
         <div className='flex flex-wrap gap-4'>
           <input type="file" accept=".xlsx" onChange={handleImportFile} className="text-sm" />
           <button
@@ -269,10 +259,8 @@ useEffect(() => {
             </li>
           ))}
         </ul>
-
       </div>
 
-      {/* Activité élève */}
       <TopEleves data={parEleve} onSelectEleve={setSelectedEleve} />
       {selectedEleve && <EleveDetail eleve={selectedEleve} onClose={() => setSelectedEleve(null)} />}
     </div>

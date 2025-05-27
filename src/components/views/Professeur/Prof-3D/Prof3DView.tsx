@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 type ViewMode = 'molecule' | 'equipment';
 
 type lab_items_with_classe = lab_items & {
-  classes?: { code_classe: string };
+  code_classe?: string; // ✅ depuis la vue
 };
+
 
 export default function Prof3DView() {
   const [viewMode, setViewMode] = useState<ViewMode>('molecule');
@@ -58,8 +59,8 @@ export default function Prof3DView() {
     if (!userId) return toast.error("Utilisateur non connecté");
 
     let query = supabase
-      .from('lab_items')
-      .select('*, classes(code_classe)')
+      .from('vue_lab_items_details')
+      .select('*')
       .eq('category', viewMode)
       .eq('auteur_id', userId)
       .order('created_at', { ascending: false });
@@ -67,6 +68,7 @@ export default function Prof3DView() {
     if (classeFilter) {
       query = query.eq('classe_id', classeFilter);
     }
+
 
     const { data, error } = await query;
 
@@ -247,7 +249,7 @@ export default function Prof3DView() {
               </option>
             ))}
           </select>
-          
+
         </div>
 
         <button
@@ -297,8 +299,8 @@ export default function Prof3DView() {
                   setIsEditing(false);
                 }}
                 className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${(viewMode === 'molecule' ? selectedMolecule : selectedEquipment)?.id === item.id
-                    ? 'bg-purple-100 border-purple-300'
-                    : 'bg-white hover:bg-gray-50 border-gray-200'
+                  ? 'bg-purple-100 border-purple-300'
+                  : 'bg-white hover:bg-gray-50 border-gray-200'
                   }`}
               >
                 <div className="flex justify-between items-start">
@@ -308,7 +310,7 @@ export default function Prof3DView() {
                     {viewMode === 'molecule' && (
                       <div className="text-sm text-gray-500 flex gap-3 mt-1">
                         <span className="px-2 py-0.5 bg-gray-100 rounded-full">
-                          {item.classes?.code_classe || 'Niveau inconnu'}
+{item.code_classe || 'Classe inconnue'}
                         </span>
                         <span>{item.formule}</span>
                       </div>
@@ -356,14 +358,14 @@ export default function Prof3DView() {
             </>
           ) : null}
 
-          {isEditing &&(
+          {isEditing && (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSubmit();
               }}
-              className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"              
-            style={{ maxHeight: "75vh", overflowY: "auto" }}
+              className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"
+              style={{ maxHeight: "75vh", overflowY: "auto" }}
             >
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">Nom</label>

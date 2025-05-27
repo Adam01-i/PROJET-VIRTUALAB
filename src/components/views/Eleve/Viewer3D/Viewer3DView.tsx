@@ -27,69 +27,22 @@ export default function Viewer3DView() {
     fetchItems();
   }, [viewMode]);
 
-  const fetchItems = async () => {
-    setLoading(true);
-    const { data: session } = await supabase.auth.getSession();
-    const user = session?.session?.user;
-    const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
+const fetchItems = async () => {
+  setLoading(true);
+  const { data: session } = await supabase.auth.getSession();
+  const user = session?.session?.user;
+  const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
 
-    // 🔓 Mode invité : tous les éléments de la catégorie
-    if (!user) {
-      const { data, error } = await supabase
-        .from('lab_items')
-        .select('*')
-        .eq('category', category)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Erreur de chargement (public) :", error);
-      } else {
-        viewMode === 'molecules'
-          ? setMoleculeList(data || [])
-          : setEquipmentList(data || []);
-        setSelectedIndex(0);
-      }
-
-      setLoading(false);
-      return;
-    }
-
-    // ✅ Élève connecté
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'eleve') {
-      setLoading(false);
-      return;
-    }
-
-    setPrenom(profile.name || '');
-
-    const { data: ec } = await supabase
-      .from('eleves_classes')
-      .select('classe_id')
-      .eq('eleve_id', user.id)
-      .single();
-
-    const classeId = ec?.classe_id;
-
-    if (!classeId) {
-      setLoading(false);
-      return;
-    }
-
+  // 🔓 Mode invité : tous les éléments publics
+  if (!user) {
     const { data, error } = await supabase
-      .from('lab_items')
+      .from('vue_lab_items_details')
       .select('*')
       .eq('category', category)
-      .eq('classe_id', classeId)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Erreur de chargement :", error);
+      console.error("Erreur de chargement (invité) :", error);
     } else {
       viewMode === 'molecules'
         ? setMoleculeList(data || [])
@@ -98,7 +51,55 @@ export default function Viewer3DView() {
     }
 
     setLoading(false);
-  };
+    return;
+  }
+
+  // ✅ Élève connecté
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'eleve') {
+    setLoading(false);
+    return;
+  }
+
+  setPrenom(profile.name || '');
+
+  const { data: ec } = await supabase
+    .from('eleves_classes')
+    .select('classe_id')
+    .eq('eleve_id', user.id)
+    .single();
+
+  const classeId = ec?.classe_id;
+
+  if (!classeId) {
+    setLoading(false);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('vue_lab_items_details')
+    .select('*')
+    .eq('category', category)
+    .eq('classe_id', classeId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Erreur de chargement :", error);
+  } else {
+    viewMode === 'molecules'
+      ? setMoleculeList(data || [])
+      : setEquipmentList(data || []);
+    setSelectedIndex(0);
+  }
+
+  setLoading(false);
+};
+
 
   const dataList = viewMode === 'molecules' ? moleculeList : equipmentList;
   const selectedItem = dataList[selectedIndex] || null;
