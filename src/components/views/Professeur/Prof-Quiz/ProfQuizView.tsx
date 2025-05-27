@@ -1,5 +1,4 @@
-'use client';
-
+// En haut des imports
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,6 +6,7 @@ import { toast } from 'sonner';
 import ProfQuizCard from './ProfQuizCard';
 import type { Quiz, QuizQuestion } from '../../../../types/Quiz/quiz';
 
+// Options de durée
 const DUREE_OPTIONS = ["10 min", "20 min", "30 min", "45 min"];
 
 type QuizWithClasse = Quiz & { code_classe?: string };
@@ -15,12 +15,13 @@ export default function ProfQuizView() {
   const [quizzes, setQuizzes] = useState<QuizWithClasse[]>([]);
   const [formData, setFormData] = useState<Quiz | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [, setUploading] = useState(false);
   const [classes, setClasses] = useState<{ id: string, code_classe: string }[]>([]);
   const [classeFilter, setClasseFilter] = useState<string>('all');
+  const [, setUploading] = useState(false);
 
   const totalQuestions = quizzes.reduce((acc, quiz) => acc + (quiz.questions?.length || 0), 0);
   const totalQuizzes = quizzes.length;
+
   const toFormData = (quiz: QuizWithClasse): Quiz => ({
     id: quiz.id,
     titre: quiz.titre,
@@ -41,8 +42,8 @@ export default function ProfQuizView() {
   }, [classeFilter]);
 
   const fetchClasses = async () => {
-    const { data, error } = await supabase.from('mes_classes').select('id, code_classe');
-    if (!error && data) setClasses(data);
+    const { data } = await supabase.from('mes_classes').select('id, code_classe');
+    if (data) setClasses(data);
   };
 
   const fetchQuizzes = async () => {
@@ -60,17 +61,15 @@ export default function ProfQuizView() {
     }
 
     const { data, error } = await query;
-
-    if (error) {
-      console.error(error);
-      toast.error("Erreur chargement des quiz");
-    } else {
-      const normalized = (data || []).map((q) => ({
+    if (!error && data) {
+      const normalized = data.map((q) => ({
         ...q,
-        id: q.quiz_id, // Correction ici
+        id: q.quiz_id,
         questions: q.questions ?? [],
       }));
       setQuizzes(normalized);
+    } else {
+      toast.error("Erreur chargement des quiz");
     }
   };
 
@@ -91,27 +90,17 @@ export default function ProfQuizView() {
 
     await toast.promise(
       (async () => {
+        let quizId = formData.id;
+
         if (isNew) {
           const { data: inserted, error } = await supabase
             .from('quizzes')
-            .insert([{
-              ...formData,
-              id: uuidv4(),
-              auteur_id: userId,
-            }])
+            .insert([{ ...formData, id: uuidv4(), auteur_id: userId }])
             .select();
 
-          if (error || !inserted || !inserted[0]) throw new Error("Erreur lors de l'ajout.");
-          const quizId = inserted[0].id;
-
-          for (const question of formData.questions || []) {
-            await supabase.from('questions').insert({
-              ...question,
-              quiz_id: quizId,
-            });
-          }
+          if (error || !inserted || !inserted[0]) throw new Error("Erreur ajout quiz");
+          quizId = inserted[0].id;
         } else {
-          console.log("Updating quiz:", formData);
           const { error } = await supabase
             .from('quizzes')
             .update({
@@ -122,23 +111,29 @@ export default function ProfQuizView() {
               classe_id: formData.classe_id,
             })
             .eq('id', formData.id);
-
-          if (error) throw new Error("Erreur modification quiz");
+          if (error) throw new Error("Erreur update quiz");
 
           await supabase.from('questions').delete().eq('quiz_id', formData.id);
-
-          for (const question of formData.questions || []) {
-            await supabase.from('questions').insert({
-              ...question,
-              quiz_id: formData.id,
-            });
-          }
         }
+
+        for (const question of formData.questions || []) {
+          await supabase.from('questions').insert({
+            ...question,
+            quiz_id: quizId,
+          });
+        }
+
+        // 🔍 Journalisation dans activity_logs
+        await supabase.from('activity_logs').insert({
+          user_id: userId,
+          type: 'quiz',
+          meta: { quizId, titre: formData.titre, action: isNew ? 'ajout' : 'modification' },
+        });
       })(),
       {
-        loading: "⏳ Enregistrement...",
-        success: isNew ? "✅ Quiz ajouté !" : "✅ Modifié !",
-        error: "❌ Échec de l'enregistrement.",
+        loading: "Enregistrement...",
+        success: isNew ? "Quiz ajouté !" : "Quiz mis à jour !",
+        error: "Erreur lors de la sauvegarde",
       }
     );
 
@@ -149,12 +144,10 @@ export default function ProfQuizView() {
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce quiz ?")) return;
     const { error } = await supabase.from('quizzes').delete().eq('id', id);
-    if (error) toast.error("Erreur suppression");
-    else {
+    if (!error) {
       toast.success("Quiz supprimé");
       fetchQuizzes();
-      resetForm();
-    }
+    } else toast.error("Erreur suppression");
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,12 +155,14 @@ export default function ProfQuizView() {
     if (!file) return;
 
     setUploading(true);
-    const filePath = `quiz-images/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from("images-sim").upload(filePath, file);
+    const path = `quiz-images/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('images-sim').upload(path, file);
     if (!error) {
-      const { data } = supabase.storage.from("images-sim").getPublicUrl(filePath);
+      const { data } = supabase.storage.from('images-sim').getPublicUrl(path);
       if (formData) setFormData({ ...formData, image: data.publicUrl });
-    } else toast.error("Erreur d'upload image");
+    } else {
+      toast.error("Erreur upload image");
+    }
     setUploading(false);
   };
 

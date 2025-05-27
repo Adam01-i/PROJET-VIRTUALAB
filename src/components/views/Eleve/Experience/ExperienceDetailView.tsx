@@ -87,7 +87,7 @@ export default function ExperienceDetailView({
 
         <div>
           <h2 className="text-lg font-bold text-gray-900">{experience.titre}</h2>
-          <div className="flex items-center gap-4 text-gray-500 text-sm mt-1">
+          <div className="flex items-center gap-4 text-gray-500 text-sm ">
             <div className="flex items-center gap-1.5">
               <Clock size={14} />
               <span>{experience.duree}</span>
@@ -99,7 +99,7 @@ export default function ExperienceDetailView({
 
       <button
         onClick={toggleFullscreen}
-        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-md text-sm border border-indigo-200 flex items-center gap-2"
+        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-sm border border-indigo-200 flex items-center gap-2"
       >
         {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         <span>{isFullscreen ? "Quitter" : "Plein écran"}</span>
@@ -121,8 +121,8 @@ export default function ExperienceDetailView({
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-0 py-20">
-      <h2 className="text-2xl font-bold text-black mx-0 my-4">Simulation interactive</h2>
+    <div className="max-w-[1280px] mx-auto py-6">
+      {/* <h2 className="text-2xl font-bold text-black mx-0 my-4">Simulation interactive</h2> */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Simulation */}
         <div className="md:col-span-3 space-y-5">

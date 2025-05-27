@@ -5,6 +5,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import CardStat from '../../../ui/CardStat';
 import GraphActivityByClasse from './GraphActivityByClasse';
 import { AcademicCapIcon, UserGroupIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import GraphActivityParEleve from './GraphActivityParEleve';
 
 type Classe = { id: string; code_classe: string };
 type EleveActivite = {
@@ -167,6 +168,7 @@ export default function ProfesseurDashboard() {
 
       {/* 📈 Graphe */}
       <GraphActivityByClasse data={filteredClasseData} />
+      <GraphActivityParEleve data={parEleve} selectedClasse={selectedClasse} />
     </div>
   );
 }

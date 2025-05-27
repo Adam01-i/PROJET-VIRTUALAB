@@ -10,9 +10,8 @@ import { toast } from 'sonner';
 type ViewMode = 'molecule' | 'equipment';
 
 type lab_items_with_classe = lab_items & {
-  code_classe?: string; // ✅ depuis la vue
+  code_classe?: string;
 };
-
 
 export default function Prof3DView() {
   const [viewMode, setViewMode] = useState<ViewMode>('molecule');
@@ -69,13 +68,8 @@ export default function Prof3DView() {
       query = query.eq('classe_id', classeFilter);
     }
 
-
     const { data, error } = await query;
-
-    if (error) {
-      toast.error("Erreur de chargement des éléments.");
-      return;
-    }
+    if (error) return toast.error("Erreur de chargement des éléments.");
 
     if (viewMode === 'molecule') {
       setMoleculeList(data || []);
@@ -84,13 +78,27 @@ export default function Prof3DView() {
     }
   };
 
+  const logActivity = async (item: lab_items_with_classe) => {
+    const { data: session } = await supabase.auth.getSession();
+    const user = session?.session?.user;
+    if (!user) return;
+
+    await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      type: 'simulation',
+      meta: {
+        lab_item_id: item.id,
+        nom: item.nom,
+        category: item.category,
+      },
+    });
+  };
+
   const handleSubmit = async () => {
     const isEdit = !!formData.id;
-
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
-
       if (!userId) return toast.error("Utilisateur non connecté");
 
       await toast.promise(
@@ -113,7 +121,7 @@ export default function Prof3DView() {
 
             if (updateError) throw updateError;
           } else {
-            const { data: insertedItems, error: insertError } = await supabase
+            const { error: insertError } = await supabase
               .from('lab_items')
               .insert([{
                 nom: formData.nom,
@@ -129,9 +137,7 @@ export default function Prof3DView() {
               }])
               .select();
 
-            if (insertError || !insertedItems || insertedItems.length === 0) {
-              throw insertError || new Error("Insertion échouée");
-            }
+            if (insertError) throw insertError;
           }
 
           setIsEditing(false);
@@ -163,9 +169,7 @@ export default function Prof3DView() {
   };
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = window.confirm("Supprimer cet élément ?");
-    if (!confirmDelete) return;
-
+    if (!confirm("Supprimer cet élément ?")) return;
     try {
       await toast.promise(
         async () => {
@@ -192,103 +196,71 @@ export default function Prof3DView() {
     const filename = `${folder}/${Date.now()}_${file.name}`;
 
     const { error } = await supabase.storage.from('structures').upload(filename, file);
-
-    if (error) {
-      toast.error("❌ Échec de l'upload du fichier .glb");
-      console.error(error);
-      return;
-    }
+    if (error) return toast.error("❌ Échec de l'upload du fichier .glb");
 
     const { data } = supabase.storage.from('structures').getPublicUrl(filename);
-
     if (data?.publicUrl) {
-      setFormData((prev) => ({
-        ...prev,
-        structure: data.publicUrl,
-      }));
+      setFormData((prev) => ({ ...prev, structure: data.publicUrl }));
       toast.success("✅ Fichier .glb uploadé !");
     }
   };
 
   return (
     <div className="p-6 text-base text-gray-800 pt-6 space-y-4">
-      {/* HEADER */}
-      <h1 className="text-3xl font-bold text-indigo-800">Mes Object 3D</h1>
-
+      <h1 className="text-3xl font-bold text-indigo-800">Mes Objets 3D</h1>
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('molecule')}
+          <button onClick={() => setViewMode('molecule')}
             className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
               ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
-              }`}
-          >
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'}`}>
             <Flask size={16} /> Molécules
-            <span className="ml-3 text-sm text-black font-normal">  | Total :  {nombreDeMolecules} </span>
+            <span className="ml-3 text-sm text-black font-normal">| Total : {nombreDeMolecules}</span>
           </button>
-          <button
-            onClick={() => setViewMode('equipment')}
+          <button onClick={() => setViewMode('equipment')}
             className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
               ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
-              }`}
-          >
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'}`}>
             <Tool size={16} /> Matériel
-            <span className="ml-3 text-sm text-black font-normal">  | Total :  {nombreDeMateriels} </span>
+            <span className="ml-3 text-sm text-black font-normal">| Total : {nombreDeMateriels}</span>
           </button>
-          <select
-            className="border px-2 py-1 rounded text-x font-semibold bg-white text-indigo-600"
-            value={classeFilter || ''}
-            onChange={(e) => setClasseFilter(e.target.value || null)}
-          >
+          <select className="border px-2 py-1 rounded text-sm bg-white text-indigo-600"
+            value={classeFilter || ''} onChange={(e) => setClasseFilter(e.target.value || null)}>
             <option value="">Toutes les classes</option>
             {classesList.map((cl) => (
-              <option key={cl.id} value={cl.id}>
-                {cl.code_classe}
-              </option>
+              <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
             ))}
           </select>
-
         </div>
-
-        <button
-          onClick={() => {
-            setIsEditing(true);
-            setSelectedMolecule(null);
-            setSelectedEquipment(null);
-            setFormData({
-              id: '',
-              nom: '',
-              description: '',
-              structure: '',
-              category: viewMode,
-              formule: '',
-              importance: '',
-              usage: '',
-              precautions: '',
-              classe_id: '',
-            });
-          }}
-          className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md"
-        >
+        <button onClick={() => {
+          setIsEditing(true);
+          setSelectedMolecule(null);
+          setSelectedEquipment(null);
+          setFormData({
+            id: '',
+            nom: '',
+            description: '',
+            structure: '',
+            category: viewMode,
+            formule: '',
+            importance: '',
+            usage: '',
+            precautions: '',
+            classe_id: '',
+          });
+        }} className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md">
           ➕ Nouveau {viewMode === 'molecule' ? 'Molécule' : 'Matériel'}
         </button>
       </div>
 
-      {/* LISTE + DÉTAILS */}
       <div className="flex flex-col md:flex-row gap-6">
-        {/* LISTE */}
-        <div className="md:w-[60%] space-y-3 ">
+        <div className="md:w-[60%] space-y-3">
           {(viewMode === 'molecule' ? moleculeList : equipmentList).length === 0 ? (
-            <p className="text-gray-500">
-              Aucun {viewMode === 'molecule' ? 'molécule' : 'matériel'} trouvé.
-            </p>
+            <p className="text-gray-500">Aucun {viewMode === 'molecule' ? 'molécule' : 'matériel'} trouvé.</p>
           ) : (
             (viewMode === 'molecule' ? moleculeList : equipmentList).map((item) => (
-              <div
-                key={item.id}
-                onClick={() => {
+              <div key={item.id}
+                onClick={async () => {
                   if (viewMode === 'molecule') {
                     setSelectedMolecule(item);
                     setSelectedEquipment(null);
@@ -297,12 +269,11 @@ export default function Prof3DView() {
                     setSelectedMolecule(null);
                   }
                   setIsEditing(false);
+                  await logActivity(item); // ✅ LOG
                 }}
                 className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${(viewMode === 'molecule' ? selectedMolecule : selectedEquipment)?.id === item.id
                   ? 'bg-purple-100 border-purple-300'
-                  : 'bg-white hover:bg-gray-50 border-gray-200'
-                  }`}
-              >
+                  : 'bg-white hover:bg-gray-50 border-gray-200'}`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-base font-semibold text-gray-800">{item.nom}</h3>
@@ -310,33 +281,24 @@ export default function Prof3DView() {
                     {viewMode === 'molecule' && (
                       <div className="text-sm text-gray-500 flex gap-3 mt-1">
                         <span className="px-2 py-0.5 bg-gray-100 rounded-full">
-{item.code_classe || 'Classe inconnue'}
+                          {item.code_classe || 'Classe inconnue'}
                         </span>
                         <span>{item.formule}</span>
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Pencil
-                      size={16}
-                      className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                    <Pencil size={16} className="text-blue-500 hover:text-blue-700 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsEditing(true);
-                        setFormData({
-                          ...item,
-                          category: viewMode,
-                        });
-                      }}
-                    />
-                    <Trash2
-                      size={16}
-                      className="text-red-500 hover:text-red-700 cursor-pointer"
+                        setFormData({ ...item, category: viewMode });
+                      }} />
+                    <Trash2 size={16} className="text-red-500 hover:text-red-700 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(item.id);
-                      }}
-                    />
+                      }} />
                   </div>
                 </div>
               </div>
@@ -344,20 +306,19 @@ export default function Prof3DView() {
           )}
         </div>
 
-        {/* DÉTAILS + FORMULAIRE */}
         <div className="md:w-[40%] space-y-4 text-sm">
-          {viewMode === 'molecule' && selectedMolecule ? (
+          {viewMode === 'molecule' && selectedMolecule && (
             <>
               <ProfGLBViewer glbUrl={selectedMolecule.structure} moleculeName={selectedMolecule.nom} />
               <ProfMoleculeDetails molecule={selectedMolecule} />
             </>
-          ) : viewMode === 'equipment' && selectedEquipment ? (
+          )}
+          {viewMode === 'equipment' && selectedEquipment && (
             <>
               <ProfGLBViewer glbUrl={selectedEquipment.structure} moleculeName={selectedEquipment.nom} />
               <ProfMaterielsDetails equipment={selectedEquipment} />
             </>
-          ) : null}
-
+          )}
           {isEditing && (
             <form
               onSubmit={(e) => {
@@ -365,8 +326,7 @@ export default function Prof3DView() {
                 handleSubmit();
               }}
               className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"
-              style={{ maxHeight: "75vh", overflowY: "auto" }}
-            >
+              style={{ maxHeight: "75vh", overflowY: "auto" }}>
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">Nom</label>
                 <input
