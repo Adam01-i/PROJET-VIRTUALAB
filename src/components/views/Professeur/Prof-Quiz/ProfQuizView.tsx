@@ -1,4 +1,3 @@
-// En haut des imports
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,7 +5,6 @@ import { toast } from 'sonner';
 import ProfQuizCard from './ProfQuizCard';
 import type { Quiz, QuizQuestion } from '../../../../types/Quiz/quiz';
 
-// Options de durée
 const DUREE_OPTIONS = ["10 min", "20 min", "30 min", "45 min"];
 
 type QuizWithClasse = Quiz & { code_classe?: string };
@@ -15,23 +13,9 @@ export default function ProfQuizView() {
   const [quizzes, setQuizzes] = useState<QuizWithClasse[]>([]);
   const [formData, setFormData] = useState<Quiz | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [classes, setClasses] = useState<{ id: string, code_classe: string }[]>([]);
+  const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([]);
   const [classeFilter, setClasseFilter] = useState<string>('all');
   const [, setUploading] = useState(false);
-
-  const totalQuestions = quizzes.reduce((acc, quiz) => acc + (quiz.questions?.length || 0), 0);
-  const totalQuizzes = quizzes.length;
-
-  const toFormData = (quiz: QuizWithClasse): Quiz => ({
-    id: quiz.id,
-    titre: quiz.titre,
-    description: quiz.description,
-    duree: quiz.duree,
-    image: quiz.image,
-    questions: quiz.questions ?? [],
-    classe_id: quiz.classe_id,
-    auteur_id: quiz.auteur_id,
-  });
 
   useEffect(() => {
     fetchClasses();
@@ -64,7 +48,7 @@ export default function ProfQuizView() {
     if (!error && data) {
       const normalized = data.map((q) => ({
         ...q,
-        id: q.quiz_id,
+        id: q.quiz_id || q.id,
         questions: q.questions ?? [],
       }));
       setQuizzes(normalized);
@@ -86,7 +70,12 @@ export default function ProfQuizView() {
 
     const { data: session } = await supabase.auth.getSession();
     const userId = session?.session?.user?.id;
-    const isNew = !formData.id;
+    const isNew = !formData?.id || formData.id.trim() === '';
+
+    if (!isNew && formData.auteur_id !== userId) {
+      toast.error("Vous ne pouvez modifier que vos propres quiz.");
+      return;
+    }
 
     await toast.promise(
       (async () => {
@@ -95,12 +84,21 @@ export default function ProfQuizView() {
         if (isNew) {
           const { data: inserted, error } = await supabase
             .from('quizzes')
-            .insert([{ ...formData, id: uuidv4(), auteur_id: userId }])
+            .insert([{
+              id: uuidv4(),
+              titre: formData.titre,
+              description: formData.description,
+              duree: formData.duree,
+              image: formData.image,
+              classe_id: formData.classe_id,
+              auteur_id: userId,
+            }])
             .select();
 
           if (error || !inserted || !inserted[0]) throw new Error("Erreur ajout quiz");
           quizId = inserted[0].id;
-        } else {
+        }
+        else {
           const { error } = await supabase
             .from('quizzes')
             .update({
@@ -112,22 +110,38 @@ export default function ProfQuizView() {
             })
             .eq('id', formData.id);
           if (error) throw new Error("Erreur update quiz");
-
           await supabase.from('questions').delete().eq('quiz_id', formData.id);
         }
 
         for (const question of formData.questions || []) {
+          // Vérification minimale
+          if (
+            !question.question.trim() ||
+            !Array.isArray(question.options) ||
+            question.options.length < 2 ||
+            question.options.some(opt => !opt.trim()) ||
+            typeof question.correctAnswer !== 'number'
+          ) {
+            console.warn("Question ignorée : mal formée", question);
+            continue;
+          }
+
           await supabase.from('questions').insert({
             ...question,
+            id: question.id || uuidv4(),
             quiz_id: quizId,
           });
         }
 
-        // 🔍 Journalisation dans activity_logs
+
         await supabase.from('activity_logs').insert({
           user_id: userId,
           type: 'quiz',
-          meta: { quizId, titre: formData.titre, action: isNew ? 'ajout' : 'modification' },
+          meta: {
+            quizId,
+            titre: formData.titre,
+            action: isNew ? 'ajout' : 'modification',
+          },
         });
       })(),
       {
@@ -147,13 +161,14 @@ export default function ProfQuizView() {
     if (!error) {
       toast.success("Quiz supprimé");
       fetchQuizzes();
-    } else toast.error("Erreur suppression");
+    } else {
+      toast.error("Erreur suppression");
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     const path = `quiz-images/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from('images-sim').upload(path, file);
@@ -204,6 +219,20 @@ export default function ProfQuizView() {
     setFormData({ ...formData, questions: updated });
   };
 
+  const toFormData = (quiz: QuizWithClasse): Quiz => ({
+    id: quiz.id,
+    titre: quiz.titre,
+    description: quiz.description,
+    duree: quiz.duree,
+    image: quiz.image,
+    questions: quiz.questions ?? [],
+    classe_id: quiz.classe_id,
+    auteur_id: quiz.auteur_id,
+  });
+
+  const totalQuestions = quizzes.reduce((acc, quiz) => acc + (quiz.questions?.length || 0), 0);
+  const totalQuizzes = quizzes.length;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
@@ -229,9 +258,9 @@ export default function ProfQuizView() {
       </div>
 
       <div>
-        <label className="text-xx font-semibold text-gray-600 mr-2">Classe :</label>
+        <label className="font-semibold text-gray-600 mr-2">Classe :</label>
         <select
-          className="border px-3 py-1 rounded text-x font-semibold bg-white text-indigo-600"
+          className="border px-3 py-1 rounded text-sm bg-white text-indigo-600"
           onChange={(e) => setClasseFilter(e.target.value)}
           value={classeFilter}
         >
@@ -240,7 +269,9 @@ export default function ProfQuizView() {
             <option key={c.code_classe} value={c.code_classe}>{c.code_classe}</option>
           ))}
         </select>
-        <span className="ml-3 text-sm text-gray-500 font-normal">| Total :  {totalQuizzes}  quiz | {totalQuestions} questions</span>
+        <span className="ml-3 text-sm text-gray-500 font-normal">
+          | Total : {totalQuizzes} quiz | {totalQuestions} questions
+        </span>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -262,7 +293,7 @@ export default function ProfQuizView() {
             ))
           )}
         </div>
-
+        {/* Formulaire d'édition affiché à droite */}
         {isEditing && formData && (
           <form
             onSubmit={(e) => {
