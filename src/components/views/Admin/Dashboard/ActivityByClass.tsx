@@ -98,10 +98,10 @@ export default function ActivityByClass({ classes }: Props) {
   }, [dateRange, selectedClasseId, classes]);
 
   return (
-    <div className="bg-white shadow rounded-xl p-6 space-y-2">
+    <div className="bg-white shadow rounded-xl p-6 space-y-3">
       <h2 className="text-2xl font-semibold text-gray-700 mb-2">Activité par classe</h2>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 ">
         {/* 🔁 Période */}
         {['7j', '30j', 'tout'].map((opt) => (
           <button
