@@ -13,9 +13,8 @@ export type Experience = {
   classe_id: string;
   auteur_id?: string;
 
-  // Champs ajoutés par la vue
-  code_classe?: string; // ⚠️ Optionnel car pas toujours présent
-  is_public?: boolean;  // facultatif car lors de création, il peut ne pas être défini encore
+  code_classe?: string; 
+  is_public?: boolean; 
 };
 
 

@@ -122,7 +122,6 @@ export default function ExperienceDetailView({
 
   return (
     <div className="max-w-[1280px] mx-auto py-6">
-      {/* <h2 className="text-2xl font-bold text-black mx-0 my-4">Simulation interactive</h2> */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Simulation */}
         <div className="md:col-span-3 space-y-5">

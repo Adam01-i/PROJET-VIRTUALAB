@@ -4,12 +4,18 @@ import type { Experience } from '../../../../types/Experience/experience';
 type ExperienceCardProps = {
   experience: Experience;
   onStart: (experienceId: string) => void;
+  isLocal?: boolean;
 };
 
-export default function ExperienceCard({ experience, onStart }: ExperienceCardProps) {
+export default function ExperienceCard({ experience, onStart, isLocal }: ExperienceCardProps) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 group">
-      {/* Image plus compacte */}
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 group relative">
+      {isLocal && (
+        <div className="absolute top-2 right-2 bg-violet-100 text-violet-700 text-xs font-semibold px-2 py-0.5 rounded-md shadow-sm">
+          Locale
+        </div>
+      )}
+
       <div className="h-36 relative overflow-hidden">
         <img 
           src={experience.image} 
@@ -24,7 +30,6 @@ export default function ExperienceCard({ experience, onStart }: ExperienceCardPr
         </div>
       </div>
 
-      {/* Contenu réduit */}
       <div className="p-4">
         <h3 className="text-base font-semibold text-gray-800 mb-1">{experience.titre}</h3>
         <p className="text-gray-600 text-sm mb-2 leading-relaxed line-clamp-2">

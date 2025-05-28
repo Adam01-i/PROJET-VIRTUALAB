@@ -8,12 +8,35 @@ import { supabase } from '../../../../lib/supabaseClient';
 
 const ITEMS_PER_PAGE = 3;
 
+const localSimulationModules = import.meta.glob('../../../../simulations/*.tsx');
+
+const getLocalSimulations = async (): Promise<any[]> => {
+  return Object.keys(localSimulationModules).map((path, index) => {
+    const fileName = path.split('/').pop()?.replace('.tsx', '') || `local-${index}`;
+    return {
+      id: `local-${fileName}`,
+      titre: `Simulation locale : ${fileName}`,
+      description: "Simulation ajoutée localement.",
+      objectifs: ["Observer, comprendre, expérimenter"],
+      materiel: ["Ordinateur", "Navigateur"],
+      resultatsAttendus: ["Observation des résultats", "Compréhension du phénomène"],
+      duree: "5-10 min",
+      niveau: "Tous niveaux",
+      simulationPath: fileName,
+      image: "/images/simulation-default.jpg", // Image par défaut
+      created_at: new Date().toISOString(),
+    };
+  });
+};
+
 export default function ExperienceView() {
   const [activeExperience, setActiveExperience] = useState<string | null>(null);
   const [experiences, setExperiences] = useState<any[]>([]);
+  const [localIds, setLocalIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [prenom, setPrenom] = useState('');
+  const [filtre, setFiltre] = useState<'all' | 'local' | 'supabase'>('all');
 
   const handleStartExperience = async (experienceId: string) => {
     const experience = experiences.find((e) => e.id === experienceId);
@@ -35,28 +58,23 @@ export default function ExperienceView() {
     setActiveExperience(experienceId);
   };
 
-  const totalPages = Math.ceil(experiences.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentData = experiences.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
   useEffect(() => {
     const fetchExperiences = async () => {
       setLoading(true);
       const { data: session } = await supabase.auth.getSession();
       const user = session?.session?.user;
 
+      const localSimulations = await getLocalSimulations();
+      const localIdSet = new Set(localSimulations.map((sim) => sim.id));
+      setLocalIds(localIdSet);
+
       if (!user) {
         const { data: allExperiences } = await supabase
           .from('vue_experience_details')
           .select('*')
           .order('created_at', { ascending: false });
-        setExperiences(allExperiences || []);
+
+        setExperiences([...(allExperiences || []), ...localSimulations]);
         setLoading(false);
         return;
       }
@@ -92,19 +110,32 @@ export default function ExperienceView() {
         .eq('classe_id', classeId)
         .order('created_at', { ascending: false });
 
-      if (classeExperiences) {
-        setExperiences(classeExperiences);
-      }
-
+      setExperiences(classeExperiences || []);
       setLoading(false);
     };
 
     fetchExperiences();
   }, []);
 
+  const filteredExperiences = experiences.filter((exp) => {
+    if (filtre === 'local') return localIds.has(exp.id);
+    if (filtre === 'supabase') return !localIds.has(exp.id);
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredExperiences.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentData = filteredExperiences.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
   const currentExperience = activeExperience
     ? experiences.find((e) => e.id === activeExperience)
     : null;
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   if (loading) {
     return (
@@ -127,7 +158,42 @@ export default function ExperienceView() {
         {prenom ? `Bienvenue ${prenom} 👋 – Expériences de ta classe` : "Expériences disponibles (mode invité)"}
       </h2>
 
-      {experiences.length === 0 ? (
+      {!prenom && (
+        <div className="flex gap-3 flex-wrap">
+          <button
+            onClick={() => setFiltre('all')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
+              filtre === 'all'
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Toutes
+          </button>
+          <button
+            onClick={() => setFiltre('supabase')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
+              filtre === 'supabase'
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Supabase
+          </button>
+          <button
+            onClick={() => setFiltre('local')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
+              filtre === 'local'
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Locales
+          </button>
+        </div>
+      )}
+
+      {filteredExperiences.length === 0 ? (
         <div className="text-gray-500 text-center py-12">
           Aucune expérience disponible pour le moment.
         </div>
@@ -139,6 +205,7 @@ export default function ExperienceView() {
                 key={experience.id}
                 experience={experience}
                 onStart={handleStartExperience}
+                isLocal={localIds.has(experience.id)}
               />
             ))}
           </div>

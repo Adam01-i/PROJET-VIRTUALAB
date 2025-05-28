@@ -3,6 +3,7 @@ import type { Experience } from '../../types/Experience/experience';
 export const experienceData: Experience[] = [
   {
     id: '1',
+    classe_id: '',
     titre: 'Réactions d\'oxydo-réduction',
     description: 'Découvrez les transferts d\'électrons et leurs applications dans la vie quotidienne.',
     duree: '45 min',
@@ -32,6 +33,7 @@ export const experienceData: Experience[] = [
   },
   {
     id: '2',
+    classe_id: '',
     titre: 'Équilibre chimique et Le Chatelier',
     description: 'Comprendre les réactions réversibles et le principe de Le Chatelier à travers une expérience visuelle.',
     duree: '60 min',
@@ -61,6 +63,7 @@ export const experienceData: Experience[] = [
   },
   {
     id: '3',
+    classe_id: '',
     titre: 'Titrage acido-basique avec indicateur coloré',
     description: 'Réalisez un titrage acido-basique en utilisant un indicateur coloré pour déterminer le point d\'équivalence.',
     duree: '45 min',
@@ -90,6 +93,7 @@ export const experienceData: Experience[] = [
   },
   {
   id: '4',
+  classe_id: '',
   titre: 'Calorimétrie : mesure d\'énergie thermique',
   description: 'Mesurez la quantité de chaleur échangée lors d\'une réaction chimique ou d\'un changement d\'état.',
   duree: '45 min',
@@ -120,6 +124,7 @@ export const experienceData: Experience[] = [
 },
 {
   id: '5',
+  classe_id: '',
   titre: 'Oxydation des composés oxygénés',
   description: 'Étudiez l\'oxydation des alcools primaires et secondaires en laboratoire, et observez les produits formés.',
   duree: '50 min',

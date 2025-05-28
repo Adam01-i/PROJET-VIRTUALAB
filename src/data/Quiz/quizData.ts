@@ -2,10 +2,11 @@ import type { Quiz } from '../../types/Quiz/quiz';
 
 export const quizData: Quiz[] = [
   {
-    id: '1',
+    id: '1', 
+    classe_id: '',
+    auteur_id: '',
     titre: 'Les réactions acido-basiques',
     description: 'Testez vos connaissances sur les réactions entre acides et bases, le pH et les indicateurs colorés.',
-    niveau: 'Intermédiaire',
     duree: '30 min',
     image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
     questions: [
@@ -73,9 +74,10 @@ export const quizData: Quiz[] = [
   },
   {
     id: '2',
+    classe_id: '',
+    auteur_id: '',
     titre: 'Équilibres chimiques',
     description: 'Comprendre les équilibres chimiques et le principe de Le Chatelier.',
-    niveau: 'Avancé',
     duree: '45 min',
     image: 'https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?auto=format&fit=crop&w=800&q=80',
     questions: [
@@ -143,9 +145,10 @@ export const quizData: Quiz[] = [
   },
   {
     id: '3',
+    classe_id: '',
+    auteur_id: '',
     titre: 'La thermodynamique',
     description: 'Testez vos connaissances sur les principes de la thermodynamique et les changements d\'énergie.',
-    niveau: 'Intermédiaire',
     duree: '40 min',
     image: 'https://images.unsplash.com/photo-1519824112455-0b2aef03cfd0?auto=format&fit=crop&w=800&q=80',
     questions: [
@@ -213,9 +216,10 @@ export const quizData: Quiz[] = [
   },
   {
     id: '4',
+    classe_id: '',
+    auteur_id: '',
     titre: 'Les solutions',
     description: 'Testez vos connaissances sur les solutions et leur préparation.',
-    niveau: 'Débutant',
     duree: '30 min',
     image: 'https://images.unsplash.com/photo-1602560519088-53ef418e2b2f?auto=format&fit=crop&w=800&q=80',
     questions: [
@@ -283,9 +287,10 @@ export const quizData: Quiz[] = [
   },
   {
     id: '5',
+    classe_id: '',
+    auteur_id: '',
     titre: 'La chimie organique',
     description: 'Testez vos connaissances sur la chimie organique et ses différentes familles de composés.',
-    niveau: 'Avancé',
     duree: '50 min',
     image: 'https://images.unsplash.com/photo-1519990354110-b869b4a41659?auto=format&fit=crop&w=800&q=80',
     questions: [
