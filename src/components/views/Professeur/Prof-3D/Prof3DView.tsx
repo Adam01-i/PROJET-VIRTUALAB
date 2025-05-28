@@ -8,22 +8,16 @@ import { supabase } from '../../../../lib/supabaseClient';
 import { toast } from 'sonner';
 
 type ViewMode = 'molecule' | 'equipment';
-
-type lab_items_with_classe = lab_items & {
-  code_classe?: string;
-};
+type lab_items_with_classe = lab_items & { code_classe?: string };
 
 export default function Prof3DView() {
   const [viewMode, setViewMode] = useState<ViewMode>('molecule');
-  const [selectedMolecule, setSelectedMolecule] = useState<lab_items_with_classe | null>(null);
-  const [selectedEquipment, setSelectedEquipment] = useState<lab_items_with_classe | null>(null);
+  const [selectedItem, setSelectedItem] = useState<lab_items_with_classe | null>(null);
   const [moleculeList, setMoleculeList] = useState<lab_items_with_classe[]>([]);
   const [equipmentList, setEquipmentList] = useState<lab_items_with_classe[]>([]);
   const [classesList, setClassesList] = useState<{ id: string; code_classe: string }[]>([]);
   const [classeFilter, setClasseFilter] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const nombreDeMolecules = moleculeList.length;
-  const nombreDeMateriels = equipmentList.length;
 
   const [formData, setFormData] = useState<Partial<lab_items>>({
     id: '',
@@ -48,35 +42,47 @@ export default function Prof3DView() {
       .from('classes')
       .select('id, code_classe')
       .order('code_classe', { ascending: true });
-
     if (!error) setClassesList(data || []);
   };
 
-  const fetchItems = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
-    if (!userId) return toast.error("Utilisateur non connecté");
+const fetchItems = async () => {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData?.user?.id;
+  if (!userId) return toast.error("Utilisateur non connecté");
 
-    let query = supabase
-      .from('vue_lab_items_details')
-      .select('*')
-      .eq('category', viewMode)
-      .eq('auteur_id', userId)
-      .order('created_at', { ascending: false });
+  let query = supabase
+    .from('lab_items') // on reste sur la table directe
+    .select('*')
+    .eq('category', viewMode)
+    .eq('auteur_id', userId)
+    .order('created_at', { ascending: false });
 
-    if (classeFilter) {
-      query = query.eq('classe_id', classeFilter);
-    }
+  if (classeFilter) query = query.eq('classe_id', classeFilter);
 
-    const { data, error } = await query;
-    if (error) return toast.error("Erreur de chargement des éléments.");
+  const { data, error } = await query;
 
-    if (viewMode === 'molecule') {
-      setMoleculeList(data || []);
-    } else {
-      setEquipmentList(data || []);
-    }
-  };
+  if (error) return toast.error("Erreur de chargement des éléments.");
+  console.log("🔁 fetchItems result:", data);
+
+  // 🧠 Associer le code_classe à chaque item
+  const dataWithClasse: lab_items_with_classe[] = (data || []).map((item) => {
+    const classe = classesList.find(c => c.id === item.classe_id);
+    return {
+      ...item,
+      code_classe: classe?.code_classe || 'Inconnue',
+    };
+  });
+
+  // 🔄 Mise à jour de l’état
+  if (viewMode === 'molecule') {
+    setMoleculeList(dataWithClasse);
+  } else {
+    setEquipmentList(dataWithClasse);
+  }
+};
+
+
+
 
   const logActivity = async (item: lab_items_with_classe) => {
     const { data: session } = await supabase.auth.getSession();
@@ -86,107 +92,105 @@ export default function Prof3DView() {
     await supabase.from('activity_logs').insert({
       user_id: user.id,
       type: 'simulation',
-      meta: {
-        lab_item_id: item.id,
-        nom: item.nom,
-        category: item.category,
-      },
+      meta: { lab_item_id: item.id, nom: item.nom, category: item.category },
     });
   };
 
   const handleSubmit = async () => {
     const isEdit = !!formData.id;
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-      if (!userId) return toast.error("Utilisateur non connecté");
 
-      await toast.promise(
-        async () => {
-          if (isEdit) {
-            const { error: updateError } = await supabase
-              .from('lab_items')
-              .update({
-                nom: formData.nom,
-                description: formData.description,
-                structure: formData.structure,
-                category: viewMode,
-                formule: formData.formule,
-                importance: formData.importance,
-                usage: formData.usage,
-                precautions: formData.precautions,
-                classe_id: formData.classe_id,
-              })
-              .eq('id', formData.id);
+    const userData = await supabase.auth.getUser();
+    const userId = userData?.data?.user?.id;
+    console.log("auteur_id:", userId); // << TEST ICI
+    if (!userId) return toast.error("Utilisateur non connecté");
 
-            if (updateError) throw updateError;
-          } else {
-            const { error: insertError } = await supabase
-              .from('lab_items')
-              .insert([{
-                nom: formData.nom,
-                description: formData.description,
-                structure: formData.structure,
-                category: viewMode,
-                formule: formData.formule,
-                importance: formData.importance,
-                usage: formData.usage,
-                precautions: formData.precautions,
-                auteur_id: userId,
-                classe_id: formData.classe_id,
-              }])
-              .select();
+    await toast.promise(
+      async () => {
+        if (isEdit) {
+          const { error } = await supabase
+            .from('lab_items')
+            .update({
+              nom: formData.nom,
+              description: formData.description,
+              structure: formData.structure,
+              category: viewMode,
+              formule: formData.formule,
+              importance: formData.importance,
+              usage: formData.usage,
+              precautions: formData.precautions,
+              classe_id: formData.classe_id,
+            })
 
-            if (insertError) throw insertError;
-          }
+            .eq('id', formData.id)
+            .eq('auteur_id', userId); // ✅ sécurité supplémentaire
 
-          setIsEditing(false);
-          setFormData({
-            id: '',
-            nom: '',
-            description: '',
-            structure: '',
-            category: viewMode,
-            formule: '',
-            importance: '',
-            usage: '',
-            precautions: '',
-            classe_id: '',
-          });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('lab_items')
+            .insert([{
+              nom: formData.nom,
+              description: formData.description,
+              structure: formData.structure,
+              category: viewMode,
+              formule: formData.formule,
+              importance: formData.importance,
+              usage: formData.usage,
+              precautions: formData.precautions,
+              classe_id: formData.classe_id,
+              auteur_id: userId, // ✅ Obligatoire pour RLS
+            }]); // ✅ NE PAS mettre .select()
+          // ✅ limité et sécurisé
 
-          fetchItems();
-        },
-        {
-          loading: isEdit ? 'Mise à jour...' : 'Ajout en cours...',
-          success: isEdit ? '✅ Modifié avec succès !' : '✅ Ajouté avec succès !',
-          error: '❌ Erreur lors de la sauvegarde.',
+          if (error) throw error;
         }
-      );
-    } catch (err) {
-      console.error("Erreur handleSubmit:", err);
-      toast.error("Une erreur est survenue.");
-    }
+        setIsEditing(false);
+        setFormData({ ...formData, id: '', structure: '' });
+        fetchItems();
+      },
+      {
+        loading: isEdit ? 'Mise à jour...' : 'Ajout en cours...',
+        success: isEdit ? '✅ Modifié avec succès !' : '✅ Ajouté avec succès !',
+        error: '❌ Erreur lors de la sauvegarde.',
+      }
+    );
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cet élément ?")) return;
-    try {
-      await toast.promise(
-        async () => {
-          const { error } = await supabase.from('lab_items').delete().eq('id', id);
-          if (error) throw error;
-          fetchItems();
-        },
-        {
-          loading: "Suppression...",
-          success: "✅ Supprimé",
-          error: "❌ Erreur lors de la suppression",
-        }
-      );
-    } catch (err) {
-      console.error(err);
+
+    const userId = (await supabase.auth.getUser()).data?.user?.id;
+    if (!userId) {
+      toast.error("Utilisateur non connecté");
+      return;
     }
+
+    await toast.promise(
+      async () => {
+        // 🔍 Débogage ici
+        const { data, error, status, statusText } = await supabase
+          .from('lab_items')
+          .delete()
+          .eq('id', id)
+          .eq('auteur_id', userId); // 👈 🔐 RLS condition importante
+
+        console.log("DELETE status:", status, statusText);
+        console.log("DELETE data:", data);
+        console.log("DELETE error:", error);
+
+        if (error || status !== 204) throw error || new Error("Suppression non autorisée");
+
+        fetchItems();
+      },
+      {
+        loading: "Suppression...",
+        success: "✅ Supprimé",
+        error: "❌ Erreur lors de la suppression",
+      }
+    );
   };
+
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -194,8 +198,8 @@ export default function Prof3DView() {
 
     const folder = viewMode === 'molecule' ? 'molecules' : 'equipments';
     const filename = `${folder}/${Date.now()}_${file.name}`;
-
     const { error } = await supabase.storage.from('structures').upload(filename, file);
+
     if (error) return toast.error("❌ Échec de l'upload du fichier .glb");
 
     const { data } = supabase.storage.from('structures').getPublicUrl(filename);
@@ -208,72 +212,87 @@ export default function Prof3DView() {
   return (
     <div className="p-6 text-base text-gray-800 pt-6 space-y-4">
       <h1 className="text-3xl font-bold text-indigo-800">Mes Objets 3D</h1>
+
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          <button onClick={() => setViewMode('molecule')}
+          <button
+            onClick={() => setViewMode('molecule')}
             className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
               ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'}`}>
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              }`}
+          >
             <Flask size={16} /> Molécules
-            <span className="ml-3 text-sm text-black font-normal">| Total : {nombreDeMolecules}</span>
+            <span className="ml-3 text-sm text-black font-normal">| Total : {moleculeList.length}</span>
           </button>
-          <button onClick={() => setViewMode('equipment')}
+
+          <button
+            onClick={() => setViewMode('equipment')}
             className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
               ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'}`}>
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              }`}
+          >
             <Tool size={16} /> Matériel
-            <span className="ml-3 text-sm text-black font-normal">| Total : {nombreDeMateriels}</span>
+            <span className="ml-3 text-sm text-black font-normal">| Total : {equipmentList.length}</span>
           </button>
-          <select className="border px-2 py-1 rounded text-sm bg-white text-indigo-600"
-            value={classeFilter || ''} onChange={(e) => setClasseFilter(e.target.value || null)}>
+
+          <select
+            className="border px-2 py-1 rounded text-sm bg-white text-indigo-600"
+            value={classeFilter || ''}
+            onChange={(e) => setClasseFilter(e.target.value || null)}
+          >
             <option value="">Toutes les classes</option>
             {classesList.map((cl) => (
               <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
             ))}
           </select>
         </div>
-        <button onClick={() => {
-          setIsEditing(true);
-          setSelectedMolecule(null);
-          setSelectedEquipment(null);
-          setFormData({
-            id: '',
-            nom: '',
-            description: '',
-            structure: '',
-            category: viewMode,
-            formule: '',
-            importance: '',
-            usage: '',
-            precautions: '',
-            classe_id: '',
-          });
-        }} className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md">
+
+        <button
+          onClick={() => {
+            setIsEditing(true);
+            setSelectedItem(null);
+            setFormData({
+              id: '',
+              nom: '',
+              description: '',
+              structure: '',
+              category: viewMode,
+              formule: '',
+              importance: '',
+              usage: '',
+              precautions: '',
+              classe_id: '',
+            });
+          }}
+          className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md"
+        >
           ➕ Nouveau {viewMode === 'molecule' ? 'Molécule' : 'Matériel'}
         </button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
+        {/* Liste des éléments */}
         <div className="md:w-[60%] space-y-3">
           {(viewMode === 'molecule' ? moleculeList : equipmentList).length === 0 ? (
-            <p className="text-gray-500">Aucun {viewMode === 'molecule' ? 'molécule' : 'matériel'} trouvé.</p>
+            <p className="text-gray-500">
+              Aucun {viewMode === 'molecule' ? 'molécule' : 'matériel'} trouvé.
+            </p>
           ) : (
             (viewMode === 'molecule' ? moleculeList : equipmentList).map((item) => (
-              <div key={item.id}
+              <div
+                key={item.id}
                 onClick={async () => {
-                  if (viewMode === 'molecule') {
-                    setSelectedMolecule(item);
-                    setSelectedEquipment(null);
-                  } else {
-                    setSelectedEquipment(item);
-                    setSelectedMolecule(null);
-                  }
+                  setSelectedItem(item);
                   setIsEditing(false);
-                  await logActivity(item); // ✅ LOG
+                  await logActivity(item);
                 }}
-                className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${(viewMode === 'molecule' ? selectedMolecule : selectedEquipment)?.id === item.id
+                className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${selectedItem?.id === item.id
                   ? 'bg-purple-100 border-purple-300'
-                  : 'bg-white hover:bg-gray-50 border-gray-200'}`}>
+                  : 'bg-white hover:bg-gray-50 border-gray-200'
+                  }`}
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-base font-semibold text-gray-800">{item.nom}</h3>
@@ -288,17 +307,23 @@ export default function Prof3DView() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Pencil size={16} className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                    <Pencil
+                      size={16}
+                      className="text-blue-500 hover:text-blue-700 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsEditing(true);
                         setFormData({ ...item, category: viewMode });
-                      }} />
-                    <Trash2 size={16} className="text-red-500 hover:text-red-700 cursor-pointer"
+                      }}
+                    />
+                    <Trash2
+                      size={16}
+                      className="text-red-500 hover:text-red-700 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(item.id);
-                      }} />
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -306,19 +331,19 @@ export default function Prof3DView() {
           )}
         </div>
 
+        {/* Panneau de droite : Vue ou Édition */}
         <div className="md:w-[40%] space-y-4 text-sm">
-          {viewMode === 'molecule' && selectedMolecule && (
+          {!isEditing && selectedItem && (
             <>
-              <ProfGLBViewer glbUrl={selectedMolecule.structure} moleculeName={selectedMolecule.nom} />
-              <ProfMoleculeDetails molecule={selectedMolecule} />
+              <ProfGLBViewer glbUrl={selectedItem.structure} moleculeName={selectedItem.nom} />
+              {viewMode === 'molecule' ? (
+                <ProfMoleculeDetails molecule={selectedItem} />
+              ) : (
+                <ProfMaterielsDetails equipment={selectedItem} />
+              )}
             </>
           )}
-          {viewMode === 'equipment' && selectedEquipment && (
-            <>
-              <ProfGLBViewer glbUrl={selectedEquipment.structure} moleculeName={selectedEquipment.nom} />
-              <ProfMaterielsDetails equipment={selectedEquipment} />
-            </>
-          )}
+
           {isEditing && (
             <form
               onSubmit={(e) => {
@@ -326,7 +351,8 @@ export default function Prof3DView() {
                 handleSubmit();
               }}
               className="space-y-4 bg-white p-5 rounded-md shadow border mt-4"
-              style={{ maxHeight: "75vh", overflowY: "auto" }}>
+              style={{ maxHeight: '75vh', overflowY: 'auto' }}
+            >
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">Nom</label>
                 <input
@@ -353,7 +379,6 @@ export default function Prof3DView() {
                 <label className="block text-sm font-medium text-gray-700">Structure (.glb)</label>
                 <input
                   type="text"
-                  placeholder="URL du fichier .glb ou automatique après l’upload"
                   value={formData.structure}
                   onChange={(e) => setFormData({ ...formData, structure: e.target.value })}
                   className="w-full p-2 border rounded-md"
@@ -362,14 +387,10 @@ export default function Prof3DView() {
                   type="file"
                   accept=".glb"
                   onChange={handleFileUpload}
-                  className="mt-2 block w-full text-sm text-gray-700
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-purple-600 file:text-white
-                  hover:file:bg-purple-700"
+                  className="mt-2 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
                 />
               </div>
+
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">Classe</label>
                 <select
@@ -378,7 +399,9 @@ export default function Prof3DView() {
                   onChange={(e) => setFormData({ ...formData, classe_id: e.target.value })}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="" disabled>Choisir une classe</option>
+                  <option value="" disabled>
+                    Choisir une classe
+                  </option>
                   {classesList.map((classe) => (
                     <option key={classe.id} value={classe.id}>
                       {classe.code_classe}
@@ -386,7 +409,6 @@ export default function Prof3DView() {
                   ))}
                 </select>
               </div>
-
 
               {viewMode === 'molecule' && (
                 <>
