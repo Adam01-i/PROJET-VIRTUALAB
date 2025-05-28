@@ -28,7 +28,7 @@ export default function ProfExpView() {
   useEffect(() => {
     const fetchSession = async () => {
       const { data: session } = await supabase.auth.getSession();
-      setUserId(session?.session?.user?.id ?? null);
+      setUserId(session?.session?.user?.id ?? null);      
     };
 
     const fetchClasses = async () => {
@@ -71,45 +71,77 @@ export default function ProfExpView() {
     }
   };
 
-  const handleSave = async () => {
-    if (!formData?.titre || !formData.description || !formData.classe_id) {
-      toast.error("Titre, description et classe sont requis.");
-      return;
-    }
+ const handleSave = async () => {
+  if (!formData?.titre || !formData.description || !formData.classe_id) {
+    toast.error("Titre, description et classe sont requis.");
+    return;
+  }
 
-    if (!userId) {
-      toast.error("Utilisateur non authentifié.");
-      return;
-    }
+  if (!userId) {
+    toast.error("Utilisateur non authentifié.");
+    return;
+  }
 
-    const isNew = !formData.id;
+  const isNew = !formData.id;
 
-    await toast.promise(
-      (async () => {
-        if (isNew) {
-          const { data: inserted, error } = await supabase
-            .from("experiences")
-            .insert([{
-              ...formData,
-              id: uuidv4(),
-              auteur_id: userId,
-            }])
-            .select();
-          if (error || !inserted || !inserted[0]) throw new Error("Erreur lors de l'ajout.");
-        } else {
-          await supabase.from("experiences").update(formData).eq("id", formData.id);
+  // 🔒 Clés autorisées pour insert/update
+  const allowedKeys = [
+    'id', 'titre', 'description', 'duree', 'niveau',
+    'image', 'simulationPath', 'objectifs', 'materiel',
+    'resultatsAttendus', 'classe_id', 'auteur_id', 'is_public'
+  ];
+
+  const cleanFormData = Object.fromEntries(
+    Object.entries(formData).filter(([key]) => allowedKeys.includes(key))
+  );
+
+  // 📌 Ajout ID et auteur_id si nouveau
+  if (isNew) {
+    cleanFormData.id = uuidv4();
+    cleanFormData.auteur_id = userId;
+  }
+
+  // ✅ Ajout d’un header d’auth (nécessaire côté server RLS)
+  const supabaseWithAuth = supabase;
+
+  await toast.promise(
+    (async () => {
+      if (isNew) {
+        const { data: inserted, error } = await supabaseWithAuth
+          .from("experiences")
+          .insert([cleanFormData])
+          .select();
+
+        if (error || !inserted || !inserted[0]) {
+          console.error("❌ Erreur insertion :", error);
+          throw new Error("Erreur lors de l'ajout.");
         }
-      })(),
-      {
-        loading: "Enregistrement...",
-        success: isNew ? "Ajoutée !" : "Modifiée !",
-        error: "Échec de l'enregistrement.",
-      }
-    );
+      } else {
+        const { error } = await supabaseWithAuth
+          .from("experiences")
+          .update(cleanFormData)
+          .eq("id", formData.id);
 
-    fetchExperiences();
-    resetForm();
-  };
+        if (error) {
+          console.error("❌ Erreur mise à jour :", error);
+          throw new Error("Erreur lors de la mise à jour.");
+        }
+      }
+    })(),
+    {
+      loading: "Enregistrement...",
+      success: isNew ? "Ajoutée !" : "Modifiée !",
+      error: "Échec de l'enregistrement.",
+    }
+  );
+
+  fetchExperiences();
+  resetForm();
+};
+
+
+
+
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette expérience ?")) return;
@@ -212,10 +244,30 @@ export default function ProfExpView() {
                 key={exp.id}
                 experience={exp}
                 classeNom={getClasseNom(exp.code_classe)}
-                onEdit={(e) => {
-                  setFormData(e);
+                onEdit={(exp) => {
+                  const {
+                    id, titre, description, duree, niveau, image, simulationPath,
+                    objectifs, materiel, resultatsAttendus, classe_id, is_public
+                  } = exp;
+
+                  setFormData({
+                    id,
+                    titre,
+                    description,
+                    duree,
+                    niveau,
+                    image,
+                    simulationPath,
+                    objectifs,
+                    materiel,
+                    resultatsAttendus,
+                    classe_id,
+                    is_public,
+                  });
+
                   setIsEditing(true);
                 }}
+
                 onDelete={handleDelete}
               />
             ))
