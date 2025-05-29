@@ -12,6 +12,7 @@ import CardStat from '../../../ui/CardStat';
 import ActivityByClass from './ActivityByClass';
 import ActivityByProf from './ActivityByProf';
 import ActivityByEleve from './ActivityByEleve';
+import AllActivity from './AllActivity';
 
 type Classe = {
   id: string;
@@ -90,6 +91,9 @@ export default function AdminDashboard() {
 
       {/* 👨‍🎓 Activité par élève */}
       <ActivityByEleve eleves={eleves} />
+
+      {/* 📋 Historique des activités des eleves et professeurs*/}
+      <AllActivity />
 
     </div>
   );

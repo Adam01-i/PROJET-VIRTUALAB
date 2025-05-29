@@ -6,6 +6,7 @@ import CardStat from '../../../ui/CardStat';
 import { AcademicCapIcon, UserGroupIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import GraphActivityByClasse from './GraphActivityByClasse';
 import GraphActivityParEleve from './GraphActivityParEleve';
+import ProfAllActivity from './ProfAllActivity';
 
 type Classe = { id: string; code_classe: string };
 type EleveActivite = {
@@ -129,6 +130,8 @@ export default function ProfesseurDashboard() {
         selectedClasse={selectedClasseEleve}
         onClasseChange={setSelectedClasseEleve}
       />
+      {/* 📝 Activités récentes */}
+      <ProfAllActivity />
     </div>
   );
 }
