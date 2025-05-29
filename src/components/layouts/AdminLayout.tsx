@@ -56,16 +56,27 @@ export default function AdminLayout() {
       <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-indigo-900'}`}>
         <div className="max-w-[1280px] mx-auto px-4 py-1">
           <div className="flex items-center justify-between h-14">
-            {/* === Burger menu uniquement sur mobile === */}
-            <button
-              className="lg:hidden text-white"
-              onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-            >
-              {isDrawerOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            {/* LEFT: Logo + Menu */}
+            <div className="flex items-center gap-4">
+              {/* Burger menu (mobile only) */}
+              <button
+                className="lg:hidden text-white"
+                onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+              >
+                {isDrawerOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
 
-            {/* UserMenu visible partout */}
-            <UserMenu />
+              {/* Logo (desktop only) */}
+              <div className="hidden lg:flex items-center gap-2 text-white font-semibold text-lg">
+                <Flask size={20} />
+                VirtuaLab
+              </div>
+            </div>
+
+            {/* RIGHT: UserMenu */}
+            <div className="ml-auto">
+              <UserMenu />
+            </div>
           </div>
         </div>
       </nav>
@@ -136,7 +147,7 @@ export default function AdminLayout() {
         </div>
       </main>
 
-      {/* === Footer === */}
+      {/* Footer */}
       <footer className="bg-indigo-900/95 text-white z-40 mt-auto">
         <div className="border-t border-indigo-700 text-center text-sm text-indigo-200 py-4">
           © {new Date().getFullYear()} VirtuaLaB. Tous droits réservés.

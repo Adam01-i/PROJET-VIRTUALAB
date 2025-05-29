@@ -29,7 +29,10 @@ import AdminUser from './components/views/Admin/Gestion User/AdminUser';
 import AdminClasse from './components/views/Admin/Gestion Classe/AdminClasse';
 import AdminGuard from './components/views/Admin/AdminGuard';
 
+import useFullscreenOnLoad from './hooks/useFullscreenOnLoad'; // Assuming this is a custom hook for fullscreen mode
+
 function App() {
+   useFullscreenOnLoad();
   return (
     <>
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
