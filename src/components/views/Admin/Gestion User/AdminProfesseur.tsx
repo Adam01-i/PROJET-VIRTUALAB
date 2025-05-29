@@ -135,10 +135,10 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className={embedded ? "" : "min-h-screen bg-gray-50 px-8 py-10"}>
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+    <div className={embedded ? "" : "min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-10"}>
+      <div className="flex flex-col lg:flex-row justify-between gap-4 items-start lg:items-center mb-6">
         <h1 className="text-3xl font-bold text-indigo-700">Gestion des Professeurs</h1>
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <input
             type="file"
             accept=".xlsx,.xls"
@@ -169,55 +169,57 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
           setSearch(e.target.value);
           setPage(1);
         }}
-        className="w-full md:w-1/3 border px-4 py-2 rounded text-sm mb-4"
+        className="w-full md:w-1/2 border px-4 py-2 rounded text-sm mb-4"
       />
 
-      {paginated.map((prof) => {
-        const classesProf = assignations
-          .filter((a) => a.professeur_id === prof.id)
-          .map((a) => classes.find((c) => c.id === a.classe_id))
-          .filter(Boolean);
+      <div className="space-y-6">
+        {paginated.map((prof) => {
+          const classesProf = assignations
+            .filter((a) => a.professeur_id === prof.id)
+            .map((a) => classes.find((c) => c.id === a.classe_id))
+            .filter(Boolean);
 
-        return (
-          <div key={prof.id} className="mb-6 border rounded p-4 bg-white shadow flex gap-4 items-center">
-            <img
-              src={prof.avatar_url || "/assets/avatars/default-avatar.png"}
-              alt={`${prof.name} ${prof.surname}`}
-              className="w-14 h-14 rounded-full object-cover border"
-            />
+          return (
+            <div key={prof.id} className="border rounded p-4 bg-white shadow flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <img
+                src={prof.avatar_url || "/assets/avatars/default-avatar.png"}
+                alt={`${prof.name} ${prof.surname}`}
+                className="w-14 h-14 rounded-full object-cover border"
+              />
 
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-semibold text-lg">{prof.name} {prof.surname}</p>
-                  <p className="text-sm text-gray-600">{prof.email}</p>
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <p className="font-semibold text-lg">{prof.name} {prof.surname}</p>
+                    <p className="text-sm text-gray-600">{prof.email}</p>
+                  </div>
+
+                  <ProfesseurDialog
+                    prof={prof}
+                    allClasses={classes}
+                    refresh={fetchAssignations}
+                  />
                 </div>
 
-                <ProfesseurDialog
-                  prof={prof}
-                  allClasses={classes}
-                  refresh={fetchAssignations}
-                />
+                {classesProf.length > 0 && (
+                  <div className="mt-3">
+                    <p className="font-medium text-gray-700">Classes assignées :</p>
+                    <ul className="list-disc pl-5 mt-1 text-sm text-gray-600">
+                      {classesProf.map((classe: any) => (
+                        <li key={classe.id} className="mt-1">
+                          {classe.niveau} {classe.lettre}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-
-              {classesProf.length > 0 && (
-                <div className="mt-3">
-                  <p className="font-medium text-gray-700">Classes assignées :</p>
-                  <ul className="list-disc pl-5 mt-1">
-                    {classesProf.map((classe: any) => (
-                      <li key={classe.id} className="text-sm mt-1">
-                        {classe.niveau} {classe.lettre}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
-      <div className="flex justify-between items-center mt-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-2 sm:gap-0">
         <span className="text-sm text-gray-600">
           {filtered.length} professeur{filtered.length > 1 ? "s" : ""} trouvé
         </span>

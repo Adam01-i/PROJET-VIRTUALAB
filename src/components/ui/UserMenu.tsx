@@ -24,7 +24,6 @@ export default function UserMenu() {
       }
 
       const userId = session?.session?.user?.id;
-
       if (!userId) return;
 
       const { data, error } = await supabase
@@ -33,14 +32,12 @@ export default function UserMenu() {
         .eq('id', userId)
         .single();
 
-
       if (error) {
         toast.error("Erreur chargement profil");
       } else {
         setProfile(data);
       }
     };
-
 
     fetchProfile();
 
@@ -70,11 +67,7 @@ export default function UserMenu() {
   };
 
   if (!profile) {
-    return (
-      <div className="text-white text-sm italic">
-        Chargement utilisateur...
-      </div>
-    );
+    return <div className="text-white text-sm italic">Chargement utilisateur...</div>;
   }
 
   return (
@@ -87,33 +80,32 @@ export default function UserMenu() {
           <img
             src={profile.avatar_url}
             alt="avatar"
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-8 h-8 rounded-full object-cover border"
           />
         ) : (
           <User2 size={20} className="text-white" />
         )}
-        <div className="flex items-center">
-          <span className="font-medium">{profile.surname} {profile.name} </span>
-        </div>
-
+        <span className="hidden sm:inline font-medium truncate max-w-[100px]">
+          {profile.surname} {profile.name}
+        </span>
         <ChevronDown size={16} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border ">
+        <div className="absolute right-0 mt-2 w-60 bg-white rounded-md shadow-lg border z-50 text-gray-800">
           <div className="flex items-center gap-3 px-4 py-3 border-b">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt="avatar"
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover border"
               />
             ) : (
               <User2 size={32} className="text-indigo-600" />
             )}
-            <div className="text-sm">              
-              <div className="font-semibold text-gray-500">{profile.surname}</div>
-              <div className="font-semibold text-gray-500">{profile.name}</div>
+            <div className="text-sm leading-tight">
+              <div className="font-semibold text-gray-700">{profile.surname}</div>
+              <div className="font-semibold text-gray-700">{profile.name}</div>
               <div className="text-xs text-gray-500">{profile.role}</div>
             </div>
           </div>
@@ -122,7 +114,7 @@ export default function UserMenu() {
             <li>
               <button
                 onClick={handleAccount}
-                className="flex w-full items-center gap-2 px-4 py-2 hover:bg-gray-100 text-gray-700"
+                className="flex w-full items-center gap-2 px-4 py-2 hover:bg-gray-100 transition"
               >
                 <Settings size={16} />
                 Mon compte
@@ -131,7 +123,7 @@ export default function UserMenu() {
             <li>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 px-4 py-2 hover:bg-gray-100 text-red-600"
+                className="flex w-full items-center gap-2 px-4 py-2 hover:bg-gray-100 text-red-600 transition"
               >
                 <LogOut size={16} />
                 Se déconnecter

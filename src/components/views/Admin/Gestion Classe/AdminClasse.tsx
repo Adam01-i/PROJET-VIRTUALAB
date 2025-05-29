@@ -41,12 +41,9 @@ const AdminClasse: React.FC = () => {
       return;
     }
 
-    // Récupérer les ID de professeurs principaux
-    // Étape : filtrer les ID valides
-const principalProfIds = data
-  .map((classe) => classe.professeur_principal_id)
-  .filter((id): id is string => !!id); // <== évite les nulls
-
+    const principalProfIds = data
+      .map((classe) => classe.professeur_principal_id)
+      .filter((id): id is string => !!id);
 
     const { data: profsData, error: profError } = await supabase
       .from("profiles")
@@ -64,25 +61,23 @@ const principalProfIds = data
       (profsData || []).map((p) => [p.id, p])
     );
 
-const formatted: Classe[] = data.map((c: any) => {
-  const profPrincipal = c.professeur_principal_id
-    ? profMap[c.professeur_principal_id] || null
-    : null;
+    const formatted: Classe[] = data.map((c: any) => {
+      const profPrincipal = c.professeur_principal_id
+        ? profMap[c.professeur_principal_id] || null
+        : null;
 
-  return {
-    id: c.id,
-    code_classe: c.code_classe,
-    created_at: c.created_at,
-    professeur_principal: profPrincipal,
-    students_count: c.students_count,
-    teachers_count: c.teachers_count,
-  };
-});
-
+      return {
+        id: c.id,
+        code_classe: c.code_classe,
+        created_at: c.created_at,
+        professeur_principal: profPrincipal,
+        students_count: c.students_count,
+        teachers_count: c.teachers_count,
+      };
+    });
 
     setClasses(formatted);
   };
-
 
   useEffect(() => {
     fetchClasses();
@@ -99,9 +94,9 @@ const formatted: Classe[] = data.map((c: any) => {
   };
 
   return (
-    <div className="mt-20 p-6 space-y-8">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold tracking-tight text-gray-800">
+    <div className="mt-15 px-4 sm:px-6 md:px-8 py-10 space-y-8 max-w-screen-xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-800">
           🎓 Gestion des classes
         </h2>
 
@@ -136,7 +131,7 @@ const formatted: Classe[] = data.map((c: any) => {
               key={classe.id}
               className="bg-white shadow-md hover:shadow-xl transition-shadow border border-gray-200"
             >
-              <CardContent className="p-5 space-y-3">
+              <CardContent className="p-5 space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-semibold text-blue-700">
                     🏷️ {classe.code_classe}
@@ -179,7 +174,7 @@ const formatted: Classe[] = data.map((c: any) => {
                   Créée le {new Date(classe.created_at).toLocaleDateString()}
                 </p>
 
-                <div className="flex gap-2 mt-3">
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
                   <GestionElevesDialog
                     classeId={classe.id}
                     classeNom={classe.code_classe}

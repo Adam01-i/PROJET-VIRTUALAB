@@ -55,7 +55,7 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
         if (!prof || (filters.userId !== 'tous' && prof.id !== filters.userId)) continue;
         const row = grouped[prof.name];
         if (row && ['simulation', 'quiz', 'object3D'].includes(log.type)) {
-          row[log.type as 'simulation' | 'quiz' | 'object3D'] += 1;
+          row[log.type as keyof ActivityLog]++;
         }
       }
 
@@ -73,9 +73,10 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
     }`;
 
   return (
-    <div className="mt-24 bg-white shadow rounded-xl p-6 space-y-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-2">Activité par professeur</h2>
-      <div className="flex gap-2 flex-wrap mb-4">
+    <div className="mt-24 bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
+      <h2 className="text-2xl font-semibold">Activité par professeur</h2>
+
+      <div className="flex gap-2 flex-wrap items-center mb-4">
         {['7j', '30j', 'tout'].map((opt) => (
           <button
             key={opt}
@@ -85,10 +86,11 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
             {opt === '7j' ? '7 jours' : opt === '30j' ? '30 jours' : 'Tout'}
           </button>
         ))}
+
         <select
           value={filters.userId}
           onChange={(e) => setFilters((f) => ({ ...f, userId: e.target.value }))}
-          className="border rounded px-3 py-1 text-sm"
+          className="border rounded px-3 py-1 text-sm text-gray-700"
         >
           <option value="tous">Tous les professeurs</option>
           {professeurs.map((p) => (

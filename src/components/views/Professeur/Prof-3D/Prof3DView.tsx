@@ -6,6 +6,9 @@ import ProfGLBViewer from './ProfGLBViewer';
 import type { lab_items } from '../../../../types/Viewer3D/lab_items';
 import { supabase } from '../../../../lib/supabaseClient';
 import { toast } from 'sonner';
+import { Menu, X } from 'lucide-react';
+import { useRef } from 'react';
+
 
 type ViewMode = 'molecule' | 'equipment';
 type lab_items_with_classe = lab_items & { code_classe?: string };
@@ -36,6 +39,22 @@ export default function Prof3DView() {
     fetchClasses();
     fetchItems();
   }, [viewMode, classeFilter]);
+  const drawerRef = useRef(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isDrawerOpen &&
+        drawerRef.current &&
+        !(drawerRef.current as HTMLElement).contains(event.target as Node)
+      ) {
+        setIsDrawerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDrawerOpen]);
 
   const fetchClasses = async () => {
     const { data, error } = await supabase
@@ -45,44 +64,41 @@ export default function Prof3DView() {
     if (!error) setClassesList(data || []);
   };
 
-const fetchItems = async () => {
-  const { data: userData } = await supabase.auth.getUser();
-  const userId = userData?.user?.id;
-  if (!userId) return toast.error("Utilisateur non connecté");
+  const fetchItems = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
+    if (!userId) return toast.error("Utilisateur non connecté");
 
-  let query = supabase
-    .from('lab_items') // on reste sur la table directe
-    .select('*')
-    .eq('category', viewMode)
-    .eq('auteur_id', userId)
-    .order('created_at', { ascending: false });
+    let query = supabase
+      .from('lab_items') // on reste sur la table directe
+      .select('*')
+      .eq('category', viewMode)
+      .eq('auteur_id', userId)
+      .order('created_at', { ascending: false });
 
-  if (classeFilter) query = query.eq('classe_id', classeFilter);
+    if (classeFilter) query = query.eq('classe_id', classeFilter);
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) return toast.error("Erreur de chargement des éléments.");
-  console.log("🔁 fetchItems result:", data);
+    if (error) return toast.error("Erreur de chargement des éléments.");
+    console.log("🔁 fetchItems result:", data);
 
-  // 🧠 Associer le code_classe à chaque item
-  const dataWithClasse: lab_items_with_classe[] = (data || []).map((item) => {
-    const classe = classesList.find(c => c.id === item.classe_id);
-    return {
-      ...item,
-      code_classe: classe?.code_classe || 'Inconnue',
-    };
-  });
+    // 🧠 Associer le code_classe à chaque item
+    const dataWithClasse: lab_items_with_classe[] = (data || []).map((item) => {
+      const classe = classesList.find(c => c.id === item.classe_id);
+      return {
+        ...item,
+        code_classe: classe?.code_classe || 'Inconnue',
+      };
+    });
 
-  // 🔄 Mise à jour de l’état
-  if (viewMode === 'molecule') {
-    setMoleculeList(dataWithClasse);
-  } else {
-    setEquipmentList(dataWithClasse);
-  }
-};
-
-
-
+    // 🔄 Mise à jour de l’état
+    if (viewMode === 'molecule') {
+      setMoleculeList(dataWithClasse);
+    } else {
+      setEquipmentList(dataWithClasse);
+    }
+  };
 
   const logActivity = async (item: lab_items_with_classe) => {
     const { data: session } = await supabase.auth.getSession();
@@ -190,8 +206,6 @@ const fetchItems = async () => {
     );
   };
 
-
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -213,42 +227,18 @@ const fetchItems = async () => {
     <div className="p-6 text-base text-gray-800 pt-6 space-y-4">
       <h1 className="text-3xl font-bold text-indigo-800">Mes Objets 3D</h1>
 
+      {/* === BARRE DE CONTROLE === */}
       <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('molecule')}
-            className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
-              }`}
-          >
-            <Flask size={16} /> Molécules
-            <span className="ml-3 text-sm text-black font-normal">| Total : {moleculeList.length}</span>
-          </button>
+        {/* === BOUTON MOBILE : ouvrir drawer === */}
+        <button
+          className="1g:hidden text-purple-600 flex items-center gap-2"
+          onClick={() => setIsDrawerOpen(true)}
+        >
+          <Menu size={20} />
+          Filtres
+        </button>
 
-          <button
-            onClick={() => setViewMode('equipment')}
-            className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
-              }`}
-          >
-            <Tool size={16} /> Matériel
-            <span className="ml-3 text-sm text-black font-normal">| Total : {equipmentList.length}</span>
-          </button>
-
-          <select
-            className="border px-2 py-1 rounded text-sm bg-white text-indigo-600"
-            value={classeFilter || ''}
-            onChange={(e) => setClasseFilter(e.target.value || null)}
-          >
-            <option value="">Toutes les classes</option>
-            {classesList.map((cl) => (
-              <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
-            ))}
-          </select>
-        </div>
-
+        {/* === Bouton d'ajout toujours visible === */}
         <button
           onClick={() => {
             setIsEditing(true);
@@ -271,6 +261,98 @@ const fetchItems = async () => {
           ➕ Nouveau {viewMode === 'molecule' ? 'Molécule' : 'Matériel'}
         </button>
       </div>
+      {/* === DRAWER FILTRES MOBILE === */}
+      <div
+        ref={drawerRef}
+        className={`1g:hidden fixed top-0 left-0 w-64 h-full bg-white z-50 shadow-lg p-4 transform transition-transform duration-300 ease-in-out
+    ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-indigo-700">Filtres</h2>
+          <button onClick={() => setIsDrawerOpen(false)} className="text-gray-700">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* === Filtres (mobile) === */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => {
+              setViewMode('molecule');
+              setIsDrawerOpen(false);
+            }}
+            className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              }`}
+          >
+            <Flask size={16} /> Molécules ({moleculeList.length})
+          </button>
+
+          <button
+            onClick={() => {
+              setViewMode('equipment');
+              setIsDrawerOpen(false);
+            }}
+            className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              }`}
+          >
+            <Tool size={16} /> Matériel ({equipmentList.length})
+          </button>
+
+          <select
+            className="border px-2 py-1 rounded text-sm bg-white text-indigo-600"
+            value={classeFilter || ''}
+            onChange={(e) => {
+              setClasseFilter(e.target.value || null);
+              setIsDrawerOpen(false);
+            }}
+          >
+            <option value="">Toutes les classes</option>
+            {classesList.map((cl) => (
+              <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {/* === Filtres INLINE pour écrans lg et + === */}
+      <div className="hidden 1g+:flex gap-2 mb-6">
+        <button
+          onClick={() => setViewMode('molecule')}
+          className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
+            ? 'bg-purple-600 text-white'
+            : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+            }`}
+        >
+          <Flask size={16} /> Molécules
+          <span className="ml-2 text-sm text-black font-normal">| {moleculeList.length}</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode('equipment')}
+          className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
+            ? 'bg-purple-600 text-white'
+            : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+            }`}
+        >
+          <Tool size={16} /> Matériel
+          <span className="ml-2 text-sm text-black font-normal">| {equipmentList.length}</span>
+        </button>
+
+        <select
+          className="border px-2 py-1 rounded text-sm bg-white text-indigo-600"
+          value={classeFilter || ''}
+          onChange={(e) => setClasseFilter(e.target.value || null)}
+        >
+          <option value="">Toutes les classes</option>
+          {classesList.map((cl) => (
+            <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
+          ))}
+        </select>
+      </div>
+
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Liste des éléments */}

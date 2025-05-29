@@ -31,16 +31,19 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
       : data.filter((d) => d.classe === selectedClasse);
 
   return (
-    <div className="mt-12 bg-white p-6 rounded-xl shadow space-y-6">
-      {/* 🔎 Titre + filtre */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-gray-800">Activité par Classe</h2>
+    <div className="mt-12 bg-white p-6 sm:p-8 rounded-xl shadow-md space-y-6 text-gray-800">
+      {/* 🧭 Titre + Sélecteur */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-2xl font-semibold">Activité par Classe</h2>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Classe :</label>
+          <label htmlFor="classe" className="text-sm text-gray-600">
+            Classe :
+          </label>
           <select
+            id="classe"
             value={selectedClasse}
             onChange={(e) => setSelectedClasse(e.target.value)}
-            className="border px-2 py-1 rounded text-sm text-indigo-700"
+            className="border px-3 py-1.5 rounded-md text-sm text-indigo-700 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="all">Toutes</option>
             {classes.map((cl) => (
@@ -52,12 +55,12 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
         </div>
       </div>
 
-      {/* 📊 Graphe */}
+      {/* 📊 Graphe en colonnes empilées */}
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={filteredData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis dataKey="classe" stroke="#4B5563" />
-          <YAxis stroke="#4B5563" allowDecimals={false} />
+          <XAxis dataKey="classe" stroke="#4B5563" tick={{ fontSize: 12 }} />
+          <YAxis stroke="#4B5563" allowDecimals={false} tick={{ fontSize: 12 }} />
           <Tooltip />
           <Legend />
           <Bar dataKey="simulation" stackId="a" fill="#6366F1" name="Simulations" />

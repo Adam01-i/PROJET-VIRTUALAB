@@ -13,21 +13,9 @@ import {
   Legend,
 } from 'recharts';
 
-type Classe = {
-  id: string;
-  code_classe: string;
-};
-
-type ActivityLog = {
-  classe: string;
-  simulation: number;
-  quiz: number;
-  objet3d: number;
-};
-
-type Props = {
-  classes: Classe[];
-};
+type Classe = { id: string; code_classe: string };
+type ActivityLog = { classe: string; simulation: number; quiz: number; objet3d: number };
+type Props = { classes: Classe[] };
 
 export default function ActivityByClass({ classes }: Props) {
   const [dateRange, setDateRange] = useState<'7j' | '30j' | 'tout'>('7j');
@@ -47,45 +35,35 @@ export default function ActivityByClass({ classes }: Props) {
       const since = new Date();
       since.setDate(since.getDate() - days);
 
-      const { data: elevesClasse, error: err1 } = await supabase
+      const { data: elevesClasse } = await supabase
         .from('eleves_classes')
         .select('eleve_id, classe_id');
 
-      if (err1 || !elevesClasse) return;
-
       const eleveClasseMap: Record<string, string> = {};
-      elevesClasse.forEach(({ eleve_id, classe_id }) => {
+      elevesClasse?.forEach(({ eleve_id, classe_id }) => {
         const code = classes.find((c) => c.id === classe_id)?.code_classe;
-        if (code) {
-          if (selectedClasseId !== 'toutes' && classe_id !== selectedClasseId) return;
+        if (code && (selectedClasseId === 'toutes' || classe_id === selectedClasseId)) {
           eleveClasseMap[eleve_id] = code;
         }
       });
 
       const eleveIds = Object.keys(eleveClasseMap);
-      if (eleveIds.length === 0) {
-        setActivityByClasse([]);
-        return;
-      }
+      if (eleveIds.length === 0) return setActivityByClasse([]);
 
-      const { data: logs, error: err2 } = await supabase
+      const { data: logs } = await supabase
         .from('activity_logs')
         .select('user_id, created_at, type')
         .in('user_id', eleveIds)
         .gte('created_at', since.toISOString());
 
-      if (err2 || !logs) return;
-
       const agg: Record<string, ActivityLog> = {};
       Object.values(eleveClasseMap).forEach((classe) => {
-        if (!agg[classe]) {
-          agg[classe] = { classe, simulation: 0, quiz: 0, objet3d: 0 };
-        }
+        agg[classe] = { classe, simulation: 0, quiz: 0, objet3d: 0 };
       });
 
-      logs.forEach(({ user_id, type }) => {
+      logs?.forEach(({ user_id, type }) => {
         const classe = eleveClasseMap[user_id];
-        if (!classe || !agg[classe]) return;
+        if (!classe) return;
         if (type === 'simulation') agg[classe].simulation++;
         else if (type === 'quiz') agg[classe].quiz++;
         else if (type === 'objet3d') agg[classe].objet3d++;
@@ -98,11 +76,10 @@ export default function ActivityByClass({ classes }: Props) {
   }, [dateRange, selectedClasseId, classes]);
 
   return (
-    <div className="bg-white shadow rounded-xl p-6 space-y-3">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-2">Activité par classe</h2>
+    <div className="bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
+      <h2 className="text-2xl font-semibold">Activité par classe</h2>
 
-      <div className="flex flex-wrap items-center gap-3 ">
-        {/* 🔁 Période */}
+      <div className="flex flex-wrap items-center gap-3">
         {['7j', '30j', 'tout'].map((opt) => (
           <button
             key={opt}
@@ -113,7 +90,6 @@ export default function ActivityByClass({ classes }: Props) {
           </button>
         ))}
 
-        {/* 🎚️ Classe */}
         <select
           value={selectedClasseId}
           onChange={(e) => setSelectedClasseId(e.target.value)}
@@ -121,9 +97,7 @@ export default function ActivityByClass({ classes }: Props) {
         >
           <option value="toutes">Toutes les classes</option>
           {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.code_classe}
-            </option>
+            <option key={c.id} value={c.id}>{c.code_classe}</option>
           ))}
         </select>
       </div>

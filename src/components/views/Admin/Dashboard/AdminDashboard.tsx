@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="px-4 mt-24">
+    <div className="px-4 mt-15">
       <h1 className="text-3xl font-extrabold text-indigo-900 ">Tableau de bord Administrateur</h1>
 
       {/* 🔢 Statistiques de base */}

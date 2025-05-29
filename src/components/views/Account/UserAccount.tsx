@@ -14,8 +14,6 @@ export default function UserAccount() {
   const [role, setRole] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Nouveau champ pour changer le mot de passe
   const [newPassword, setNewPassword] = useState('');
 
   const fetchProfile = async () => {
@@ -61,7 +59,6 @@ export default function UserAccount() {
       await fetchProfile();
     }
 
-    // ✅ Mise à jour du mot de passe si renseigné
     if (newPassword.trim().length >= 6) {
       const { error: passError } = await supabase.auth.updateUser({
         password: newPassword.trim(),
@@ -121,13 +118,13 @@ export default function UserAccount() {
   }[role] || 'Utilisateur';
 
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8 mt-6 space-y-4 px-40">
-      <h2 className="text-2xl font-bold text-indigo-700 mb-2">Mon Profil {roleLabel}</h2>
-      <p className="text-gray-500 text-sm">Visualisez et mettez à jour vos informations personnelles.</p>
+    <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-lg p-6 sm:p-10 mt-8 space-y-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700">Mon Profil ({roleLabel})</h2>
+      <p className="text-sm text-gray-500">Visualisez et mettez à jour vos informations personnelles.</p>
 
-      <hr className="my-4 border-gray-200" />
+      <hr className="border-gray-200" />
 
-      <div className="flex flex-col md:flex-row items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-center gap-6">
         <div className="relative">
           {avatarUrl ? (
             <img
@@ -142,7 +139,7 @@ export default function UserAccount() {
           )}
         </div>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-600 font-medium">Changer l'avatar</label>
+          <label className="text-sm font-medium text-gray-700">Changer l'avatar</label>
           <input
             type="file"
             accept="image/*"
@@ -151,8 +148,6 @@ export default function UserAccount() {
           />
         </div>
       </div>
-
-      <hr className="my-4 border-gray-200" />
 
       <div className="space-y-4">
         <div>
@@ -184,7 +179,6 @@ export default function UserAccount() {
           />
         </div>
 
-        {/* 🔐 Nouveau champ mot de passe */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
           <input
@@ -198,11 +192,11 @@ export default function UserAccount() {
         </div>
       </div>
 
-      <div className="pt-4 flex gap-4">
+      <div className="pt-4 flex flex-col sm:flex-row gap-3">
         <button
           onClick={handleUpdate}
           disabled={loading}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded shadow-sm transition disabled:opacity-60"
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded shadow-sm transition disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -217,10 +211,9 @@ export default function UserAccount() {
           )}
         </button>
 
-        {/* 🔙 Bouton retour */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm px-4 py-2 text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded shadow-sm"
+          className="flex items-center justify-center gap-2 text-sm px-5 py-2 text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded shadow-sm"
         >
           <ArrowLeft size={18} />
           Retour

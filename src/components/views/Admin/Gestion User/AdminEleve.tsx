@@ -129,12 +129,11 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
       .filter((v): v is string => v !== null && v !== undefined)
   )];
 
-
   return (
-    <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-8 py-10'}>
+    <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-10'}>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-indigo-700">Gestion des Élèves</h1>
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center md:text-left">Gestion des Élèves</h1>
+        <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
           <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="text-sm text-gray-700" />
           <button
             onClick={handleImport}
@@ -152,7 +151,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-4">
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
         <input
           type="text"
           placeholder="🔍 Rechercher un élève"
@@ -182,7 +181,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
       </div>
 
       {paginated.map((eleve) => (
-        <div key={eleve.id} className="mb-4 border rounded p-4 bg-white shadow flex justify-between items-center">
+        <div key={eleve.id} className="mb-4 border rounded p-4 bg-white shadow flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex gap-3 items-center">
             <img
               src={eleve.avatar_url}
@@ -207,14 +206,14 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
           <button
             onClick={() => setPage((p) => Math.max(p - 1, 1))}
             disabled={page === 1}
-            className="px-3 py-1 bg-gray-200 rounded text-sm"
+            className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50"
           >
             Précédent
           </button>
           <button
             onClick={() => setPage((p) => (p * PAGE_SIZE < filtered.length ? p + 1 : p))}
             disabled={page * PAGE_SIZE >= filtered.length}
-            className="px-3 py-1 bg-gray-200 rounded text-sm"
+            className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50"
           >
             Suivant
           </button>

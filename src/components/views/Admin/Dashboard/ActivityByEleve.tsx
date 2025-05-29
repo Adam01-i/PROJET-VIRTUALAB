@@ -55,7 +55,7 @@ export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
         if (!eleve || (filters.eleveId !== 'tous' && eleve.id !== filters.eleveId)) continue;
         const row = grouped[eleve.name];
         if (row && ['simulation', 'quiz', 'object3D'].includes(log.type)) {
-          row[log.type as 'simulation' | 'quiz' | 'object3D'] += 1;
+          row[log.type as keyof ActivityLog]++;
         }
       }
 
@@ -73,9 +73,9 @@ export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
     }`;
 
   return (
-    <div className="mt-20 bg-white shadow rounded-xl p-6  space-y-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-2">Activité par élève</h2>
-      <div className="flex gap-2 flex-wrap mb-4">
+    <div className="mt-20 bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
+      <h2 className="text-2xl font-semibold">Activité par élève</h2>
+      <div className="flex gap-2 flex-wrap items-center mb-4">
         {['7j', '30j', 'tout'].map((opt) => (
           <button
             key={opt}
@@ -85,10 +85,11 @@ export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
             {opt === '7j' ? '7 jours' : opt === '30j' ? '30 jours' : 'Tout'}
           </button>
         ))}
+
         <select
           value={filters.eleveId}
           onChange={(e) => setFilters((f) => ({ ...f, eleveId: e.target.value }))}
-          className="border rounded px-3 py-1 text-sm"
+          className="border rounded px-3 py-1 text-sm text-gray-700"
         >
           <option value="tous">Tous les élèves</option>
           {eleves.map((e) => (
