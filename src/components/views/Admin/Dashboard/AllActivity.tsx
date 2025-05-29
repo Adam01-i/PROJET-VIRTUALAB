@@ -27,6 +27,13 @@ export default function AllActivity() {
   const [filterDate, setFilterDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(8);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   useEffect(() => {
     const fetchActivities = async () => {
       setLoading(true);
@@ -85,6 +92,7 @@ export default function AllActivity() {
     }
 
     setFiltered(result);
+    setCurrentPage(1); // reset page on filter/search change
   }, [filterRole, filterType, filterDate, searchQuery, activities]);
 
   return (
@@ -132,37 +140,60 @@ export default function AllActivity() {
       {/* 📊 Table des activités */}
       {loading ? (
         <p className="text-gray-600">Chargement...</p>
-      ) : filtered.length === 0 ? (
+      ) : currentItems.length === 0 ? (
         <p className="text-gray-600">Aucune activité trouvée.</p>
       ) : (
-        <div className="overflow-x-auto bg-white rounded shadow">
-          <table className="min-w-full divide-y divide-gray-200 text-sm text-left">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-gray-700">Nom</th>
-                <th className="px-4 py-2 text-gray-700">Rôle</th>
-                <th className="px-4 py-2 text-gray-700">Type</th>
-                <th className="px-4 py-2 text-gray-700">Durée (min)</th>
-                <th className="px-4 py-2 text-gray-700">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filtered.map((activity) => (
-                <tr key={activity.id}>
-                  <td className="px-4 py-2 text-indigo-700 font-medium">
-                    {activity.profiles?.name || 'Inconnu'}
-                  </td>
-                  <td className="px-4 py-2 capitalize">{activity.profiles?.role || '-'}</td>
-                  <td className="px-4 py-2">{activity.type}</td>
-                  <td className="px-4 py-2">{activity.duree ?? '-'}</td>
-                  <td className="px-4 py-2">
-                    {new Date(activity.created_at).toLocaleString('fr-FR')}
-                  </td>
+        <>
+          <div className="overflow-x-auto bg-white rounded shadow">
+            <table className="min-w-full divide-y divide-gray-200 text-sm text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-gray-700">Nom</th>
+                  <th className="px-4 py-2 text-gray-700">Rôle</th>
+                  <th className="px-4 py-2 text-gray-700">Type</th>
+                  <th className="px-4 py-2 text-gray-700">Durée (min)</th>
+                  <th className="px-4 py-2 text-gray-700">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {currentItems.map((activity) => (
+                  <tr key={activity.id}>
+                    <td className="px-4 py-2 text-indigo-700 font-medium">
+                      {activity.profiles?.name || 'Inconnu'}
+                    </td>
+                    <td className="px-4 py-2 capitalize">{activity.profiles?.role || '-'}</td>
+                    <td className="px-4 py-2">{activity.type}</td>
+                    <td className="px-4 py-2">{activity.duree ?? '-'}</td>
+                    <td className="px-4 py-2">
+                      {new Date(activity.created_at).toLocaleString('fr-FR')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 📄 Pagination */}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="px-4 py-2 border rounded disabled:opacity-50"
+            >
+              ⬅ Précédent
+            </button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} sur {totalPages}
+            </span>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="px-4 py-2 border rounded disabled:opacity-50"
+            >
+              Suivant ➡
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

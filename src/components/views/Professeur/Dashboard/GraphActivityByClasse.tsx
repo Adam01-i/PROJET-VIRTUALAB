@@ -34,7 +34,7 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
     <div className="mt-12 bg-white p-6 sm:p-8 rounded-xl shadow-md space-y-6 text-gray-800">
       {/* 🧭 Titre + Sélecteur */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-semibold">Activité par Classe</h2>
+        <h2 className="text-2xl font-bold">Activité par Classe</h2>
         <div className="flex items-center gap-2">
           <label htmlFor="classe" className="text-sm text-gray-600">
             Classe :

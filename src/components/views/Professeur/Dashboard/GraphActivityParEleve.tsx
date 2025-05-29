@@ -51,10 +51,10 @@ export default function GraphActivityParEleve({ data, classes, selectedClasse: e
     : data.filter((e) => e.classe === selectedClasse);
 
   return (
-    <div className="mt-24 mb-20 bg-white rounded-xl shadow-lg p-6 sm:p-8 space-y-6 text-gray-800">
+    <div className="mt-32 bg-white rounded-xl shadow-lg p-6 sm:p-8 space-y-6 text-gray-800">
       {/* 🔖 Titre & Sélecteur */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-semibold text-gray-700">
+        <h2 className="text-2xl font-bold text-gray-700">
           Activité par Élève
           {selectedClasse !== 'all' && ` — Classe ${selectedClasse}`}
         </h2>
