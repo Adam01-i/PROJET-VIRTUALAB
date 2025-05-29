@@ -7,14 +7,11 @@ export default function AdminUser() {
   const [tab, setTab] = useState('professeurs');
 
   return (
-    <div className="mt-15 px-4 sm:px-6 md:px-8 py-6 max-w-screen-xl mx-auto">
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-6 text-center">
-        Gestion des utilisateurs
-      </h1>
+    <div className="mt-15 px-4 sm:px-6 md:px-8 py-2 max-w-screen-xl mx-auto">      
 
       <Tabs defaultValue={tab} onValueChange={setTab} className="w-full">
         <TabsList
-          className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6"
+          className="flex flex-col sm:flex-row justify-center items-center gap-4"
           aria-label="Navigation entre les rôles utilisateur"
         >
           <TabsTrigger
@@ -31,7 +28,7 @@ export default function AdminUser() {
           </TabsTrigger>
         </TabsList>
 
-        <div className="bg-white shadow-md rounded-lg p-4 sm:p-6 md:p-8">
+        <div className="bg-white shadow-md rounded-lg p-4 sm:p-6 md:p-2">
           <TabsContent value="professeurs">
             <AdminProfesseur embedded />
           </TabsContent>
