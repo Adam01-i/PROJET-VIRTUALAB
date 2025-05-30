@@ -10,8 +10,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-
-  // 🔁 Redirection automatique si connecté
   useEffect(() => {
     const redirectIfLoggedIn = async () => {
       const { data: session } = await supabase.auth.getSession();
@@ -108,7 +106,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-3 font-sans">
-      {/* 🎨 Partie gauche immersive */}
+      {/* Partie gauche visuelle */}
       <div className="col-span-2 relative hidden md:block">
         <img
           src="/assets/img1.png"
@@ -128,8 +126,8 @@ export default function Login() {
         </div>
       </div>
 
-      {/* 🔐 Formulaire de connexion */}
-      <div className="col-span-1 flex items-center justify-center bg-white px-6 py-12">
+      {/* Formulaire de connexion */}
+      <div className="col-span-1 flex flex-col items-center justify-center bg-white px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -158,8 +156,6 @@ export default function Login() {
                 required
                 className="mt-1 w-full p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-12"
               />
-
-              {/* 👁 Bouton afficher/masquer mot de passe */}
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
@@ -195,6 +191,16 @@ export default function Login() {
             </button>
           </form>
         </motion.div>
+
+        {/* 🔙 Bouton retour à l'accueil */}
+        <div className="text-center mt-6">
+          <Link
+            to="/"
+            className="inline-block text-indigo-600 hover:text-indigo-800 font-medium underline"
+          >
+            ← Retour à l'accueil
+          </Link>
+        </div>
       </div>
     </div>
   );
