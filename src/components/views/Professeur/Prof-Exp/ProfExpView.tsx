@@ -12,7 +12,7 @@ const NIVEAU_OPTIONS = ["Débutant", "Intermédiaire", "Avancé"];
 
 export default function ProfExpView() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [formData, setFormData] = useState<Experience | null>(null);
+  const [formData, setFormData] = useState<any | null>(null); // Experience étendue avec selectedClasseIds
   const [isEditing, setIsEditing] = useState(false);
   const [, setUploading] = useState(false);
   const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([]);
@@ -21,14 +21,10 @@ export default function ProfExpView() {
 
   const totalExperiences = experiences.length;
 
-  const getClasseNom = (code: string | null | undefined) => {
-    return code || '—';
-  };
-
   useEffect(() => {
     const fetchSession = async () => {
       const { data: session } = await supabase.auth.getSession();
-      setUserId(session?.session?.user?.id ?? null);      
+      setUserId(session?.session?.user?.id ?? null);
     };
 
     const fetchClasses = async () => {
@@ -58,90 +54,103 @@ export default function ProfExpView() {
       .order("created_at", { ascending: false });
 
     if (classeFilter !== 'all') {
-      query = query.eq("code_classe", classeFilter);
-    }
+  query = query.contains("code_classe", [classeFilter]); // ✅ PostgREST syntax for arrays
+}
+
 
     const { data, error } = await query;
+console.log("🔎 Données brutes Supabase :", data);
 
     if (error) {
       toast.error("Erreur chargement expériences", { description: error.message });
-      console.error("🔴 Supabase error:", error);
     } else {
       setExperiences(data || []);
     }
   };
 
- const handleSave = async () => {
-  if (!formData?.titre || !formData.description || !formData.classe_id) {
-    toast.error("Titre, description et classe sont requis.");
-    return;
-  }
-
-  if (!userId) {
-    toast.error("Utilisateur non authentifié.");
-    return;
-  }
-
-  const isNew = !formData.id;
-
-  // 🔒 Clés autorisées pour insert/update
-  const allowedKeys = [
-    'id', 'titre', 'description', 'duree', 'niveau',
-    'image', 'simulationPath', 'objectifs', 'materiel',
-    'resultatsAttendus', 'classe_id', 'auteur_id', 'is_public'
-  ];
-
-  const cleanFormData = Object.fromEntries(
-    Object.entries(formData).filter(([key]) => allowedKeys.includes(key))
-  );
-
-  // 📌 Ajout ID et auteur_id si nouveau
-  if (isNew) {
-    cleanFormData.id = uuidv4();
-    cleanFormData.auteur_id = userId;
-  }
-
-  // ✅ Ajout d’un header d’auth (nécessaire côté server RLS)
-  const supabaseWithAuth = supabase;
-
-  await toast.promise(
-    (async () => {
-      if (isNew) {
-        const { data: inserted, error } = await supabaseWithAuth
-          .from("experiences")
-          .insert([cleanFormData])
-          .select();
-
-        if (error || !inserted || !inserted[0]) {
-          console.error("❌ Erreur insertion :", error);
-          throw new Error("Erreur lors de l'ajout.");
-        }
-      } else {
-        const { error } = await supabaseWithAuth
-          .from("experiences")
-          .update(cleanFormData)
-          .eq("id", formData.id);
-
-        if (error) {
-          console.error("❌ Erreur mise à jour :", error);
-          throw new Error("Erreur lors de la mise à jour.");
-        }
-      }
-    })(),
-    {
-      loading: "Enregistrement...",
-      success: isNew ? "Ajoutée !" : "Modifiée !",
-      error: "Échec de l'enregistrement.",
+  const handleSave = async () => {
+    if (!formData?.titre || !formData.description || !formData.selectedClasseIds?.length) {
+      toast.error("Titre, description et au moins une classe sont requis.");
+      return;
     }
-  );
 
-  fetchExperiences();
-  resetForm();
-};
+    if (!userId) {
+      toast.error("Utilisateur non authentifié.");
+      return;
+    }
 
+    const isNew = !formData.id;
 
+    const allowedKeys = [
+      'id', 'titre', 'description', 'duree', 'niveau',
+      'image', 'simulationPath', 'objectifs', 'materiel',
+      'resultatsAttendus', 'auteur_id', 'is_public'
+    ];
 
+    const cleanFormData = Object.fromEntries(
+      Object.entries(formData).filter(([key]) => allowedKeys.includes(key))
+    );
 
+    if (isNew) {
+      cleanFormData.id = uuidv4();
+      cleanFormData.auteur_id = userId;
+    }
+
+    await toast.promise(
+      (async () => {
+        if (isNew) {
+          const { data: inserted, error } = await supabase
+            .from("experiences")
+            .insert([cleanFormData])
+            .select();
+
+          if (error || !inserted?.[0]) throw new Error("Erreur lors de l'ajout.");
+
+          const associations = formData.selectedClasseIds.map((classeId: string) => ({
+            experience_id: inserted[0].id,
+            classe_id: classeId,
+          }));
+
+          const { error: relError } = await supabase
+            .from("classes_experiences")
+            .insert(associations);
+
+          if (relError) throw new Error("Échec d’assignation des classes.");
+        } else {
+          const { error } = await supabase
+            .from("experiences")
+            .update(cleanFormData)
+            .eq("id", formData.id);
+
+          if (error) throw new Error("Erreur mise à jour.");
+
+          await supabase
+            .from("classes_experiences")
+            .delete()
+            .eq("experience_id", formData.id);
+
+          const associations = formData.selectedClasseIds.map((classeId: string) => ({
+            experience_id: formData.id,
+            classe_id: classeId,
+          }));
+
+          const { error: relError } = await supabase
+            .from("classes_experiences")
+            .insert(associations);
+
+          if (relError) throw new Error("Échec de mise à jour des classes.");
+        }
+      })(),
+      {
+        loading: "Enregistrement...",
+        success: isNew ? "Ajoutée !" : "Modifiée !",
+        error: "Échec de l'enregistrement.",
+      }
+    );
+
+    fetchExperiences();
+    resetForm();
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette expérience ?")) return;
@@ -189,7 +198,6 @@ export default function ProfExpView() {
     }
     setUploading(false);
   };
-
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
@@ -204,11 +212,11 @@ export default function ProfExpView() {
               niveau: NIVEAU_OPTIONS[0],
               image: '',
               simulationPath: '',
-              classe_id: '',
               objectifs: [],
               materiel: [],
               resultatsAttendus: [],
-              is_public: false
+              is_public: false,
+              selectedClasseIds: [],
             });
             setIsEditing(true);
           }}
@@ -243,33 +251,25 @@ export default function ProfExpView() {
               <ProfExpCard
                 key={exp.id}
                 experience={exp}
-                classeNom={getClasseNom(exp.code_classe)}
-                onEdit={(exp) => {
-                  const {
-                    id, titre, description, duree, niveau, image, simulationPath,
-                    objectifs, materiel, resultatsAttendus, classe_id, is_public
-                  } = exp;
+                classeNoms={exp.code_classe || []} // ✅ champ array de la nouvelle view
+                classeAffichage={exp.code_classe_affichage}
+                onEdit={async (exp) => {
+                  const { data: classeLinks } = await supabase
+                    .from("classes_experiences")
+                    .select("classe_id")
+                    .eq("experience_id", exp.id);
 
                   setFormData({
-                    id,
-                    titre,
-                    description,
-                    duree,
-                    niveau,
-                    image,
-                    simulationPath,
-                    objectifs,
-                    materiel,
-                    resultatsAttendus,
-                    classe_id,
-                    is_public,
+                    ...exp,
+                    selectedClasseIds: classeLinks?.map((l) => l.classe_id) || []
                   });
-
                   setIsEditing(true);
                 }}
-
                 onDelete={handleDelete}
               />
+
+
+
             ))
           )}
         </div>
@@ -322,17 +322,25 @@ export default function ProfExpView() {
               </select>
             </div>
 
-            <select
-              value={formData.classe_id}
-              onChange={(e) => setFormData({ ...formData, classe_id: e.target.value })}
-              className="w-full border p-2 rounded"
-              required
-            >
-              <option value="">Sélectionner une classe</option>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Classes assignées :</p>
               {classes.map((cl) => (
-                <option key={cl.id} value={cl.id}>{cl.code_classe}</option>
+                <label key={cl.id} className="block text-sm">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={formData.selectedClasseIds?.includes(cl.id)}
+                    onChange={(e) => {
+                      const updated = e.target.checked
+                        ? [...formData.selectedClasseIds, cl.id]
+                        : formData.selectedClasseIds.filter((id: string) => id !== cl.id);
+                      setFormData({ ...formData, selectedClasseIds: updated });
+                    }}
+                  />
+                  {cl.code_classe}
+                </label>
               ))}
-            </select>
+            </div>
 
             <input type="file" onChange={handleFileUpload} className="text-sm" />
             {formData.simulationPath && <a href={formData.simulationPath} className="text-blue-600 underline text-sm">Voir simulation</a>}
@@ -347,7 +355,7 @@ export default function ProfExpView() {
                   rows={5}
                   value={(formData as any)[field]?.join("\n") || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData!, [field]: e.target.value.split("\n") })
+                    setFormData({ ...formData, [field]: e.target.value.split("\n") })
                   }
                   className="w-full border p-2 rounded text-sm"
                 />

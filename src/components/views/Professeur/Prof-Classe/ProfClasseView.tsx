@@ -132,7 +132,7 @@ export default function ProfClasseView() {
       const { count: expCount, error: expErr } = await supabase
         .from('vue_experience_details')
         .select('*', { count: 'exact', head: true })
-        .eq('code_classe', selectedClasseCode);
+        .contains('code_classe', [selectedClasseCode]); // ✅ Important : .contains() sur text[]
 
       if (expErr) console.error('Erreur expériences:', expErr);
       setExperienceCount(expCount || 0);

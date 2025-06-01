@@ -13,7 +13,8 @@ export type Experience = {
   classe_id: string;
   auteur_id?: string;
 
-  code_classe?: string; 
+  code_classe?: string[]; // ✅ tableau de noms de classes
+  code_classe_affichage?: string; // ✅ nom de la classe pour affichage
   is_public?: boolean; 
 };
 
