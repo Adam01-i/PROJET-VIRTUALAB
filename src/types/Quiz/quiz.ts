@@ -26,3 +26,8 @@ export type Quiz = {
     completed: boolean;
     showExplanation: boolean;
   };
+
+  export type QuizWithClasse = Quiz & {
+  code_classe?: string[];               // tableau de codes classe
+  code_classe_affichage?: string;       // affichage lisible pour les tags ou le tri
+};

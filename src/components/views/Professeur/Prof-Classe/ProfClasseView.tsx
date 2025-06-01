@@ -121,10 +121,11 @@ export default function ProfClasseView() {
     const fetchStats = async () => {
       if (!selectedClasseCode || !selectedClasseNiveau) return;
 
+      // ✅ Count quiz liés à cette classe via la vue (many-to-many)
       const { count: quizCount, error: quizErr } = await supabase
         .from('vue_quiz_details')
         .select('*', { count: 'exact', head: true })
-        .eq('code_classe', selectedClasseCode);
+        .contains('code_classe', [selectedClasseCode]); // ✅ .contains sur array
 
       if (quizErr) console.error('Erreur quiz:', quizErr);
       setQuizCount(quizCount || 0);
@@ -132,7 +133,7 @@ export default function ProfClasseView() {
       const { count: expCount, error: expErr } = await supabase
         .from('vue_experience_details')
         .select('*', { count: 'exact', head: true })
-        .contains('code_classe', [selectedClasseCode]); // ✅ Important : .contains() sur text[]
+        .contains('code_classe', [selectedClasseCode]);
 
       if (expErr) console.error('Erreur expériences:', expErr);
       setExperienceCount(expCount || 0);

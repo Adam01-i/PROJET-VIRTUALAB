@@ -3,14 +3,15 @@ import type { Quiz } from '../../../../types/Quiz/quiz';
 
 type ProfQuizCardProps = {
   quiz: Quiz;
-  classeNom?: string;
+  classeNoms?: string[]; // 🔄 tableau pour plusieurs classes
+  classeAffichage?: string; // chaîne lisible "3e B, 4e A"
   onEdit: (quiz: Quiz) => void;
   onDelete: (id: string) => void;
 };
 
 export default function ProfQuizCard({
   quiz,
-  classeNom,
+  classeNoms = [],
   onEdit,
   onDelete,
 }: ProfQuizCardProps) {
@@ -22,12 +23,12 @@ export default function ProfQuizCard({
           alt={quiz.titre}
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-3 left-3 flex gap-2">
-          {classeNom && (
-            <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded">
-              📘 {classeNom}
+        <div className="absolute bottom-3 left-3 flex gap-2 flex-wrap">
+          {classeNoms.map((nom, idx) => (
+            <span key={idx} className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded">
+              📘 {nom}
             </span>
-          )}
+          ))}
         </div>
       </div>
 
