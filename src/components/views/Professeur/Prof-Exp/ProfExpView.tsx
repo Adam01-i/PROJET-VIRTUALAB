@@ -152,17 +152,23 @@ console.log("🔎 Données brutes Supabase :", data);
     resetForm();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cette expérience ?")) return;
+const handleDelete = async (id: string) => {
+  if (!confirm("Supprimer cette expérience ?")) return;
 
-    const { error } = await supabase.from("experiences").delete().eq("id", id);
-    if (error) toast.error("Erreur suppression");
-    else {
-      toast.success("Expérience supprimée");
-      fetchExperiences();
-      resetForm();
-    }
-  };
+  const { error } = await supabase
+    .from("experiences")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    toast.error("Erreur suppression");
+  } else {
+    toast.success("Expérience supprimée");
+    fetchExperiences();
+    resetForm();
+  }
+};
+
 
   const resetForm = () => {
     setFormData(null);
