@@ -7,7 +7,6 @@ import ExperienceDetailView from './ExperienceDetailView';
 import { supabase } from '../../../../lib/supabaseClient';
 
 const ITEMS_PER_PAGE = 3;
-
 const localSimulationModules = import.meta.glob('../../../../simulations/*.tsx');
 
 const getLocalSimulations = async (): Promise<any[]> => {
@@ -23,7 +22,7 @@ const getLocalSimulations = async (): Promise<any[]> => {
       duree: "5-10 min",
       niveau: "Tous niveaux",
       simulationPath: fileName,
-      image: "/images/simulation-default.jpg", // Image par défaut
+      image: "/images/simulation-default.jpg",
       created_at: new Date().toISOString(),
     };
   });
@@ -68,6 +67,7 @@ export default function ExperienceView() {
       const localIdSet = new Set(localSimulations.map((sim) => sim.id));
       setLocalIds(localIdSet);
 
+      // Utilisateur non connecté
       if (!user) {
         const { data: allExperiences } = await supabase
           .from('vue_experience_details')
@@ -79,6 +79,7 @@ export default function ExperienceView() {
         return;
       }
 
+      // Récupération profil utilisateur
       const { data: profile } = await supabase
         .from('profiles')
         .select('name, role')
@@ -92,22 +93,32 @@ export default function ExperienceView() {
 
       setPrenom(profile.name || '');
 
-      const { data: classeLink } = await supabase
+      // Récupération de la classe de l'élève + code_classe
+      const { data: classeLink, error: classeError } = await supabase
         .from('eleves_classes')
-        .select('classe_id')
+        .select('classe_id, classes(code_classe)')
         .eq('eleve_id', user.id)
         .single();
 
-      const classeId = classeLink?.classe_id;
-      if (!classeId) {
+      if (
+        !classeLink ||
+        classeError ||
+        !classeLink.classes ||
+        !Array.isArray(classeLink.classes) ||
+        classeLink.classes.length === 0 ||
+        !classeLink.classes[0]?.code_classe
+      ) {
         setLoading(false);
         return;
       }
 
+      const codeClasse = classeLink.classes[0].code_classe;
+
+      // ✅ Nouvelle logique : contient la classe dans le tableau
       const { data: classeExperiences } = await supabase
         .from('vue_experience_details')
         .select('*')
-        .eq('classe_id', classeId)
+        .contains('code_classe', [codeClasse])
         .order('created_at', { ascending: false });
 
       setExperiences(classeExperiences || []);

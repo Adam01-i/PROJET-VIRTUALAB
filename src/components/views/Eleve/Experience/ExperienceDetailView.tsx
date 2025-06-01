@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useState, lazy, Suspense } from "react";
 import {
   FlaskRound as Flask,
@@ -7,6 +9,7 @@ import {
   ArrowLeft,
   Book,
   ListChecks,
+  Users,
 } from "lucide-react";
 import type { Experience } from "../../../../types/Experience/experience";
 
@@ -57,7 +60,6 @@ export default function ExperienceDetailView({
 
     try {
       const SimulationComponent = loadSimulationComponent(experience.simulationPath);
-
       return (
         <Suspense fallback={<div className="text-gray-600">Chargement de la simulation...</div>}>
           <SimulationComponent />
@@ -80,19 +82,28 @@ export default function ExperienceDetailView({
 
   const Header = () => (
     <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white rounded-t-md">
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="text-indigo-600 hover:text-indigo-800">
+      <div className="flex items-start gap-3">
+        <button onClick={onBack} className="text-indigo-600 hover:text-indigo-800 mt-1">
           <ArrowLeft size={20} />
         </button>
 
         <div>
           <h2 className="text-lg font-bold text-gray-900">{experience.titre}</h2>
-          <div className="flex items-center gap-4 text-gray-500 text-sm ">
+
+          {/* Infos */}
+          <div className="flex flex-wrap items-center gap-3 text-gray-500 text-sm mt-1">
             <div className="flex items-center gap-1.5">
               <Clock size={14} />
               <span>{experience.duree}</span>
             </div>
-            <span>{experience.niveau}</span>
+            <span className="text-indigo-600 font-semibold">{experience.niveau}</span>
+
+            {experience.code_classe_affichage && (
+              <div className="flex items-center gap-1.5 text-purple-600 font-medium">
+                <Users size={14} />
+                <span>{experience.code_classe_affichage}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

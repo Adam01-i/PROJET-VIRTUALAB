@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../../lib/supabaseClient';
@@ -22,10 +24,9 @@ export default function QuizView() {
     const { data: session } = await supabase.auth.getSession();
     const user = session?.session?.user;
 
-    // 🔓 Mode invité : charger tous les quiz publics
     if (!user) {
       const { data: allQuizzes, error } = await supabase
-        .from('quizzes')
+        .from('vue_quiz_details')
         .select('*, questions(*)')
         .order('created_at', { ascending: false });
 
@@ -39,7 +40,6 @@ export default function QuizView() {
       return;
     }
 
-    // ✅ Utilisateur connecté
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, role')
@@ -65,16 +65,32 @@ export default function QuizView() {
       return;
     }
 
-    // Quiz de la classe
-    const { data: quizzes } = await supabase
-      .from('quizzes')
+    const { data: classe } = await supabase
+      .from('classes')
+      .select('code_classe')
+      .eq('id', classeId)
+      .single();
+
+    const code_classe = classe?.code_classe;
+    if (!code_classe) {
+      setLoading(false);
+      return;
+    }
+
+    const { data: quizzes, error } = await supabase
+      .from('vue_quiz_details')
       .select('*, questions(*)')
-      .eq('classe_id', classeId)
+      .contains('code_classe', [code_classe])
       .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Erreur chargement quiz:", error);
+      setLoading(false);
+      return;
+    }
 
     setQuizList(quizzes || []);
 
-    // Résultats de l'élève
     const { data: results } = await supabase
       .from('quiz_results')
       .select('*')

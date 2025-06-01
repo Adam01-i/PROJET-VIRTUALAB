@@ -96,11 +96,23 @@ export default function Viewer3DView() {
       return;
     }
 
+    const classeData = await supabase
+      .from('classes')
+      .select('code_classe')
+      .eq('id', classeId)
+      .single();
+
+    const code_classe = classeData.data?.code_classe;
+    if (!code_classe) {
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('vue_lab_items_details')
       .select('*')
       .eq('category', category)
-      .eq('classe_id', classeId)
+      .contains('code_classe', [code_classe])
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -111,7 +123,6 @@ export default function Viewer3DView() {
         : setEquipmentList(data || []);
       setSelectedIndex(0);
 
-      // Log de la première sélection automatiquement
       if (data && data[0]) {
         await logActivity(data[0]);
       }
@@ -199,14 +210,14 @@ export default function Viewer3DView() {
                   viewMode === 'molecules' ? (
                     <MoleculeCard
                       key={item.id}
-                      molecule={item as lab_items}
+                      molecule={item}
                       isSelected={selectedIndex === index}
                       onSelect={() => handleSelect(index)}
                     />
                   ) : (
                     <EquipmentCard
                       key={item.id}
-                      equipment={item as lab_items}
+                      equipment={item}
                       isSelected={selectedIndex === index}
                       onSelect={() => handleSelect(index)}
                     />
