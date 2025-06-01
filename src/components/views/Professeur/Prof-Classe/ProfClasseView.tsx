@@ -121,15 +121,16 @@ export default function ProfClasseView() {
     const fetchStats = async () => {
       if (!selectedClasseCode || !selectedClasseNiveau) return;
 
-      // ✅ Count quiz liés à cette classe via la vue (many-to-many)
+      // ✅ Vue avec code_classe[] pour quiz
       const { count: quizCount, error: quizErr } = await supabase
         .from('vue_quiz_details')
         .select('*', { count: 'exact', head: true })
-        .contains('code_classe', [selectedClasseCode]); // ✅ .contains sur array
+        .contains('code_classe', [selectedClasseCode]);
 
       if (quizErr) console.error('Erreur quiz:', quizErr);
       setQuizCount(quizCount || 0);
 
+      // ✅ Vue avec code_classe[] pour simulations
       const { count: expCount, error: expErr } = await supabase
         .from('vue_experience_details')
         .select('*', { count: 'exact', head: true })
@@ -138,10 +139,11 @@ export default function ProfClasseView() {
       if (expErr) console.error('Erreur expériences:', expErr);
       setExperienceCount(expCount || 0);
 
+      // ✅ Vue avec code_classe[] pour lab items
       const { count: labCount, error: labErr } = await supabase
         .from('vue_lab_items_details')
         .select('*', { count: 'exact', head: true })
-        .eq('code_classe', selectedClasseCode);
+        .contains('code_classe', [selectedClasseCode]);
 
       if (labErr) console.error('Erreur lab3D:', labErr);
       setLab3DCount(labCount || 0);
