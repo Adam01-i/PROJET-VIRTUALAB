@@ -1,14 +1,17 @@
+'use client';
+
 import { Brain, Clock, ArrowRight } from 'lucide-react';
-import type { Quiz } from '../../../../types/Quiz/quiz';
+import type { QuizWithClasse } from '../../../../types/Quiz/quiz';
 
 type QuizCardProps = {
-  quiz: Quiz;
+  quiz: QuizWithClasse;
   onStart: (quizId: string) => void;
   scoreInfo?: { score: number; total: number };
 };
 
 export default function QuizCard({ quiz, onStart, scoreInfo }: QuizCardProps) {
   const isCompleted = !!scoreInfo;
+  const hasQuestions = Array.isArray(quiz.questions) && quiz.questions.length > 0;
 
   const getPerformance = () => {
     if (!scoreInfo) return null;
@@ -24,16 +27,18 @@ export default function QuizCard({ quiz, onStart, scoreInfo }: QuizCardProps) {
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition duration-300 group">
       {/* Image */}
       <div className="h-36 overflow-hidden relative">
-        <img 
-          src={quiz.image} 
-          alt={quiz.titre} 
-          className="w-full h-full object-cover transform group-hover:scale-105 transition duration-300" 
+        <img
+          src={quiz.image}
+          alt={quiz.titre}
+          className="w-full h-full object-cover transform group-hover:scale-105 transition duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <div className="absolute bottom-2 left-2">
-          <span className={`px-2.5 py-0.5 text-white text-xs rounded-full shadow-sm ${
-            isCompleted ? 'bg-green-600' : 'bg-yellow-500'
-          }`}>
+          <span
+            className={`px-2.5 py-0.5 text-white text-xs rounded-full shadow-sm ${
+              isCompleted ? 'bg-green-600' : 'bg-yellow-500'
+            }`}
+          >
             {isCompleted ? '✅ Terminé' : '⏳ À faire'}
           </span>
         </div>
@@ -47,7 +52,7 @@ export default function QuizCard({ quiz, onStart, scoreInfo }: QuizCardProps) {
         <div className="flex justify-between text-xs text-gray-500 mb-3">
           <div className="flex items-center gap-1.5">
             <Brain size={14} />
-            <span>{quiz.questions.length} questions</span>
+            <span>{quiz.questions?.length || 0} question{quiz.questions?.length === 1 ? '' : 's'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Clock size={14} />
@@ -56,19 +61,22 @@ export default function QuizCard({ quiz, onStart, scoreInfo }: QuizCardProps) {
         </div>
 
         {scoreInfo && (
-          <>
-            <div className="text-xs text-indigo-600 mt-1">
-              ✅ Score précédent : {scoreInfo.score} / {scoreInfo.total}
-            </div>
-          </>
+          <div className="text-xs text-indigo-600 mt-1">
+            ✅ Score précédent : {scoreInfo.score} / {scoreInfo.total}
+          </div>
         )}
 
         <button
           onClick={() => onStart(quiz.id)}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 mt-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200"
+          disabled={!hasQuestions}
+          className={`w-full mt-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200 ${
+            hasQuestions
+              ? 'bg-purple-600 hover:bg-purple-700 text-white'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
-          <span>Commencer</span>
-          <ArrowRight size={16} />
+          <span>{hasQuestions ? 'Commencer' : 'Aucune question'}</span>
+          {hasQuestions && <ArrowRight size={16} />}
         </button>
       </div>
     </div>

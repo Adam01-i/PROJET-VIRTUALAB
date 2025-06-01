@@ -97,13 +97,6 @@ export default function ExperienceDetailView({
               <span>{experience.duree}</span>
             </div>
             <span className="text-indigo-600 font-semibold">{experience.niveau}</span>
-
-            {experience.code_classe_affichage && (
-              <div className="flex items-center gap-1.5 text-purple-600 font-medium">
-                <Users size={14} />
-                <span>{experience.code_classe_affichage}</span>
-              </div>
-            )}
           </div>
         </div>
       </div>

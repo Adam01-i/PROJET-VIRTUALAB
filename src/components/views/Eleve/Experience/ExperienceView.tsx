@@ -7,6 +7,7 @@ import ExperienceDetailView from './ExperienceDetailView';
 import { supabase } from '../../../../lib/supabaseClient';
 
 const ITEMS_PER_PAGE = 3;
+
 const localSimulationModules = import.meta.glob('../../../../simulations/*.tsx');
 
 const getLocalSimulations = async (): Promise<any[]> => {
@@ -35,7 +36,7 @@ export default function ExperienceView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [prenom, setPrenom] = useState('');
-  const [filtre, setFiltre] = useState<'all' | 'local' | 'supabase'>('all');
+  const [filtre, setFiltre] = useState<'all' | 'supabase'>('all');
 
   const handleStartExperience = async (experienceId: string) => {
     const experience = experiences.find((e) => e.id === experienceId);
@@ -60,6 +61,7 @@ export default function ExperienceView() {
   useEffect(() => {
     const fetchExperiences = async () => {
       setLoading(true);
+
       const { data: session } = await supabase.auth.getSession();
       const user = session?.session?.user;
 
@@ -67,7 +69,6 @@ export default function ExperienceView() {
       const localIdSet = new Set(localSimulations.map((sim) => sim.id));
       setLocalIds(localIdSet);
 
-      // Utilisateur non connecté
       if (!user) {
         const { data: allExperiences } = await supabase
           .from('vue_experience_details')
@@ -79,48 +80,25 @@ export default function ExperienceView() {
         return;
       }
 
-      // Récupération profil utilisateur
       const { data: profile } = await supabase
         .from('profiles')
         .select('name, role')
         .eq('id', user.id)
         .single();
 
-      if (profile?.role !== 'eleve') {
+      if (!profile || profile.role !== 'eleve') {
         setLoading(false);
         return;
       }
 
       setPrenom(profile.name || '');
 
-      // Récupération de la classe de l'élève + code_classe
-      const { data: classeLink, error: classeError } = await supabase
-        .from('eleves_classes')
-        .select('classe_id, classes(code_classe)')
-        .eq('eleve_id', user.id)
-        .single();
-
-      if (
-        !classeLink ||
-        classeError ||
-        !classeLink.classes ||
-        !Array.isArray(classeLink.classes) ||
-        classeLink.classes.length === 0 ||
-        !classeLink.classes[0]?.code_classe
-      ) {
-        setLoading(false);
-        return;
-      }
-
-      const codeClasse = classeLink.classes[0].code_classe;
-
-      // ✅ Nouvelle logique : contient la classe dans le tableau
       const { data: classeExperiences } = await supabase
-        .from('vue_experience_details')
+        .from('vue_experience_eleve')
         .select('*')
-        .contains('code_classe', [codeClasse])
         .order('created_at', { ascending: false });
 
+      // ✅ Ici on n'ajoute PAS les locales
       setExperiences(classeExperiences || []);
       setLoading(false);
     };
@@ -129,7 +107,6 @@ export default function ExperienceView() {
   }, []);
 
   const filteredExperiences = experiences.filter((exp) => {
-    if (filtre === 'local') return localIds.has(exp.id);
     if (filtre === 'supabase') return !localIds.has(exp.id);
     return true;
   });
@@ -190,16 +167,6 @@ export default function ExperienceView() {
             }`}
           >
             Supabase
-          </button>
-          <button
-            onClick={() => setFiltre('local')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
-              filtre === 'local'
-                ? 'bg-purple-600 text-white border-purple-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            Locales
           </button>
         </div>
       )}

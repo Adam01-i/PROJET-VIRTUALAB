@@ -82,10 +82,12 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
           total: quiz.questions.length,
         });
 
-        // ✅ Log dans activity_logs
         await logActivity('quiz', {
           quiz_id: quiz.id,
           titre: quiz.titre,
+          score: progress.score,
+          total: quiz.questions.length,
+          pourcentage: Math.round((progress.score / quiz.questions.length) * 100),
         });
 
         onComplete(progress.score);
@@ -239,7 +241,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
         </div>
       </div>
 
-      {/* Modal Résultat */}
+      {/* Résultat final */}
       {progress.completed && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-indigo-900 rounded-md p-5 w-full max-w-md mx-4">
@@ -254,7 +256,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
             </div>
             <div className="flex gap-4">
               <button
-                onClick={() => onExit()}
+                onClick={onExit}
                 className="bg-purple-600 hover:bg-purple-700 text-white w-full py-2 rounded-md text-sm"
               >
                 Revenir à l'accueil

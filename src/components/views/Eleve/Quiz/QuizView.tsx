@@ -3,15 +3,16 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../../lib/supabaseClient';
-import type { Quiz } from '../../../../types/Quiz/quiz';
 import QuizCard from './QuizCard';
 import QuizSession from './QuizSession';
+import type { QuizQuestion, QuizWithClasse } from '../../../../types/Quiz/quiz';
 
 const ITEMS_PER_PAGE = 3;
 
 export default function QuizView() {
-  const [quizList, setQuizList] = useState<Quiz[]>([]);
-  const [activeQuiz, setActiveQuiz] = useState<string | null>(null);
+  const [quizList, setQuizList] = useState<QuizWithClasse[]>([]);
+  const [questionsMap, setQuestionsMap] = useState<Map<string, QuizQuestion[]>>(new Map());
+  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [prenom, setPrenom] = useState('');
@@ -19,27 +20,32 @@ export default function QuizView() {
   const [cumulativeScore, setCumulativeScore] = useState({ score: 0, total: 0, percentage: 0 });
   const [showOnlyUncompleted, setShowOnlyUncompleted] = useState(false);
 
+  useEffect(() => {
+    refreshData();
+  }, []);
+
   const refreshData = async () => {
     setLoading(true);
+
     const { data: session } = await supabase.auth.getSession();
     const user = session?.session?.user;
 
+    // 🎓 Mode invité
     if (!user) {
-      const { data: allQuizzes, error } = await supabase
+      const { data: publicQuizzes, error } = await supabase
         .from('vue_quiz_details')
-        .select('*, questions(*)')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Erreur chargement quiz publics :", error);
-      } else {
-        setQuizList(allQuizzes || []);
-      }
+      if (error) return console.error("Erreur quiz public :", error);
 
+      setQuizList(publicQuizzes || []);
+      await fetchQuestions(publicQuizzes || []);
       setLoading(false);
       return;
     }
 
+    // 👤 Profil
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, role')
@@ -60,10 +66,7 @@ export default function QuizView() {
       .single();
 
     const classeId = ec?.classe_id;
-    if (!classeId) {
-      setLoading(false);
-      return;
-    }
+    if (!classeId) return setLoading(false);
 
     const { data: classe } = await supabase
       .from('classes')
@@ -72,25 +75,20 @@ export default function QuizView() {
       .single();
 
     const code_classe = classe?.code_classe;
-    if (!code_classe) {
-      setLoading(false);
-      return;
-    }
+    if (!code_classe) return setLoading(false);
 
     const { data: quizzes, error } = await supabase
       .from('vue_quiz_details')
-      .select('*, questions(*)')
+      .select('*')
       .contains('code_classe', [code_classe])
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("Erreur chargement quiz:", error);
-      setLoading(false);
-      return;
-    }
+    if (error) return console.error("Erreur quiz élève :", error);
 
     setQuizList(quizzes || []);
+    await fetchQuestions(quizzes || []);
 
+    // Résultats élève
     const { data: results } = await supabase
       .from('quiz_results')
       .select('*')
@@ -111,7 +109,6 @@ export default function QuizView() {
     });
 
     setResultsMap(resultMap);
-
     setCumulativeScore({
       score: totalScore,
       total: totalPossible,
@@ -121,18 +118,37 @@ export default function QuizView() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    refreshData();
-  }, []);
+  const fetchQuestions = async (quizzes: QuizWithClasse[]) => {
+    const quizIds = quizzes.map(q => q.id);
+    const { data, error } = await supabase
+      .from('questions')
+      .select('*')
+      .in('quiz_id', quizIds);
 
-  const handleStartQuiz = (quizId: string) => setActiveQuiz(quizId);
+    if (error) return console.error("Erreur chargement questions :", error);
+
+    const grouped = new Map<string, QuizQuestion[]>();
+    for (const q of data || []) {
+      if (!grouped.has(q.quiz_id)) grouped.set(q.quiz_id, []);
+      grouped.get(q.quiz_id)?.push(q);
+    }
+
+    setQuestionsMap(grouped);
+  };
+
+  const handleStartQuiz = (quizId: string) => setActiveQuizId(quizId);
 
   const handleCompleteQuiz = async () => {
-    setActiveQuiz(null);
+    setActiveQuizId(null);
     await refreshData();
   };
 
-  const currentQuiz = activeQuiz ? quizList.find(q => q.id === activeQuiz) : null;
+  const currentQuiz = activeQuizId
+    ? {
+        ...(quizList.find(q => q.id === activeQuizId)!),
+        questions: questionsMap.get(activeQuizId) || [],
+      }
+    : null;
 
   const filteredQuizList = showOnlyUncompleted
     ? quizList.filter((quiz) => !resultsMap.has(quiz.id))
@@ -143,9 +159,7 @@ export default function QuizView() {
   const currentPageData = filteredQuizList.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   if (currentQuiz) {
@@ -153,7 +167,7 @@ export default function QuizView() {
       <QuizSession
         quiz={currentQuiz}
         onComplete={handleCompleteQuiz}
-        onExit={() => setActiveQuiz(null)}
+        onExit={() => setActiveQuizId(null)}
       />
     );
   }
@@ -192,9 +206,9 @@ export default function QuizView() {
             {currentPageData.map((quiz) => (
               <QuizCard
                 key={quiz.id}
-                quiz={quiz}
+                quiz={{ ...quiz, questions: questionsMap.get(quiz.id) || [] }}
                 onStart={handleStartQuiz}
-                scoreInfo={resultsMap.get(quiz.id) || undefined}
+                scoreInfo={resultsMap.get(quiz.id)}
               />
             ))}
           </div>
