@@ -1,11 +1,13 @@
+'use client';
+
 import { Brain } from 'lucide-react';
-import type { Quiz } from '../../../../types/Quiz/quiz';
+import type { QuizWithClasse } from '../../../../types/Quiz/quiz';
 
 type ProfQuizCardProps = {
-  quiz: Quiz;
-  classeNoms?: string[]; // 🔄 tableau pour plusieurs classes
-  classeAffichage?: string; // chaîne lisible "3e B, 4e A"
-  onEdit: (quiz: Quiz) => void;
+  quiz: QuizWithClasse;
+  classeNoms?: string[]; // tableau de noms de classes (ex: ["4e A", "3e B"])
+  classeAffichage?: string; // affichage lisible (optionnel si déjà sous forme de tags)
+  onEdit: (quiz: QuizWithClasse) => void;
   onDelete: (id: string) => void;
 };
 
@@ -25,7 +27,10 @@ export default function ProfQuizCard({
         />
         <div className="absolute bottom-3 left-3 flex gap-2 flex-wrap">
           {classeNoms.map((nom, idx) => (
-            <span key={idx} className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded">
+            <span
+              key={idx}
+              className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded shadow-sm"
+            >
               📘 {nom}
             </span>
           ))}
@@ -45,20 +50,14 @@ export default function ProfQuizCard({
 
         <div className="flex gap-2 mt-2">
           <button
-            onClick={() =>
-              onEdit({
-                ...quiz,
-                questions: quiz.questions ?? [],
-              })
-            }
-            className="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-900"
+            onClick={() => onEdit(quiz)}
+            className="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-800 transition"
           >
             ✏️ Modifier
           </button>
-
           <button
             onClick={() => onDelete(quiz.id)}
-            className="flex-1 bg-red-600 text-white text-xs py-1.5 rounded hover:bg-red-700"
+            className="flex-1 bg-red-600 text-white text-xs py-1.5 rounded hover:bg-red-700 transition"
           >
             🗑 Supprimer
           </button>

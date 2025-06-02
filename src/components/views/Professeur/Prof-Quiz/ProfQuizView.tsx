@@ -5,12 +5,12 @@ import { supabase } from '../../../../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import ProfQuizCard from './ProfQuizCard';
-import type { QuizQuestion } from '../../../../types/Quiz/quiz';
+import type { QuizQuestion, QuizWithClasse } from '../../../../types/Quiz/quiz';
 
 const DUREE_OPTIONS = ["10 min", "20 min", "30 min", "45 min"];
 
 export default function ProfQuizView() {
-  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizWithClasse[]>([]);
   const [formData, setFormData] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([]);
@@ -38,7 +38,7 @@ export default function ProfQuizView() {
 
     let query = supabase
       .from('vue_quiz_details')
-      .select('*, questions(*)')
+      .select('*')
       .eq('auteur_id', userId)
       .order('created_at', { ascending: false });
 
@@ -47,15 +47,31 @@ export default function ProfQuizView() {
     }
 
     const { data, error } = await query;
-    if (error) toast.error('Erreur chargement quiz');
-    else {
-      const normalized = data.map((q) => ({
-        ...q,
-        id: q.quiz_id || q.id,
-        questions: q.questions ?? [],
-      }));
-      setQuizzes(normalized);
+    if (error || !data) {
+      toast.error('Erreur chargement quiz');
+      return;
     }
+
+    const quizIds = data.map((q) => q.quiz_id);
+
+    const { data: questionsData } = await supabase
+      .from('questions')
+      .select('*')
+      .in('quiz_id', quizIds);
+
+    const groupedQuestions = questionsData?.reduce((acc, q) => {
+      if (!acc[q.quiz_id]) acc[q.quiz_id] = [];
+      acc[q.quiz_id].push(q);
+      return acc;
+    }, {} as Record<string, QuizQuestion[]>) || {};
+
+    const normalized = data.map((q) => ({
+      ...q,
+      id: q.quiz_id,
+      questions: groupedQuestions[q.quiz_id] ?? [],
+    }));
+
+    setQuizzes(normalized);
   };
 
   const handleSave = async () => {
@@ -205,202 +221,197 @@ export default function ProfQuizView() {
     setFormData({ ...formData, questions: updated });
   };
 
- return (
-  <div className="p-6 max-w-7xl mx-auto space-y-4">
-    <div className="flex justify-between items-center">
-      <h1 className="text-3xl font-bold text-indigo-800">Mes Quiz</h1>
-      <button
-        onClick={() => {
-          setFormData({
-            id: '',
-            titre: '',
-            description: '',
-            duree: DUREE_OPTIONS[0],
-            image: '',
-            questions: [],
-            selectedClasseIds: [],
-          });
-          setIsEditing(true);
-        }}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow text-sm"
-      >
-        ➕ Nouveau Quiz
-      </button>
-    </div>
-
-    {/* 🎯 Filtrage par classe */}
-    <div>
-      <label className="font-semibold text-gray-600 mr-2">Classe :</label>
-      <select
-        className="border px-3 py-1 rounded text-sm bg-white text-indigo-600"
-        onChange={(e) => setClasseFilter(e.target.value)}
-        value={classeFilter}
-      >
-        <option value="all">Toutes</option>
-        {classes.map((c) => (
-          <option key={c.code_classe} value={c.code_classe}>{c.code_classe}</option>
-        ))}
-      </select>
-      <span className="ml-3 text-sm text-gray-500 font-normal">
-        | Total : {quizzes.length} quiz | {quizzes.reduce((acc, q) => acc + (q.questions?.length || 0), 0)} questions
-      </span>
-    </div>
-
-    {/* 🔧 Liste et Formulaire */}
-    <div className="grid md:grid-cols-2 gap-6">
-      <div className="space-y-4">
-        {quizzes.length === 0 ? (
-          <p className="text-gray-500 italic">Aucun quiz trouvé.</p>
-        ) : (
-          quizzes.map((quiz) => (
-            <ProfQuizCard
-              key={quiz.id}
-              quiz={quiz}
-              classeNoms={quiz.code_classe || []}
-              classeAffichage={quiz.code_classe_affichage}
-              onEdit={async (quiz) => {
-                const { data: classeLinks } = await supabase
-                  .from("classes_quizzes")
-                  .select("classe_id")
-                  .eq("quiz_id", quiz.id);
-
-                setFormData({
-                  ...quiz,
-                  selectedClasseIds: classeLinks?.map((l) => l.classe_id) || [],
-                });
-                setIsEditing(true);
-              }}
-              onDelete={handleDelete}
-            />
-          ))
-        )}
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-indigo-800">Mes Quiz</h1>
+        <button
+          onClick={() => {
+            setFormData({
+              id: '',
+              titre: '',
+              description: '',
+              duree: DUREE_OPTIONS[0],
+              image: '',
+              questions: [],
+              selectedClasseIds: [],
+            });
+            setIsEditing(true);
+          }}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow text-sm"
+        >
+          ➕ Nouveau Quiz
+        </button>
       </div>
 
-      {/* ✏️ Formulaire d'édition */}
-      {isEditing && formData && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="bg-white border p-4 rounded shadow space-y-4 overflow-hidden"
-          style={{ maxHeight: "75vh", overflowY: "auto" }}
+      <div>
+        <label className="font-semibold text-gray-600 mr-2">Classe :</label>
+        <select
+          className="border px-3 py-1 rounded text-sm bg-white text-indigo-600"
+          onChange={(e) => setClasseFilter(e.target.value)}
+          value={classeFilter}
         >
-          <h3 className="text-lg font-semibold text-indigo-700">
-            {formData.id ? "Modifier" : "Nouveau"} Quiz
-          </h3>
+          <option value="all">Toutes</option>
+          {classes.map((c) => (
+            <option key={c.code_classe} value={c.code_classe}>{c.code_classe}</option>
+          ))}
+        </select>
+        <span className="ml-3 text-sm text-gray-500 font-normal">
+          | Total : {quizzes.length} quiz | {quizzes.reduce((acc, q) => acc + (q.questions?.length || 0), 0)} questions
+        </span>
+      </div>
 
-          <input
-            required
-            placeholder="Titre"
-            value={formData.titre}
-            onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-            className="w-full border p-2 rounded"
-          />
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          {quizzes.length === 0 ? (
+            <p className="text-gray-500 italic">Aucun quiz trouvé.</p>
+          ) : (
+            quizzes.map((quiz) => (
+              <ProfQuizCard
+                key={quiz.id}
+                quiz={quiz}
+                classeNoms={quiz.code_classe || []}
+                classeAffichage={quiz.code_classe_affichage}
+                onEdit={async (quiz) => {
+                  const { data: classeLinks } = await supabase
+                    .from("classes_quizzes")
+                    .select("classe_id")
+                    .eq("quiz_id", quiz.id);
 
-          <textarea
-            rows={3}
-            required
-            placeholder="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full border p-2 rounded"
-          />
+                  setFormData({
+                    ...quiz,
+                    selectedClasseIds: classeLinks?.map((l) => l.classe_id) || [],
+                  });
+                  setIsEditing(true);
+                }}
+                onDelete={handleDelete}
+              />
+            ))
+          )}
+        </div>
 
-          <select
-            value={formData.duree}
-            onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
-            className="w-full border p-2 rounded"
+        {isEditing && formData && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="bg-white border p-4 rounded shadow space-y-4 overflow-hidden"
+            style={{ maxHeight: "75vh", overflowY: "auto" }}
           >
-            {DUREE_OPTIONS.map((d) => <option key={d}>{d}</option>)}
-          </select>
+            <h3 className="text-lg font-semibold text-indigo-700">
+              {formData.id ? "Modifier" : "Nouveau"} Quiz
+            </h3>
 
-          {/* 📚 Sélection des classes */}
-          <div className="space-y-1">
-            <p className="text-sm font-semibold">Classes assignées :</p>
-            {classes.map((cl) => (
-              <label key={cl.id} className="block text-sm">
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={formData.selectedClasseIds?.includes(cl.id)}
-                  onChange={(e) => {
-                    const updated = e.target.checked
-                      ? [...formData.selectedClasseIds, cl.id]
-                      : formData.selectedClasseIds.filter((id: string) => id !== cl.id);
-                    setFormData({ ...formData, selectedClasseIds: updated });
-                  }}
-                />
-                {cl.code_classe}
-              </label>
-            ))}
-          </div>
+            <input
+              required
+              placeholder="Titre"
+              value={formData.titre}
+              onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+              className="w-full border p-2 rounded"
+            />
 
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
-          {formData.image && <img src={formData.image} className="rounded border w-full mt-2" alt="quiz cover" />}
+            <textarea
+              rows={3}
+              required
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full border p-2 rounded"
+            />
 
-          {/* 🧠 Questions */}
-          <div className="space-y-4">
-            <h4 className="font-semibold text-gray-700">Questions</h4>
-            {(formData.questions || []).map((q: QuizQuestion, idx: number) => (
-              <div key={q.id || idx} className="bg-gray-50 p-3 rounded-md border space-y-2 text-sm">
-                <p className="font-medium text-gray-600">Question {idx + 1}</p>
-                <input
-                  value={q.question}
-                  onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Intitulé de la question"
-                />
-                {q.options.map((opt, optIdx) => (
-                  <input
-                    key={optIdx}
-                    value={opt}
-                    onChange={(e) => handleOptionChange(idx, optIdx, e.target.value)}
-                    className="w-full p-2 border rounded"
-                    placeholder={`Option ${optIdx + 1}`}
-                  />
-                ))}
-                <select
-                  value={String(q.correctAnswer)}
-                  onChange={(e) => handleQuestionChange(idx, 'correctAnswer', parseInt(e.target.value))}
-                  className="w-full p-2 border rounded"
-                >
-                  {q.options.map((_, i) => (
-                    <option key={i} value={i}>Bonne réponse : Option {i + 1}</option>
-                  ))}
-                </select>
-                <textarea
-                  value={q.explanation}
-                  onChange={(e) => handleQuestionChange(idx, 'explanation', e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Explication (facultatif)"
-                  rows={2}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeQuestion(idx)}
-                  className="text-red-600 text-xs hover:underline"
-                >
-                  Supprimer
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addQuestion}
-              className="text-indigo-700 text-sm hover:underline"
+            <select
+              value={formData.duree}
+              onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
+              className="w-full border p-2 rounded"
             >
-              ➕ Ajouter une question
-            </button>
-          </div>
+              {DUREE_OPTIONS.map((d) => <option key={d}>{d}</option>)}
+            </select>
 
-          <div className="flex justify-end gap-2">
-            <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">💾 Enregistrer</button>
-            <button type="button" onClick={resetForm} className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuler</button>
-          </div>
-        </form>
-      )}
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Classes assignées :</p>
+              {classes.map((cl) => (
+                <label key={cl.id} className="block text-sm">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={formData.selectedClasseIds?.includes(cl.id)}
+                    onChange={(e) => {
+                      const updated = e.target.checked
+                        ? [...formData.selectedClasseIds, cl.id]
+                        : formData.selectedClasseIds.filter((id: string) => id !== cl.id);
+                      setFormData({ ...formData, selectedClasseIds: updated });
+                    }}
+                  />
+                  {cl.code_classe}
+                </label>
+              ))}
+            </div>
+
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
+            {formData.image && <img src={formData.image} className="rounded border w-full mt-2" alt="quiz cover" />}
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-700">Questions</h4>
+              {(formData.questions || []).map((q: QuizQuestion, idx: number) => (
+                <div key={q.id || idx} className="bg-gray-50 p-3 rounded-md border space-y-2 text-sm">
+                  <p className="font-medium text-gray-600">Question {idx + 1}</p>
+                  <input
+                    value={q.question}
+                    onChange={(e) => handleQuestionChange(idx, 'question', e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Intitulé de la question"
+                  />
+                  {q.options.map((opt, optIdx) => (
+                    <input
+                      key={optIdx}
+                      value={opt}
+                      onChange={(e) => handleOptionChange(idx, optIdx, e.target.value)}
+                      className="w-full p-2 border rounded"
+                      placeholder={`Option ${optIdx + 1}`}
+                    />
+                  ))}
+                  <select
+                    value={String(q.correctAnswer)}
+                    onChange={(e) => handleQuestionChange(idx, 'correctAnswer', parseInt(e.target.value))}
+                    className="w-full p-2 border rounded"
+                  >
+                    {q.options.map((_, i) => (
+                      <option key={i} value={i}>Bonne réponse : Option {i + 1}</option>
+                    ))}
+                  </select>
+                  <textarea
+                    value={q.explanation}
+                    onChange={(e) => handleQuestionChange(idx, 'explanation', e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Explication (facultatif)"
+                    rows={2}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeQuestion(idx)}
+                    className="text-red-600 text-xs hover:underline"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addQuestion}
+                className="text-indigo-700 text-sm hover:underline"
+              >
+                ➕ Ajouter une question
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">💾 Enregistrer</button>
+              <button type="button" onClick={resetForm} className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Annuler</button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 }

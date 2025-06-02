@@ -20,7 +20,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     showExplanation: false,
   });
 
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [timeLeft, setTimeLeft] = useState(600);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,16 +53,22 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     }));
   };
 
-  const logActivity = async (type: 'quiz', meta: any = {}) => {
+  const logActivity = async () => {
     const { data: session } = await supabase.auth.getSession();
     const userId = session?.session?.user?.id;
     if (!userId) return;
 
     await supabase.from('activity_logs').insert({
       user_id: userId,
-      type,
+      type: 'quiz',
       duree: 600 - timeLeft,
-      meta,
+      meta: {
+        quiz_id: quiz.id,
+        titre: quiz.titre,
+        score: progress.score,
+        total: quiz.questions.length,
+        pourcentage: Math.round((progress.score / quiz.questions.length) * 100),
+      },
     });
   };
 
@@ -77,19 +83,12 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
         await supabase.from('quiz_results').insert({
           eleve_id: user.id,
-          quiz_id: quiz.quiz_id, // 👈 utilisez bien quiz_id ici
+          quiz_id: quiz.id,
           score: progress.score,
           total: quiz.questions.length,
         });
 
-        await logActivity('quiz', {
-          quiz_id: quiz.quiz_id,
-          titre: quiz.titre,
-          score: progress.score,
-          total: quiz.questions.length,
-          pourcentage: Math.round((progress.score / quiz.questions.length) * 100),
-        });
-
+        await logActivity();
         onComplete(progress.score);
       };
 
@@ -111,13 +110,9 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
   return (
     <div className="max-w-[700px] mx-auto bg-white rounded-md border border-gray-200 shadow-lg my-20">
-      {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-t-md">
         <div className="flex items-center justify-between">
-          <button
-            onClick={onExit}
-            className="flex items-center gap-2 text-white hover:text-gray-200 text-sm"
-          >
+          <button onClick={onExit} className="flex items-center gap-2 text-white text-sm">
             <ArrowLeft size={16} />
             <span>Quitter</span>
           </button>
@@ -141,7 +136,6 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
         </div>
       </div>
 
-      {/* Question */}
       <div className="p-5 bg-white rounded-b-md">
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -152,11 +146,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
         {currentQuestion.image && (
           <div className="mb-6 rounded-lg overflow-hidden shadow-md">
-            <img
-              src={currentQuestion.image}
-              alt="Illustration"
-              className="w-full h-52 object-cover rounded-md"
-            />
+            <img src={currentQuestion.image} alt="Illustration" className="w-full h-52 object-cover rounded-md" />
           </div>
         )}
 
@@ -169,11 +159,8 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
             let stateClasses = 'bg-white/10 hover:bg-white/20 text-gray-600 border-gray-300';
 
             if (hasAnswered) {
-              if (isCorrect) {
-                stateClasses = 'bg-green-500/20 text-white border-green-500';
-              } else if (isSelected) {
-                stateClasses = 'bg-red-500/20 text-white border-red-500';
-              }
+              if (isCorrect) stateClasses = 'bg-green-500/20 text-white border-green-500';
+              else if (isSelected) stateClasses = 'bg-red-500/20 text-white border-red-500';
             }
 
             return (
@@ -211,17 +198,18 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
         )}
       </div>
 
-      {/* Footer */}
       <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-b-md">
         <div className="flex justify-between">
           <button
-            onClick={() => setProgress(prev => ({
-              ...prev,
-              currentQuestion: prev.currentQuestion - 1,
-              showExplanation: false,
-            }))}
+            onClick={() =>
+              setProgress(prev => ({
+                ...prev,
+                currentQuestion: prev.currentQuestion - 1,
+                showExplanation: false,
+              }))
+            }
             disabled={progress.currentQuestion === 0}
-            className="flex items-center gap-2 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 text-white text-sm disabled:opacity-50"
           >
             <ArrowLeft size={16} />
             <span>Précédente</span>
@@ -232,16 +220,13 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
               onClick={handleNext}
               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2"
             >
-              <span>
-                {progress.currentQuestion === quiz.questions.length - 1 ? 'Terminer' : 'Suivante'}
-              </span>
+              <span>{progress.currentQuestion === quiz.questions.length - 1 ? 'Terminer' : 'Suivante'}</span>
               <ArrowRight size={16} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Résultat final */}
       {progress.completed && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-indigo-900 rounded-md p-5 w-full max-w-md mx-4">
@@ -249,9 +234,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
               <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Award size={24} className="text-purple-500" />
               </div>
-              <h3 className="text-2xl text-white font-semibold mb-2">
-                Bien joué ! 🎉
-              </h3>
+              <h3 className="text-2xl text-white font-semibold mb-2">Bien joué ! 🎉</h3>
               <p className="text-white">
                 Ton score final est de {progress.score} / {quiz.questions.length}
               </p>

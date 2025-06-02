@@ -12,23 +12,29 @@ export type Quiz = {
   titre: string;
   description: string;
   duree: string;
-  image: string; 
+  image: string;
   questions: QuizQuestion[];
   classe_id: string;
-  auteur_id: string; 
+  auteur_id: string;
   created_at?: string;
 };
 
-  export type QuizProgress = {
-    currentQuestion: number;
-    answers: number[];
-    score: number;
-    completed: boolean;
-    showExplanation: boolean;
-  };
+export type QuizProgress = {
+  currentQuestion: number;
+  answers: number[];
+  score: number;
+  completed: boolean;
+  showExplanation: boolean;
+};
 
+/**
+ * ⚠️ Adapté depuis la vue `vue_quiz_details` :
+ * - `quiz_id` est renommé dynamiquement en `id`
+ * - inclut aussi les `questions`
+ * - `code_classe` est un tableau de strings
+ */
 export type QuizWithClasse = {
-  quiz_id: string;
+  id: string; // ← IMPORTANT pour compatibilité avec composants
   titre: string;
   description: string;
   duree: string;

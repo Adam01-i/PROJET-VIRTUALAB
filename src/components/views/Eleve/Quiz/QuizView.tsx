@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../../lib/supabaseClient';
-import type { QuizQuestion, QuizWithClasse } from '../../../../types/Quiz/quiz';
+import type { QuizWithClasse, QuizQuestion } from '../../../../types/Quiz/quiz';
 import QuizCard from './QuizCard';
 import QuizSession from './QuizSession';
 
@@ -30,10 +30,14 @@ export default function QuizView() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Erreur chargement quiz publics :", error);
-      } else {
-        setQuizList(allQuizzes || []);
+      if (error) console.error("Erreur chargement quiz publics :", error);
+      else {
+        const publicQuizzes = (allQuizzes || []).map(q => ({
+          ...q,
+          id: q.quiz_id,
+          questions: [],
+        }));
+        setQuizList(publicQuizzes);
       }
 
       setLoading(false);
@@ -89,7 +93,7 @@ export default function QuizView() {
       return;
     }
 
-    const quizIds = quizzes?.map((q) => q.quiz_id) || [];
+    const quizIds = quizzes?.map(q => q.quiz_id) || [];
 
     const { data: questions, error: questionError } = await supabase
       .from('questions')
@@ -102,7 +106,8 @@ export default function QuizView() {
 
     const quizzesWithQuestions = (quizzes || []).map((quiz) => ({
       ...quiz,
-      questions: (questions || []).filter((q) => q.quiz_id === quiz.quiz_id),
+      id: quiz.quiz_id,
+      questions: (questions || []).filter(q => q.quiz_id === quiz.quiz_id) as QuizQuestion[],
     }));
 
     setQuizList(quizzesWithQuestions);
@@ -127,7 +132,6 @@ export default function QuizView() {
     });
 
     setResultsMap(resultMap);
-
     setCumulativeScore({
       score: totalScore,
       total: totalPossible,
@@ -150,10 +154,10 @@ export default function QuizView() {
     await refreshData();
   };
 
-  const currentQuiz = activeQuizId ? quizList.find(q => q.quiz_id === activeQuizId) : null;
+  const currentQuiz = activeQuizId ? quizList.find(q => q.id === activeQuizId) : null;
 
   const filteredQuizList = showOnlyUncompleted
-    ? quizList.filter((quiz) => !resultsMap.has(quiz.quiz_id))
+    ? quizList.filter((quiz) => !resultsMap.has(quiz.id))
     : quizList;
 
   const totalPages = Math.ceil(filteredQuizList.length / ITEMS_PER_PAGE);
@@ -173,7 +177,6 @@ export default function QuizView() {
         onComplete={handleCompleteQuiz}
         onExit={() => setActiveQuizId(null)}
       />
-
     );
   }
 
@@ -210,10 +213,10 @@ export default function QuizView() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentPageData.map((quiz) => (
               <QuizCard
-                key={quiz.quiz_id}
+                key={quiz.id}
                 quiz={quiz}
                 onStart={handleStartQuiz}
-                scoreInfo={resultsMap.get(quiz.quiz_id)}
+                scoreInfo={resultsMap.get(quiz.id)}
               />
             ))}
           </div>
@@ -234,8 +237,8 @@ export default function QuizView() {
                   key={pageNum}
                   onClick={() => goToPage(pageNum)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
                     }`}
                 >
                   {pageNum}
