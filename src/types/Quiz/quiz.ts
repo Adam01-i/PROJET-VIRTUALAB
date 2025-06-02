@@ -27,7 +27,15 @@ export type Quiz = {
     showExplanation: boolean;
   };
 
-  export type QuizWithClasse = Quiz & {
-  code_classe?: string[];               // tableau de codes classe
-  code_classe_affichage?: string;       // affichage lisible pour les tags ou le tri
+export type QuizWithClasse = {
+  quiz_id: string;
+  titre: string;
+  description: string;
+  duree: string;
+  image: string;
+  auteur_id: string;
+  created_at?: string;
+  code_classe?: string[];
+  code_classe_affichage?: string;
+  questions: QuizQuestion[];
 };

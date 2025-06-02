@@ -67,7 +67,7 @@ export default function QuizCard({ quiz, onStart, scoreInfo }: QuizCardProps) {
         )}
 
         <button
-          onClick={() => onStart(quiz.id)}
+          onClick={() => onStart(quiz.quiz_id)}
           disabled={!hasQuestions}
           className={`w-full mt-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200 ${
             hasQuestions

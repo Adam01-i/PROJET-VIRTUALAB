@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Check, X, HelpCircle, Award } from 'lucide-react';
-import type { Quiz, QuizProgress } from '../../../../types/Quiz/quiz';
+import type { QuizProgress, QuizWithClasse } from '../../../../types/Quiz/quiz';
 import { supabase } from '../../../../lib/supabaseClient';
 
 type QuizSessionProps = {
-  quiz: Quiz;
+  quiz: QuizWithClasse;
   onComplete: (score: number) => void;
   onExit: () => void;
 };
@@ -20,7 +20,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     showExplanation: false,
   });
 
-  const [timeLeft, setTimeLeft] = useState(600); // 10 min
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -77,13 +77,13 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
         await supabase.from('quiz_results').insert({
           eleve_id: user.id,
-          quiz_id: quiz.id,
+          quiz_id: quiz.quiz_id, // 👈 utilisez bien quiz_id ici
           score: progress.score,
           total: quiz.questions.length,
         });
 
         await logActivity('quiz', {
-          quiz_id: quiz.id,
+          quiz_id: quiz.quiz_id,
           titre: quiz.titre,
           score: progress.score,
           total: quiz.questions.length,
@@ -252,7 +252,9 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
               <h3 className="text-2xl text-white font-semibold mb-2">
                 Bien joué ! 🎉
               </h3>
-              <p className="text-white">Ton score final est de {progress.score} / {quiz.questions.length}</p>
+              <p className="text-white">
+                Ton score final est de {progress.score} / {quiz.questions.length}
+              </p>
             </div>
             <div className="flex gap-4">
               <button
