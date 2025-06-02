@@ -6,7 +6,7 @@ import RedirectMe from './components/views/Auth/RedirectMe';
 import ForgotPassword from './components/views/Auth/ForgotPassword';
 import ResetPassword from './components/views/Auth/ResetPassword';
 import ChangePassword from './components/views/Auth/ChangePassword';
-import UserAccount from './components/views/Account/UserAccount';
+import UserAccount from './components/views/Auth/UserAccount';
 import RoleGuard from './components/views/Auth/RoleGuard';
 
 import EleveLayout from './components/layouts/EleveLayout';
@@ -16,14 +16,14 @@ import QuizView from './components/views/Eleve/Quiz/QuizView';
 import Viewer3DView from './components/views/Eleve/Viewer3D/Viewer3DView';
 
 import ProfesseurLayout from './components/layouts/ProfesseurLayout';
-import DashboardProfesseur from './components/views/Professeur/Dashboard/ProfesseurDashboard';
+import DashboardProfesseur from './components/views/Professeur/Prof-Dashboard/ProfesseurDashboard';
 import ProfClasseView from './components/views/Professeur/Prof-Classe/ProfClasseView';
 import ProfExpView from './components/views/Professeur/Prof-Exp/ProfExpView';
 import ProfQuizView from './components/views/Professeur/Prof-Quiz/ProfQuizView';
 import Prof3DView from './components/views/Professeur/Prof-3D/Prof3DView';
 
 import AdminLayout from './components/layouts/AdminLayout';
-import AdminDashboard from './components/views/Admin/Dashboard/AdminDashboard';
+import AdminDashboard from './components/views/Admin/Admin Dashboard/AdminDashboard';
 import AdminUser from './components/views/Admin/Gestion User/AdminUser';
 import AdminClasse from './components/views/Admin/Gestion Classe/AdminClasse';
 
