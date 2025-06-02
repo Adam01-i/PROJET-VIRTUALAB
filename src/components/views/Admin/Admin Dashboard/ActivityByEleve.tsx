@@ -17,7 +17,7 @@ type ActivityLog = {
   date: string;
   simulation: number;
   quiz: number;
-  object3D: number;
+  objet3d: number;
 };
 
 type Profile = {
@@ -47,16 +47,18 @@ export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
 
       for (const eleve of eleves) {
         if (filters.eleveId !== 'tous' && eleve.id !== filters.eleveId) continue;
-        grouped[eleve.name] = { date: eleve.name, simulation: 0, quiz: 0, object3D: 0 };
+        grouped[eleve.name] = { date: eleve.name, simulation: 0, quiz: 0, objet3d: 0 };
       }
 
       for (const log of relevantLogs) {
         const eleve = eleves.find((e) => e.id === log.user_id);
         if (!eleve || (filters.eleveId !== 'tous' && eleve.id !== filters.eleveId)) continue;
         const row = grouped[eleve.name];
-        if (row && ['simulation', 'quiz', 'object3D'].includes(log.type)) {
-          row[log.type as keyof ActivityLog]++;
-        }
+        if (!row) continue;
+        if (log.type === 'simulation') row.simulation++;
+        else if (log.type === 'quiz') row.quiz++;
+        else if (log.type === 'objet3d') row.objet3d++;
+
       }
 
       setActivityByEleve(Object.values(grouped));
@@ -66,10 +68,9 @@ export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
   }, [filters, eleves]);
 
   const buttonClass = (active: boolean) =>
-    `px-3 py-1 rounded-full border text-sm ${
-      active
-        ? 'bg-indigo-600 text-white border-indigo-600'
-        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+    `px-3 py-1 rounded-full border text-sm ${active
+      ? 'bg-indigo-600 text-white border-indigo-600'
+      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
     }`;
 
   return (
@@ -107,7 +108,7 @@ export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
           <Legend />
           <Bar dataKey="simulation" stackId="b" fill="#6366F1" name="Simulations" />
           <Bar dataKey="quiz" stackId="b" fill="#10B981" name="Quiz" />
-          <Bar dataKey="object3D" stackId="b" fill="#FBBF24" name="Objets 3D" />
+          <Bar dataKey="objet3d" stackId="b" fill="#FBBF24" name="Objets 3D" />
         </BarChart>
       </ResponsiveContainer>
     </div>

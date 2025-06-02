@@ -36,7 +36,7 @@ export default function Viewer3DView() {
 
     await supabase.from('activity_logs').insert({
       user_id: user.id,
-      type: 'simulation',
+      type: 'objet3d',
       meta: {
         lab_item_id: item.id,
         nom: item.nom,
@@ -159,22 +159,20 @@ export default function Viewer3DView() {
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('molecules')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
-              viewMode === 'molecules'
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${viewMode === 'molecules'
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <Flask size={18} />
             <span>Molécules</span>
           </button>
           <button
             onClick={() => setViewMode('equipment')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
-              viewMode === 'equipment'
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${viewMode === 'equipment'
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <Tool size={18} />
             <span>Matériel</span>

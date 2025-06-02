@@ -180,7 +180,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
             <option value="">Sélectionner</option>
             {professeurs.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name} {p.surname}
+               {p.surname} {p.name} 
               </option>
             ))}
           </select>
@@ -200,7 +200,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
           <ul className="space-y-1 max-h-40 overflow-y-auto text-sm">
             {importedEleves.map((e, idx) => (
               <li key={idx} className="flex justify-between border-b py-1">
-                <span>{e.name} {e.surname}</span>
+                <span>{e.surname} {e.name} </span>
                 <span className="text-gray-500">{e.email}</span>
               </li>
             ))}

@@ -55,11 +55,14 @@ export default function Prof3DView() {
 
   const fetchClasses = async () => {
     const { data, error } = await supabase
-      .from('classes')
-      .select('id, code_classe')
-      .order('code_classe', { ascending: true });
+      .from('mes_classes')
+      .select('id, code_classe');
+
     if (!error) setClassesList(data || []);
+    else toast.error("Erreur de chargement des classes du professeur");
   };
+
+
 
   const fetchItems = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -152,6 +155,19 @@ export default function Prof3DView() {
 
       if (relError) throw relError;
 
+      // ✅ Log activité
+      await supabase.from('activity_logs').insert({
+        user_id: userId,
+        type: 'objet3d',
+        duree: null,
+        meta: {
+          action: isEdit ? 'modification_labitem' : 'ajout_labitem',
+          item_id: itemId,
+          nom: itemData.nom,
+          category: itemData.category,
+        },
+      });
+
       setIsEditing(false);
       setFormData({ id: '', structure: '', selectedClasseIds: [] });
       fetchItems();
@@ -160,6 +176,7 @@ export default function Prof3DView() {
       success: "✅ Sauvegardé",
       error: "❌ Erreur enregistrement",
     });
+
   };
 
   const handleDelete = async (id: string) => {
@@ -273,8 +290,8 @@ export default function Prof3DView() {
               setIsDrawerOpen(false);
             }}
             className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
               }`}
           >
             <Flask size={16} /> Molécules ({moleculeList.length})
@@ -286,8 +303,8 @@ export default function Prof3DView() {
               setIsDrawerOpen(false);
             }}
             className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
               }`}
           >
             <Tool size={16} /> Matériel ({equipmentList.length})
@@ -313,8 +330,8 @@ export default function Prof3DView() {
         <button
           onClick={() => setViewMode('molecule')}
           className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+            ? 'bg-purple-600 text-white'
+            : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
             }`}
         >
           <Flask size={16} /> Molécules
@@ -324,8 +341,8 @@ export default function Prof3DView() {
         <button
           onClick={() => setViewMode('equipment')}
           className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
+            ? 'bg-purple-600 text-white'
+            : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
             }`}
         >
           <Tool size={16} /> Matériel
@@ -359,8 +376,8 @@ export default function Prof3DView() {
                   logActivity(item);
                 }}
                 className={`cursor-pointer p-4 rounded-md border shadow-sm transition ${selectedItem?.id === item.id
-                    ? 'bg-purple-100 border-purple-300'
-                    : 'bg-white hover:bg-gray-50 border-gray-200'
+                  ? 'bg-purple-100 border-purple-300'
+                  : 'bg-white hover:bg-gray-50 border-gray-200'
                   }`}
               >
                 <div className="flex justify-between items-start">

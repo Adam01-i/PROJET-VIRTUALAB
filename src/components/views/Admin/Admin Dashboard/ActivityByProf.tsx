@@ -17,7 +17,7 @@ type ActivityLog = {
   date: string;
   simulation: number;
   quiz: number;
-  object3D: number;
+  objet3d: number;
 };
 
 type Profile = {
@@ -47,17 +47,20 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
 
       for (const prof of professeurs) {
         if (filters.userId !== 'tous' && prof.id !== filters.userId) continue;
-        grouped[prof.name] = { date: prof.name, simulation: 0, quiz: 0, object3D: 0 };
+        grouped[prof.name] = { date: prof.name, simulation: 0, quiz: 0, objet3d: 0 };
       }
 
       for (const log of relevantLogs) {
         const prof = professeurs.find((p) => p.id === log.user_id);
         if (!prof || (filters.userId !== 'tous' && prof.id !== filters.userId)) continue;
         const row = grouped[prof.name];
-        if (row && ['simulation', 'quiz', 'object3D'].includes(log.type)) {
-          row[log.type as keyof ActivityLog]++;
+        if (row) {
+          if (log.type === 'simulation') row.simulation++;
+          else if (log.type === 'quiz') row.quiz++;
+          else if (log.type === 'objet3d') row.objet3d++;
         }
       }
+
 
       setActivityByProf(Object.values(grouped));
     };
@@ -66,10 +69,9 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
   }, [filters, professeurs]);
 
   const buttonClass = (active: boolean) =>
-    `px-3 py-1 rounded-full border text-sm ${
-      active
-        ? 'bg-indigo-600 text-white border-indigo-600'
-        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+    `px-3 py-1 rounded-full border text-sm ${active
+      ? 'bg-indigo-600 text-white border-indigo-600'
+      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
     }`;
 
   return (
@@ -108,7 +110,7 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
           <Legend />
           <Bar dataKey="simulation" stackId="a" fill="#6366F1" name="Simulations" />
           <Bar dataKey="quiz" stackId="a" fill="#10B981" name="Quiz" />
-          <Bar dataKey="object3D" stackId="a" fill="#FBBF24" name="Objets 3D" />
+          <Bar dataKey="objet3d" stackId="a" fill="#FBBF24" name="Objets 3D" />
         </BarChart>
       </ResponsiveContainer>
     </div>

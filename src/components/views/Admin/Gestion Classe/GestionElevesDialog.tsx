@@ -168,7 +168,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
 
   const filteredEleves = allEleves.filter(
     (eleve) =>
-      `${eleve.name} ${eleve.surname}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      ` ${eleve.surname} ${eleve.name}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
       !elevesDansClasse.some((e) => e.id === eleve.id) &&
       !elevesDansAutresClasses.includes(eleve.id)
   );
@@ -198,7 +198,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
             <ul className="text-sm max-h-24 overflow-y-auto space-y-1">
               {importedEleves.map((e, i) => (
                 <li key={i} className="flex justify-between">
-                  {e.name} {e.surname}
+                   {e.surname} {e.name} 
                   <span className="text-gray-500">{e.email}</span>
                 </li>
               ))}
@@ -219,7 +219,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
             {filteredEleves.length === 0 && <p>Aucun résultat.</p>}
             {filteredEleves.map((eleve) => (
               <li key={eleve.id} className="flex justify-between items-center">
-                {eleve.name} {eleve.surname}
+                {eleve.surname} {eleve.name} 
                 <Button variant="ghost" size="icon" onClick={() => addEleveToClasse(eleve.id)}>
                   <UserPlus className="w-4 h-4 text-green-500" />
                 </Button>

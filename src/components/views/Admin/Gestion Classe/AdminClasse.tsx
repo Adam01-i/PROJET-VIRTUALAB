@@ -159,9 +159,9 @@ const AdminClasse: React.FC = () => {
                 {classe.professeur_principal ? (
                   <div className="flex items-center gap-2 text-sm text-emerald-700">
                     <UserCircle className="w-4 h-4" />
-                    Professeur principal :{" "}
-                    {classe.professeur_principal.name}{" "}
+                    Professeur principal :{" "}                    
                     {classe.professeur_principal.surname}
+                    {classe.professeur_principal.name}{" "}
                   </div>
                 ) : (
                   <div className="text-sm text-orange-500 flex items-center gap-1">
