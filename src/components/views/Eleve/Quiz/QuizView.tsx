@@ -24,26 +24,42 @@ export default function QuizView() {
     const { data: session } = await supabase.auth.getSession();
     const user = session?.session?.user;
 
+    // 🎯 MODE INVITÉ
     if (!user) {
       const { data: allQuizzes, error } = await supabase
         .from('vue_quiz_details')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) console.error("Erreur chargement quiz publics :", error);
-      else {
-        const publicQuizzes = (allQuizzes || []).map(q => ({
-          ...q,
-          id: q.quiz_id,
-          questions: [],
-        }));
-        setQuizList(publicQuizzes);
+      if (error) {
+        console.error("Erreur chargement quiz publics :", error);
+        setLoading(false);
+        return;
       }
 
+      const quizIds = (allQuizzes || []).map(q => q.quiz_id);
+
+      const { data: publicQuestions, error: questionError } = await supabase
+        .from('questions')
+        .select('*')
+        .in('quiz_id', quizIds);
+
+      if (questionError) {
+        console.error("Erreur chargement questions publics :", questionError);
+      }
+
+      const quizzesWithQuestions = (allQuizzes || []).map((quiz) => ({
+        ...quiz,
+        id: quiz.quiz_id,
+        questions: (publicQuestions || []).filter(q => q.quiz_id === quiz.quiz_id) as QuizQuestion[],
+      }));
+
+      setQuizList(quizzesWithQuestions);
       setLoading(false);
       return;
     }
 
+    // 👤 UTILISATEUR CONNECTÉ
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, role')
@@ -145,10 +161,7 @@ export default function QuizView() {
     refreshData();
   }, []);
 
-  const handleStartQuiz = (quizId: string) => {
-    setActiveQuizId(quizId);
-  };
-
+  const handleStartQuiz = (quizId: string) => setActiveQuizId(quizId);
   const handleCompleteQuiz = async () => {
     setActiveQuizId(null);
     await refreshData();
@@ -165,9 +178,7 @@ export default function QuizView() {
   const currentPageData = filteredQuizList.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   if (currentQuiz) {
@@ -188,8 +199,7 @@ export default function QuizView() {
 
       {prenom && (
         <div className="bg-purple-50 border border-purple-100 p-4 rounded-md text-sm text-purple-800">
-          Progression cumulée : <strong>{cumulativeScore.score} / {cumulativeScore.total}</strong>
-          ({cumulativeScore.percentage}%)
+          Progression cumulée : <strong>{cumulativeScore.score} / {cumulativeScore.total}</strong> ({cumulativeScore.percentage}%)
         </div>
       )}
 
@@ -236,10 +246,11 @@ export default function QuizView() {
                 <button
                   key={pageNum}
                   onClick={() => goToPage(pageNum)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                    }`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                    currentPage === pageNum
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                  }`}
                 >
                   {pageNum}
                 </button>
