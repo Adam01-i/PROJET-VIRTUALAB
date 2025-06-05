@@ -6,8 +6,8 @@ import { supabase } from "../../../../lib/supabaseClient";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
-const niveaux = ['6e', '5e', '4e', '3e', '2ndeS', '2ndeL', '1èreS2', '1èreL2', 'TLeS2', 'TLeL2'];
-const lettres = ['A', 'B', 'C', 'D'];
+const niveaux = ["1èreS2"];
+const lettres = ["A", "B", "C", "D"];
 
 type Profile = {
   id: string;
@@ -82,13 +82,16 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
 
     const newClasseId = data[0].id;
 
-    // ➕ Lier le professeur (comme principal par défaut)
-    const { error: profError } = await supabase
-      .from("professeurs_classes")
-      .insert([{ professeur_id: selectedProfId, classe_id: newClasseId, assigned_at: new Date().toISOString() }]);
+    // ➕ Utilise la fonction PostgreSQL sécurisée pour insérer le prof principal
+    const { error: profError } = await supabase.rpc("remplacer_professeur_principal", {
+      classe: newClasseId,
+      prof: selectedProfId,
+    });
 
     if (profError) {
-      toast.error("Erreur liaison professeur", { description: profError.message });
+      toast.error("Erreur assignation professeur principal", {
+        description: profError.message,
+      });
       setChecking(false);
       return;
     }
@@ -151,7 +154,9 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
           >
             <option value="">Sélectionner</option>
             {niveaux.map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
         </div>
@@ -165,7 +170,9 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
           >
             <option value="">Sélectionner</option>
             {lettres.map((l) => (
-              <option key={l} value={l}>{l}</option>
+              <option key={l} value={l}>
+                {l}
+              </option>
             ))}
           </select>
         </div>
@@ -180,7 +187,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
             <option value="">Sélectionner</option>
             {professeurs.map((p) => (
               <option key={p.id} value={p.id}>
-               {p.surname} {p.name} 
+                {p.surname} {p.name}
               </option>
             ))}
           </select>
@@ -200,7 +207,9 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
           <ul className="space-y-1 max-h-40 overflow-y-auto text-sm">
             {importedEleves.map((e, idx) => (
               <li key={idx} className="flex justify-between border-b py-1">
-                <span>{e.surname} {e.name} </span>
+                <span>
+                  {e.surname} {e.name}
+                </span>
                 <span className="text-gray-500">{e.email}</span>
               </li>
             ))}

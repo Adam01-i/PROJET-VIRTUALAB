@@ -43,7 +43,7 @@ export default function ProfQuizView() {
       .order('created_at', { ascending: false });
 
     if (classeFilter !== 'all') {
-      query = query.contains('code_classe', [classeFilter]);
+      query = query.contains('classe_ids', [classeFilter]);
     }
 
     const { data, error } = await query;
@@ -117,7 +117,6 @@ export default function ProfQuizView() {
           await supabase.from('questions').delete().eq('quiz_id', quizId);
         }
 
-        // ⛓️ Mise à jour des classes liées
         await supabase.from('classes_quizzes').delete().eq('quiz_id', quizId);
         const associations = formData.selectedClasseIds.map((classeId: string) => ({
           quiz_id: quizId,
@@ -221,7 +220,7 @@ export default function ProfQuizView() {
     setFormData({ ...formData, questions: updated });
   };
 
-  return (
+    return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-indigo-800">Mes Quiz</h1>
@@ -253,7 +252,9 @@ export default function ProfQuizView() {
         >
           <option value="all">Toutes</option>
           {classes.map((c) => (
-            <option key={c.code_classe} value={c.code_classe}>{c.code_classe}</option>
+            <option key={c.id} value={c.id}>
+              {c.code_classe}
+            </option>
           ))}
         </select>
         <span className="ml-3 text-sm text-gray-500 font-normal">

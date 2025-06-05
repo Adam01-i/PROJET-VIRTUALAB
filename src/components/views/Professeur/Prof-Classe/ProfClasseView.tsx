@@ -30,7 +30,7 @@ type EleveActivite = {
 
 export default function ProfClasseView() {
   const [classes, setClasses] = useState<Classe[]>([]);
-  const [selectedClasseId, setSelectedClasseId] = useState<string | null>(null);
+  const [selectedClasseId, setSelectedClasseId] = useState<string>('all');
   const [eleves, setEleves] = useState<Eleve[]>([]);
   const [quizCount, setQuizCount] = useState(0);
   const [lab3DCount, setLab3DCount] = useState(0);
@@ -40,9 +40,6 @@ export default function ProfClasseView() {
   const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
 
-  const selectedClasse = classes.find(c => c.id === selectedClasseId);
-  const selectedClasseCode = selectedClasse?.code_classe;
-  const selectedClasseNiveau = selectedClasse?.niveau;
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -53,16 +50,17 @@ export default function ProfClasseView() {
         });
         return;
       }
-
       setClasses(data);
-      if (data.length) setSelectedClasseId(data[0].id);
     };
-
     fetchClasses();
   }, []);
 
   useEffect(() => {
-    if (!selectedClasseId) return;
+    if (!selectedClasseId || selectedClasseId === 'all') {
+      setEleves([]);
+      setParEleve([]);
+      return;
+    }
 
     const fetchDetails = async () => {
       const since = new Date();
@@ -119,38 +117,45 @@ export default function ProfClasseView() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!selectedClasseCode || !selectedClasseNiveau) return;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) return;
 
-      // ✅ Vue avec code_classe[] pour quiz
-      const { count: quizCount, error: quizErr } = await supabase
+      let quizQuery = supabase
         .from('vue_quiz_details')
         .select('*', { count: 'exact', head: true })
-        .contains('code_classe', [selectedClasseCode]);
+        .eq('auteur_id', userId);
 
-      if (quizErr) console.error('Erreur quiz:', quizErr);
-      setQuizCount(quizCount || 0);
-
-      // ✅ Vue avec code_classe[] pour simulations
-      const { count: expCount, error: expErr } = await supabase
-        .from('vue_experience_details')
-        .select('*', { count: 'exact', head: true })
-        .contains('code_classe', [selectedClasseCode]);
-
-      if (expErr) console.error('Erreur expériences:', expErr);
-      setExperienceCount(expCount || 0);
-
-      // ✅ Vue avec code_classe[] pour lab items
-      const { count: labCount, error: labErr } = await supabase
+      let labQuery = supabase
         .from('vue_lab_items_details')
         .select('*', { count: 'exact', head: true })
-        .contains('code_classe', [selectedClasseCode]);
+        .eq('auteur_id', userId);
 
-      if (labErr) console.error('Erreur lab3D:', labErr);
+      let expQuery = supabase
+        .from('vue_experience_details')
+        .select('*', { count: 'exact', head: true })
+        .eq('auteur_id', userId);
+
+      if (selectedClasseId !== 'all') {
+        quizQuery = quizQuery.contains('classe_ids', [selectedClasseId]);
+        labQuery = labQuery.contains('classe_ids', [selectedClasseId]);
+        expQuery = expQuery.contains('classe_ids', [selectedClasseId]);
+      }
+
+      const [{ count: quizCount }, { count: labCount }, { count: expCount }] = await Promise.all([
+        quizQuery,
+        labQuery,
+        expQuery
+      ]);
+
+      setQuizCount(quizCount || 0);
       setLab3DCount(labCount || 0);
+      setExperienceCount(expCount || 0);
     };
 
     fetchStats();
-  }, [selectedClasseCode, selectedClasseNiveau]);
+  }, [selectedClasseId]);
+
 
   const handleRemoveEleve = async (eleveId: string) => {
     const { error } = await supabase
@@ -158,7 +163,6 @@ export default function ProfClasseView() {
       .delete()
       .eq('eleve_id', eleveId)
       .eq('classe_id', selectedClasseId);
-
     if (error) toast.error("Erreur suppression");
     else {
       toast.success("Élève retiré");
@@ -169,7 +173,6 @@ export default function ProfClasseView() {
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = async (evt) => {
       const data = evt.target?.result;
@@ -182,7 +185,7 @@ export default function ProfClasseView() {
   };
 
   const handleImport = async () => {
-    if (!parsedData.length || !selectedClasseId) return;
+    if (!parsedData.length || !selectedClasseId || selectedClasseId === 'all') return;
     setLoading(true);
     let success = 0;
 
@@ -218,9 +221,10 @@ export default function ProfClasseView() {
         <label className="text-x font-semibold text-gray-600">Classe : </label>
         <select
           onChange={(e) => setSelectedClasseId(e.target.value)}
-          value={selectedClasseId ?? ''}
+          value={selectedClasseId}
           className="mt-1 px-3 py-1 border rounded text-x font-semibold bg-white text-indigo-600"
         >
+          <option value="all">🧩 Toutes mes classes</option>
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
               {c.code_classe}
@@ -236,33 +240,35 @@ export default function ProfClasseView() {
         <CardStat label="Objets 3D" count={lab3DCount} icon={<Atom className="h-6 w-6" />} />
       </div>
 
-      <div className="bg-white shadow rounded p-6">
-        <h2 className="text-xl font-semibold text-indigo-700 mb-4">👥 Élèves</h2>
-        <div className='flex flex-wrap gap-4'>
-          <input type="file" accept=".xlsx" onChange={handleImportFile} className="text-sm" />
-          <button
-            onClick={handleImport}
-            disabled={parsedData.length === 0 || loading}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded text-sm"
-          >
-            <UploadCloud size={16} />
-            Importer élèves
-          </button>
-        </div>
+      {selectedClasseId !== 'all' && (
+        <div className="bg-white shadow rounded p-6">
+          <h2 className="text-xl font-semibold text-indigo-700 mb-4">👥 Élèves</h2>
+          <div className='flex flex-wrap gap-4'>
+            <input type="file" accept=".xlsx" onChange={handleImportFile} className="text-sm" />
+            <button
+              onClick={handleImport}
+              disabled={parsedData.length === 0 || loading}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded text-sm"
+            >
+              <UploadCloud size={16} />
+              Importer élèves
+            </button>
+          </div>
 
-        <ul className="divide-y text-sm">
-          {eleves.map((el) => (
-            <li key={el.id} className="py-2 flex justify-between items-center">
-              <div>
-                {el.name} {el.surname} <span className="text-gray-400 italic">({el.email})</span>
-              </div>
-              <button onClick={() => handleRemoveEleve(el.id)} className="text-red-600 hover:text-red-800">
-                <Trash2 size={16} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+          <ul className="divide-y text-sm">
+            {eleves.map((el) => (
+              <li key={el.id} className="py-2 flex justify-between items-center">
+                <div>
+                  {el.name} {el.surname} <span className="text-gray-400 italic">({el.email})</span>
+                </div>
+                <button onClick={() => handleRemoveEleve(el.id)} className="text-red-600 hover:text-red-800">
+                  <Trash2 size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <TopEleves data={parEleve} onSelectEleve={setSelectedEleve} />
       {selectedEleve && <EleveDetail eleve={selectedEleve} onClose={() => setSelectedEleve(null)} />}
