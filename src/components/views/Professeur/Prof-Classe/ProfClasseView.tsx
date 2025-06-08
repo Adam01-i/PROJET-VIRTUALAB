@@ -35,6 +35,7 @@ export default function ProfClasseView() {
   const [quizCount, setQuizCount] = useState(0);
   const [lab3DCount, setLab3DCount] = useState(0);
   const [experienceCount, setExperienceCount] = useState(0);
+  const [elevesCount, setElevesCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [parEleve, setParEleve] = useState<EleveActivite[]>([]);
   const [selectedEleve, setSelectedEleve] = useState<EleveActivite | null>(null);
@@ -121,6 +122,15 @@ export default function ProfClasseView() {
       const userId = sessionData?.session?.user?.id;
       if (!userId) return;
 
+      let elevesQuery = supabase
+        .from('vue_eleves_classes')
+        .select('eleve_id', { count: 'exact', head: true })
+        .eq('professeur_id', userId);  // userId = ID du prof connecté;
+
+      if (selectedClasseId !== 'all') {
+        elevesQuery = elevesQuery.eq('classe_id', selectedClasseId);
+      }
+
       let quizQuery = supabase
         .from('vue_quiz_details')
         .select('*', { count: 'exact', head: true })
@@ -140,17 +150,20 @@ export default function ProfClasseView() {
         quizQuery = quizQuery.contains('classe_ids', [selectedClasseId]);
         labQuery = labQuery.contains('classe_ids', [selectedClasseId]);
         expQuery = expQuery.contains('classe_ids', [selectedClasseId]);
+        elevesQuery = elevesQuery.eq('classe_id', selectedClasseId);
       }
 
-      const [{ count: quizCount }, { count: labCount }, { count: expCount }] = await Promise.all([
+      const [{ count: quizCount }, { count: labCount }, { count: expCount }, { count: eleveCount }] = await Promise.all([
         quizQuery,
         labQuery,
-        expQuery
+        expQuery,
+        elevesQuery
       ]);
 
       setQuizCount(quizCount || 0);
       setLab3DCount(labCount || 0);
       setExperienceCount(expCount || 0);
+      setElevesCount(eleveCount || 0);
     };
 
     fetchStats();
@@ -234,7 +247,7 @@ export default function ProfClasseView() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <CardStat label="Élèves" count={eleves.length} icon={<Users className="h-6 w-6" />} />
+        <CardStat label="Élèves" count={elevesCount} icon={<Users className="h-6 w-6" />} />
         <CardStat label="Expériences" count={experienceCount} icon={<FlaskConical className="h-6 w-6" />} />
         <CardStat label="Quiz" count={quizCount} icon={<FileText className="h-6 w-6" />} />
         <CardStat label="Objets 3D" count={lab3DCount} icon={<Atom className="h-6 w-6" />} />

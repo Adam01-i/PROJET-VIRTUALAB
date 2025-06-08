@@ -54,12 +54,12 @@ export default function ProfExpView() {
       .order("created_at", { ascending: false });
 
     if (classeFilter !== 'all') {
-  query = query.contains("code_classe", [classeFilter]); // ✅ PostgREST syntax for arrays
-}
+      query = query.contains("code_classe", [classeFilter]); // ✅ PostgREST syntax for arrays
+    }
 
 
     const { data, error } = await query;
-console.log("🔎 Données brutes Supabase :", data);
+    console.log("🔎 Données brutes Supabase :", data);
 
     if (error) {
       toast.error("Erreur chargement expériences", { description: error.message });
@@ -152,22 +152,22 @@ console.log("🔎 Données brutes Supabase :", data);
     resetForm();
   };
 
-const handleDelete = async (id: string) => {
-  if (!confirm("Supprimer cette expérience ?")) return;
+  const handleDelete = async (id: string) => {
+    if (!confirm("Supprimer cette expérience ?")) return;
 
-  const { error } = await supabase
-    .from("experiences")
-    .delete()
-    .eq("id", id);
+    const { error } = await supabase
+      .from("experiences")
+      .delete()
+      .eq("id", id);
 
-  if (error) {
-    toast.error("Erreur suppression");
-  } else {
-    toast.success("Expérience supprimée");
-    fetchExperiences();
-    resetForm();
-  }
-};
+    if (error) {
+      toast.error("Erreur suppression");
+    } else {
+      toast.success("Expérience supprimée");
+      fetchExperiences();
+      resetForm();
+    }
+  };
 
 
   const resetForm = () => {
