@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Book,
   ListChecks,
-  Users,
 } from "lucide-react";
 import type { Experience } from "../../../../types/Experience/experience";
 

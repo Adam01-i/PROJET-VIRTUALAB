@@ -5,8 +5,8 @@ import type { QuizWithClasse } from '../../../../types/Quiz/quiz';
 
 type ProfQuizCardProps = {
   quiz: QuizWithClasse;
-  classeNoms?: string[]; // tableau de noms de classes (ex: ["4e A", "3e B"])
-  classeAffichage?: string; // affichage lisible (optionnel si déjà sous forme de tags)
+  classeNoms?: string[];
+  classeAffichage?: string;
   onEdit: (quiz: QuizWithClasse) => void;
   onDelete: (id: string) => void;
 };
@@ -21,7 +21,7 @@ export default function ProfQuizCard({
     <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg transition">
       <div className="h-40 relative overflow-hidden">
         <img
-          src={quiz.image}
+          src={quiz.image || '/placeholder.jpg'}
           alt={quiz.titre}
           className="w-full h-full object-cover"
         />

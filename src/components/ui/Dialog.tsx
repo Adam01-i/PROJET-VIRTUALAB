@@ -1,15 +1,13 @@
-// src/components/ui/dialog.tsx
+'use client';
+
 import * as React from "react";
-import { useState, ReactNode } from "react";
 import { cn } from "../../lib/utils";
+import { ReactNode } from "react";
 
 interface DialogProps {
-  children: ReactNode;
-}
-
-interface DialogTriggerProps {
-  asChild?: boolean;
   children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface DialogContentProps {
@@ -22,18 +20,25 @@ const DialogContext = React.createContext<{
   setOpen: (open: boolean) => void;
 } | null>(null);
 
-export function Dialog({ children }: DialogProps) {
-  const [open, setOpen] = useState(false);
+export function Dialog({ children, open: controlledOpen, onOpenChange }: DialogProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? onOpenChange! : setInternalOpen;
+
   return (
-    <DialogContext.Provider value={{ open, setOpen }}>{children}</DialogContext.Provider>
+    <DialogContext.Provider value={{ open, setOpen }}>
+      {children}
+    </DialogContext.Provider>
   );
 }
 
-export function DialogTrigger({ children }: DialogTriggerProps) {
+export function DialogTrigger({ children }: { children: ReactNode }) {
   const context = React.useContext(DialogContext);
   if (!context) throw new Error("DialogTrigger must be used inside Dialog");
 
   const handleClick = () => context.setOpen(true);
+
   return (
     <div onClick={handleClick} className="cursor-pointer">
       {children}

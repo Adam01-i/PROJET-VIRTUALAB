@@ -1,6 +1,8 @@
+'use client';
+
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, Environment, OrbitControls } from '@react-three/drei';
-import { Suspense, useRef, useEffect, useState } from 'react';
+import { useGLTF, Environment, OrbitControls, Center } from '@react-three/drei';
+import { Suspense, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Maximize2, Minimize2 } from 'lucide-react';
 
@@ -13,25 +15,9 @@ function MoleculeModel({ url }: { url: string }) {
   const { scene } = useGLTF(url);
   const ref = useRef<THREE.Group>(null);
 
-  useEffect(() => {
-    if (!ref.current) return;
-
-    const box = new THREE.Box3().setFromObject(ref.current);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-
-    ref.current.position.sub(center);
-
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const scale = 2 / maxDim;
-    ref.current.scale.setScalar(scale);
-  }, [scene]);
-
   useFrame(() => {
     if (ref.current) {
-      ref.current.rotation.y += 0.005;
+      ref.current.rotation.y += 0.003;
     }
   });
 
@@ -55,7 +41,7 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
   return (
     <div
       ref={viewerRef}
-      className={`relative w-full ${isFullscreen ? 'h-screen' : 'h-[400px]'} rounded-lg overflow-hidden cursor-grab bg-gradient-to-br from-purple-700 to-purple-300`}
+      className={`relative w-full h-[80vh] ${isFullscreen ? 'h-screen' : 'h-[400px]'} rounded-lg overflow-hidden bg-gradient-to-br from-purple-700 to-purple-300`}
     >
       {/* Titre molécule */}
       {moleculeName && (
@@ -65,13 +51,19 @@ export default function GLBViewerMolecules({ glbUrl, moleculeName }: GLBViewerPr
       )}
 
       {/* Canvas 3D */}
-      <Canvas camera={{ position: [2, 2, 3] }}>
+      <Canvas
+        camera={{ position: [2, 2, 2], fov: 45 }}
+        dpr={[1, 2]}
+        shadows
+      >
         <Suspense fallback={null}>
-          <Environment preset="studio" background={false} />
-          <ambientLight intensity={0.8} />
-          <directionalLight position={[5, 5, 5]} intensity={0.5} />
-          <MoleculeModel url={glbUrl} />
-          <OrbitControls enableZoom enableRotate />
+          <Environment preset="warehouse" background={false} />
+          <ambientLight intensity={0.5} />
+          <directionalLight intensity={1} position={[5, 5, 5]} />
+          <OrbitControls enableZoom enableRotate autoRotate autoRotateSpeed={0.5} />
+          <Center>
+            <MoleculeModel url={glbUrl} />
+          </Center>
         </Suspense>
       </Canvas>
 

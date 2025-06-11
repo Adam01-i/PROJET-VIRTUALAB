@@ -1,9 +1,11 @@
+'use client';
+
 import { Beaker } from 'lucide-react';
 import type { Experience } from '../../../../types/Experience/experience';
 
 type ProfExpCardProps = {
   experience: Experience;
-  classeNoms?: string[]; // ✅ Nouveau type : tableau
+  classeNoms?: string[];
   classeAffichage?: string;
   onEdit: (exp: Experience) => void;
   onDelete: (id: string) => void;
@@ -11,7 +13,7 @@ type ProfExpCardProps = {
 
 export default function ProfExpCard({
   experience,
-  classeNoms,
+  classeNoms = [],
   onEdit,
   onDelete,
 }: ProfExpCardProps) {
@@ -19,23 +21,22 @@ export default function ProfExpCard({
     <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg transition">
       <div className="h-40 relative overflow-hidden">
         <img
-          src={experience.image}
+          src={experience.image || '/default-experience.jpg'}
           alt={experience.titre}
           className="w-full h-full object-cover"
         />
-        {(classeNoms ?? []).length > 0 && (
-          <div className="absolute bottom-3 left-3 flex flex-wrap gap-1">
-            {(classeNoms ?? []).map((nom) => (
+        {classeNoms.length > 0 && (
+          <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+            {classeNoms.map((nom) => (
               <span
                 key={nom}
-                className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded shadow-sm"
+                className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded shadow"
               >
                 📘 {nom}
               </span>
             ))}
           </div>
         )}
-        
       </div>
 
       <div className="p-4 space-y-2 text-sm">
@@ -46,7 +47,7 @@ export default function ProfExpCard({
 
         <div className="flex justify-between text-xs text-gray-500">
           <span>⏱ {experience.duree}</span>
-          <span className="px-2 py-0.5 text-indigo-700 text-sm rounded">
+          <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">
             {experience.niveau}
           </span>
         </div>
@@ -54,7 +55,7 @@ export default function ProfExpCard({
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => onEdit(experience)}
-            className="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-900"
+            className="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-800"
           >
             ✏️ Modifier
           </button>
