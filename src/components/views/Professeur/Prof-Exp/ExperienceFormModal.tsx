@@ -36,7 +36,7 @@ export default function ExperienceFormModal({
 
   return (
     <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-[50vw] overflow-y-auto">
         <form
           onSubmit={(e) => {
             e.preventDefault();

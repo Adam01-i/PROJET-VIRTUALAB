@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FlaskRound as Flask,
   PenTool as Tool,
@@ -32,6 +32,8 @@ export default function Prof3DView() {
   const [formData, setFormData] = useState<Partial<LabItemWithClasse> | null>(null);
   const [previewItem, setPreviewItem] = useState<LabItemWithClasse | null>(null);
 
+  const cacheRef = useRef<{ [key: string]: LabItemWithClasse[] }>({});
+
   useEffect(() => {
     fetchClasses();
   }, []);
@@ -39,6 +41,10 @@ export default function Prof3DView() {
   useEffect(() => {
     fetchItems();
   }, [viewMode, classeFilter]);
+
+  const displayedItems = useMemo(() => {
+    return viewMode === 'molecule' ? moleculeList : equipmentList;
+  }, [viewMode, moleculeList, equipmentList]);
 
   const fetchClasses = async () => {
     const { data, error } = await supabase.from('mes_classes').select('id, code_classe');
@@ -51,20 +57,37 @@ export default function Prof3DView() {
     const userId = userData?.user?.id;
     if (!userId) return toast.error('Utilisateur non connecté');
 
+    const cacheKey = `${viewMode}_${classeFilter || 'all'}`;
+    if (cacheRef.current[cacheKey]) {
+      const cached = cacheRef.current[cacheKey];
+      if (viewMode === 'molecule') setMoleculeList(cached);
+      else setEquipmentList(cached);
+      return;
+    }
+
     let query = supabase
       .from('vue_lab_items_details')
-      .select('*')
+      .select('id, nom, description, structure, code_classe, created_at, category')
       .eq('category', viewMode)
       .eq('auteur_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(0, 19); // pagination
 
     if (classeFilter) query = query.contains('code_classe', [classeFilter]);
 
     const { data, error } = await query;
     if (error) return toast.error('Erreur de chargement des éléments.');
 
-    if (viewMode === 'molecule') setMoleculeList(data || []);
-    else setEquipmentList(data || []);
+    if (data) {
+      // Ensure all required fields are present and types match
+      const typedData: LabItemWithClasse[] = data.map((item: any) => ({
+        ...item,
+        category: item.category ?? viewMode, // fallback if missing
+      }));
+      cacheRef.current[cacheKey] = typedData;
+      if (viewMode === 'molecule') setMoleculeList(typedData);
+      else setEquipmentList(typedData);
+    }
   };
 
   const handleSubmit = async () => {
@@ -201,7 +224,7 @@ export default function Prof3DView() {
           className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'molecule'
             ? 'bg-purple-600 text-white'
             : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <Flask size={16} /> Molécules ({moleculeList.length})
         </button>
@@ -210,7 +233,7 @@ export default function Prof3DView() {
           className={`px-3 py-2 rounded-md flex items-center gap-2 text-sm ${viewMode === 'equipment'
             ? 'bg-purple-600 text-white'
             : 'bg-gray-100 text-purple-600 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <Tool size={16} /> Matériel ({equipmentList.length})
         </button>
@@ -227,7 +250,7 @@ export default function Prof3DView() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {(viewMode === 'molecule' ? moleculeList : equipmentList).map((item) => (
+        {displayedItems.map((item) => (
           <div key={item.id} className="p-4 bg-white border rounded-md shadow hover:shadow-md transition">
             <div className="flex justify-between items-start">
               <div>

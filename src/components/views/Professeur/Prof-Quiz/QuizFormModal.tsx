@@ -1,8 +1,11 @@
 'use client';
-import { Dialog, DialogTrigger, DialogContent } from '../../../ui/Dialog';
+
+import { Dialog, DialogContent } from '../../../ui/Dialog';
 import { Button } from '../../../ui/button2';
 
 export default function QuizFormModal({
+  open,
+  setOpen,
   formData,
   setFormData,
   onSave,
@@ -14,16 +17,19 @@ export default function QuizFormModal({
   addQuestion,
   removeQuestion,
 }: any) {
-  return (
-    <Dialog>
-      <DialogTrigger>
-        <Button variant="default" size="default">
-          {formData?.id ? "✏️ Modifier" : "➕ Nouveau Quiz"}
-        </Button>
-      </DialogTrigger>
+  if (!formData) return null;
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="space-y-4">
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-h-[90vh] max-w-[50vw] overflow-y-auto">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSave();
+            setOpen(false);
+          }}
+          className="space-y-4"
+        >
           <h3 className="text-lg font-semibold text-indigo-700">
             {formData?.id ? "Modifier" : "Nouveau"} Quiz
           </h3>
@@ -74,7 +80,9 @@ export default function QuizFormModal({
           </div>
 
           <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
-          {formData.image && <img src={formData.image} className="rounded border w-full mt-2" alt="quiz cover" />}
+          {formData.image && (
+            <img src={formData.image} className="rounded border w-full mt-2" alt="quiz cover" />
+          )}
 
           <div className="space-y-4">
             <h4 className="font-semibold text-gray-700">Questions</h4>
@@ -111,19 +119,32 @@ export default function QuizFormModal({
                   placeholder="Explication (facultatif)"
                   rows={2}
                 />
-                <button type="button" onClick={() => removeQuestion(idx)} className="text-red-600 text-xs hover:underline">
+                <button
+                  type="button"
+                  onClick={() => removeQuestion(idx)}
+                  className="text-red-600 text-xs hover:underline"
+                >
                   Supprimer
                 </button>
               </div>
             ))}
-            <button type="button" onClick={addQuestion} className="text-indigo-700 text-sm hover:underline">
+            <button
+              type="button"
+              onClick={addQuestion}
+              className="text-indigo-700 text-sm hover:underline"
+            >
               ➕ Ajouter une question
             </button>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="submit" variant="default">💾 Enregistrer</Button>
-            <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
+            <Button type="submit">💾 Enregistrer</Button>
+            <Button type="button" variant="outline" onClick={() => {
+              onCancel();
+              setOpen(false);
+            }}>
+              Annuler
+            </Button>
           </div>
         </form>
       </DialogContent>

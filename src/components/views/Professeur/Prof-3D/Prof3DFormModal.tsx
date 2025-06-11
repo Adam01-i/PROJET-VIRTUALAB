@@ -70,15 +70,6 @@ export default function Prof3DFormModal({
             onChange={handleFileUpload}
             className="text-sm"
           />
-          {formData.structure && (
-            <a
-              href={formData.structure}
-              target="_blank"
-              className="text-sm text-blue-600 underline block mt-1"
-            >
-              Voir structure actuelle
-            </a>
-          )}
 
           <div className="space-y-1">
             <p className="text-sm font-semibold">Classes assignées :</p>

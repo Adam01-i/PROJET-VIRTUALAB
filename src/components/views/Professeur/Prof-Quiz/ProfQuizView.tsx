@@ -14,6 +14,7 @@ const DUREE_OPTIONS = ["10 min", "20 min", "30 min", "45 min"];
 export default function ProfQuizView() {
   const [quizzes, setQuizzes] = useState<QuizWithClasse[]>([]);
   const [formData, setFormData] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([]);
   const [classeFilter, setClasseFilter] = useState<string>('all');
   const [userId, setUserId] = useState<string | null>(null);
@@ -125,8 +126,9 @@ export default function ProfQuizView() {
 
     fetchQuizzes();
     setFormData(null);
-    setFormData(null);
+    setIsModalOpen(false);
   };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce quiz ?")) return;
     const { error } = await supabase.from('quizzes').delete().eq('id', id);
@@ -191,27 +193,42 @@ export default function ProfQuizView() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-indigo-800">Mes Quiz</h1>
-        <QuizFormModal
-          formData={{
-            id: '',
-            titre: '',
-            description: '',
-            duree: DUREE_OPTIONS[0],
-            image: '',
-            questions: [],
-            selectedClasseIds: [],
+        <button
+          onClick={() => {
+            setFormData({
+              id: '',
+              titre: '',
+              description: '',
+              duree: DUREE_OPTIONS[0],
+              image: '',
+              questions: [],
+              selectedClasseIds: [],
+            });
+            setIsModalOpen(true);
           }}
-          setFormData={setFormData}
-          onSave={handleSave}
-          onCancel={() => setFormData(null)}
-          classes={classes}
-          handleImageUpload={handleImageUpload}
-          handleQuestionChange={handleQuestionChange}
-          handleOptionChange={handleOptionChange}
-          addQuestion={addQuestion}
-          removeQuestion={removeQuestion}
-        />
+          className="bg-indigo-600 hover:bg-indigo-800 text-white px-4 py-2 rounded text-sm"
+        >
+          ➕ Ajouter un nouveau quiz
+        </button>
       </div>
+
+      <QuizFormModal
+        open={isModalOpen}
+        setOpen={setIsModalOpen}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSave}
+        onCancel={() => {
+          setFormData(null);
+          setIsModalOpen(false);
+        }}
+        classes={classes}
+        handleImageUpload={handleImageUpload}
+        handleQuestionChange={handleQuestionChange}
+        handleOptionChange={handleOptionChange}
+        addQuestion={addQuestion}
+        removeQuestion={removeQuestion}
+      />
 
       <div>
         <label className="font-semibold text-gray-600 mr-2">Classe :</label>
@@ -222,9 +239,7 @@ export default function ProfQuizView() {
         >
           <option value="all">Toutes</option>
           {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.code_classe}
-            </option>
+            <option key={c.id} value={c.id}>{c.code_classe}</option>
           ))}
         </select>
         <span className="ml-3 text-sm text-gray-500 font-normal">
@@ -243,11 +258,15 @@ export default function ProfQuizView() {
               classeNoms={quiz.code_classe || []}
               classeAffichage={quiz.code_classe_affichage}
               onEdit={async (quiz) => {
-                const { data: links } = await supabase.from("classes_quizzes").select("classe_id").eq("quiz_id", quiz.id);
+                const { data: links } = await supabase
+                  .from("classes_quizzes")
+                  .select("classe_id")
+                  .eq("quiz_id", quiz.id);
                 setFormData({
                   ...quiz,
                   selectedClasseIds: links?.map((l) => l.classe_id) || [],
                 });
+                setIsModalOpen(true);
               }}
               onDelete={handleDelete}
             />
