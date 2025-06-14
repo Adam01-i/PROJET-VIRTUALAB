@@ -4,7 +4,7 @@ import * as React from "react"
 import { useRef, useState, Suspense, useEffect, useCallback } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Text, Html, ContactShadows } from "@react-three/drei"
-import type * as THREE from "three"
+import * as THREE from "three"
 import { FlaskConical, Camera } from "lucide-react"
 
 // Types pour la simulation
@@ -42,7 +42,7 @@ const INDICATEURS = [
     { value: "Bleu de bromothymol", label: "Bleu de Bromothymol", color: "#3b82f6", range: "pH 6.0-7.6" },
 ]
 
-export default function TitrageInteractif() {
+export default function TitrageAcidoBasique() {
     const initialConfig: TitrageConfig = {
         titrant: "HCl 0.1M",
         titré: "NaOH 0.1M",
@@ -160,18 +160,18 @@ export default function TitrageInteractif() {
     const currentIndicateur = INDICATEURS.find((i) => i.value === config.indicateur) || INDICATEURS[0]
 
     return (
-        <div className="w-full h-full relative bg-gradient-to-b from-slate-100 to-slate-200">
+        <div className="w-full h-full relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900">
             {/* Interface de contrôle - Version compacte */}
-            <div className="absolute top-4 left-4 z-10 bg-indigo-500 rounded-lg p-4 shadow-xl w-[300px] space-y-3 border-2 border-gray-300">
-                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <div className="absolute top-4 left-4 z-10 bg-indigo-100 rounded-lg p-4 shadow-xl w-[300px] space-y-3 border-2 border-indigo-300">
+                <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
                     <FlaskConical className="w-4 h-4 text-indigo-600" />
                     Titrage Acide-Base
                 </h2>
 
                 {/* Sélection des réactifs - Version compacte */}
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm text-indigo-800">
                     <div>
-                        <label className="font-semibold text-gray-900 mb-1 block text-base">Titrant</label>
+                        <label className="font-semibold text-indigo-900 mb-1 block text-base">Titrant</label>
                         <div className="space-y-1">
                             {TITRANTS.map((titrant) => (
                                 <label key={titrant.value} className="flex items-center space-x-2 cursor-pointer">
@@ -189,24 +189,24 @@ export default function TitrageInteractif() {
                             ))}
                         </div>
                         <div className="mt-2">
-                            <label className="text-xs text-gray-800">Concentration (M)</label>
-                            <div className = 'flex items-center space-x-2'>
-                            <input
-                                type="range"
-                                min={0.05}
-                                max={0.5}
-                                step={0.05}
-                                value={config.concentrationBurette}
-                                onChange={(e) => handleConfigChange("concentrationBurette", Number(e.target.value))}
-                                className="w-full mt-1"
-                            />
-                            <div className="text-xs text-gray-800">{config.concentrationBurette.toFixed(2)}M</div>
+                            <label className="text-xs text-indigo-700">Concentration (M)</label>
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="range"
+                                    min={0.05}
+                                    max={0.5}
+                                    step={0.05}
+                                    value={config.concentrationBurette}
+                                    onChange={(e) => handleConfigChange("concentrationBurette", Number(e.target.value))}
+                                    className="w-full mt-1 accent-indigo-600"
+                                />
+                                <div className="text-xs text-indigo-800">{config.concentrationBurette.toFixed(2)}M</div>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label className="font-semibold text-gray-900 mb-1 block text-base">Titré</label>
+                        <label className="font-semibold text-indigo-900 mb-1 block text-base">Titré</label>
                         <div className="space-y-1">
                             {TITRÉS.map((titré) => (
                                 <label key={titré.value} className="flex items-center space-x-2 cursor-pointer">
@@ -225,40 +225,40 @@ export default function TitrageInteractif() {
                         </div>
                         <div className="mt-2 space-y-2">
                             <div>
-                                <label className="text-xs text-gray-800">Concentration (M)</label>
+                                <label className="text-xs text-indigo-700">Concentration (M)</label>
                                 <div className="flex items-center space-x-2">
-                                <input
-                                    type="range"
-                                    min={0.05}
-                                    max={0.5}
-                                    step={0.05}
-                                    value={config.concentrationErlenmeyer}
-                                    onChange={(e) => handleConfigChange("concentrationErlenmeyer", Number(e.target.value))}
-                                    className="w-full mt-1"
-                                />
-                                <div className="text-xs text-gray-800">{config.concentrationErlenmeyer.toFixed(2)}M</div>
+                                    <input
+                                        type="range"
+                                        min={0.05}
+                                        max={0.5}
+                                        step={0.05}
+                                        value={config.concentrationErlenmeyer}
+                                        onChange={(e) => handleConfigChange("concentrationErlenmeyer", Number(e.target.value))}
+                                        className="w-full mt-1 accent-indigo-600"
+                                    />
+                                    <div className="text-xs text-indigo-800">{config.concentrationErlenmeyer.toFixed(2)}M</div>
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs text-gray-800">Volume initial (mL)</label>
+                                <label className="text-xs text-indigo-700">Volume initial (mL)</label>
                                 <div className="flex items-center space-x-2">
-                                <input
-                                    type="range"
-                                    min={10}
-                                    max={50}
-                                    step={5}
-                                    value={config.initialVolumeErlenmeyer}
-                                    onChange={(e) => handleConfigChange("initialVolumeErlenmeyer", Number(e.target.value))}
-                                    className="w-full mt-1"
-                                />
-                                <div className="text-xs text-gray-800">{config.initialVolumeErlenmeyer}mL</div>
+                                    <input
+                                        type="range"
+                                        min={10}
+                                        max={50}
+                                        step={5}
+                                        value={config.initialVolumeErlenmeyer}
+                                        onChange={(e) => handleConfigChange("initialVolumeErlenmeyer", Number(e.target.value))}
+                                        className="w-full mt-1 accent-indigo-600"
+                                    />
+                                    <div className="text-xs text-indigo-800">{config.initialVolumeErlenmeyer}mL</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label className="font-semibold text-gray-900 mb-1 block text-base">Indicateur</label>
+                        <label className="font-semibold text-indigo-900 mb-1 block text-base">Indicateur</label>
                         <div className="space-y-1">
                             {INDICATEURS.map((indicateur) => (
                                 <label key={indicateur.value} className="flex items-center space-x-2 cursor-pointer">
@@ -278,48 +278,45 @@ export default function TitrageInteractif() {
                     </div>
 
                     <div>
-                        <label className="font-medium text-gray-800 text-sm">Débit (mL/s)</label>
+                        <label className="font-medium text-indigo-800 text-sm">Débit (mL/s)</label>
                         <div className="flex items-center space-x-2">
-                        <input
-                            type="range"
-                            min={0.1}
-                            max={2.0}
-                            step={0.1}
-                            value={titrageState.debit}
-                            onChange={handleDebitChange}
-                            className="w-full mt-1"
-                        />
-                        <div className="text-xs text-gray-800">{titrageState.debit.toFixed(1)}mL/s</div>
+                            <input
+                                type="range"
+                                min={0.1}
+                                max={2.0}
+                                step={0.1}
+                                value={titrageState.debit}
+                                onChange={handleDebitChange}
+                                className="w-full mt-1 accent-indigo-600"
+                            />
+                            <div className="text-xs text-indigo-800">{titrageState.debit.toFixed(1)}mL/s</div>
                         </div>
                     </div>
                 </div>
             </div>
 
+
             {/* Résultats - Version compacte */}
-            <div className="absolute top-4 right-4 z-10 bg-indigo-500 rounded-lg p-4 shadow-xl w-[300px] max-h-[85vh] overflow-y-auto text-sm space-y-3 border-2 border-gray-300">
-                <h3 className="text-lg font-semibold text-indigo-700">Résultats</h3>
+            <div className="absolute top-4 right-4 z-10 bg-indigo-200 rounded-lg p-4 shadow-xl w-[300px] max-h-[85vh] overflow-y-auto text-sm space-y-3 border-2 border-indigo-300">
+                <h3 className="text-lg font-semibold text-indigo-900">Résultats</h3>
 
                 {/* Configuration - Version compacte */}
-                <div className="bg-gray-50 p-2 rounded border text-xs">
-                    <div className="flex items-center gap-1 mb-1 text-gray-800">
-                        <div className="w-2 h-2 rounded-full " style={{ backgroundColor: currentTitrant.color }} />
-                        <span>
-                            {currentTitrant.label} ({config.concentrationBurette.toFixed(2)}M)
-                        </span>
+                <div className="bg-indigo-100 p-2 rounded border border-indigo-300 text-xs">
+                    <div className="flex items-center gap-1 mb-1 text-indigo-800">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTitrant.color }} />
+                        <span>{currentTitrant.label} ({config.concentrationBurette.toFixed(2)}M)</span>
                     </div>
-                    <div className="flex items-center gap-1 mb-1 text-gray-800">
+                    <div className="flex items-center gap-1 mb-1 text-indigo-800">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTitré.color }} />
-                        <span>
-                            {currentTitré.label} ({config.concentrationErlenmeyer.toFixed(2)}M, {config.initialVolumeErlenmeyer}mL)
-                        </span>
+                        <span>{currentTitré.label} ({config.concentrationErlenmeyer.toFixed(2)}M, {config.initialVolumeErlenmeyer}mL)</span>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-800">
+                    <div className="flex items-center gap-1 text-indigo-800">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentIndicateur.color }} />
                         <span>{currentIndicateur.label}</span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-2 gap-2 text-xs text-indigo-900">
                     <div className="font-medium">Volume écoulé:</div>
                     <div className="font-mono">{titrageState.volumeEcoule.toFixed(1)} mL</div>
                     <div className="font-medium">Vol. équivalence:</div>
@@ -329,52 +326,47 @@ export default function TitrageInteractif() {
                     <div className="font-medium">Progression:</div>
                     <div className="font-mono">{progressPercent.toFixed(0)}%</div>
                 </div>
+
                 {/* État actuel - Version compacte */}
                 <div className="space-y-2">
                     {titrageState.equivalenceAtteinte ? (
-                        <div className="p-2 bg-green-50 border-l-2 border-green-400 rounded text-green-800 text-xs">
-                            <strong>🎉 Équivalence atteinte!</strong>
-                            <br />
+                        <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded text-green-800 text-xs">
+                            <strong>🎉 Équivalence atteinte!</strong><br />
                             Volume: {titrageState.volumeEcoule.toFixed(1)} mL, pH: {titrageState.pH.toFixed(2)}
                         </div>
                     ) : titrageState.isRunning ? (
-                        <div
-                            className={`p-2 bg-${phaseInfo.color}-50 border-l-2 border-${phaseInfo.color}-400 rounded text-${phaseInfo.color}-800 text-xs`}
-                        >
-                            <strong>⚗️ {phaseInfo.phase}</strong>
-                            <br />
+                        <div className={`p-2 bg-${phaseInfo.color}-50 border-l-4 border-${phaseInfo.color}-400 rounded text-${phaseInfo.color}-800 text-xs`}>
+                            <strong>⚗️ {phaseInfo.phase}</strong><br />
                             {phaseInfo.description}
                             {progressPercent < 90 && (
-                                <div>
-                                    <br />
-                                    Reste: {(titrageState.volumeEquivalence - titrageState.volumeEcoule).toFixed(1)} mL
-                                </div>
+                                <div><br />Reste: {(titrageState.volumeEquivalence - titrageState.volumeEcoule).toFixed(1)} mL</div>
                             )}
                         </div>
                     ) : (
-                        <div className="p-2 bg-gray-50 border-l-2 border-gray-400 rounded text-gray-800 text-xs">
-                            <strong>🔬 Prêt</strong>
-                            <br />
+                        <div className="p-2 bg-indigo-50 border-l-4 border-indigo-400 rounded text-indigo-800 text-xs">
+                            <strong>🔬 Prêt</strong><br />
                             Vol. théorique: {titrageState.volumeEquivalence.toFixed(1)} mL
                         </div>
                     )}
 
-                    <div className="p-2 bg-blue-50 border border-blue-200 rounded text-blue-800 text-xs">
-                        <strong>💡 Conseils:</strong> Ajustez le débit • Observez la couleur • Le pH change vite près de
-                        l'équivalence
+                    <div className="p-2 bg-indigo-100 border border-indigo-300 rounded text-indigo-800 text-xs">
+                        <strong>💡 Conseils:</strong> Ajustez le débit • Observez la couleur • Le pH change vite près de l'équivalence
                     </div>
                 </div>
+
                 <div className="flex gap-2">
                     <button
                         onClick={toggleTitrage}
-                        className={`flex-1 px-3 py-2 rounded-md text-white font-medium text-sm transition-colors ${titrageState.isRunning ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                        className={`flex-1 px-3 py-2 rounded-md text-white font-medium text-sm transition-colors ${titrageState.isRunning
+                            ? "bg-indigo-700 hover:bg-indigo-800"
+                            : "bg-indigo-500 hover:bg-indigo-600"
                             }`}
                     >
                         {titrageState.isRunning ? "Arrêter" : "Démarrer"}
                     </button>
                     <button
                         onClick={reset}
-                        className="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium text-sm transition-colors"
+                        className="flex-1 px-3 py-2 bg-indigo-400 hover:bg-indigo-500 text-white rounded-md font-medium text-sm transition-colors"
                     >
                         Reset
                     </button>
@@ -382,23 +374,44 @@ export default function TitrageInteractif() {
 
                 <button
                     onClick={resetCamera}
-                    className="w-full px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                    className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
                 >
                     <Camera className="w-4 h-4" />
                     Caméra
                 </button>
             </div>
 
-            {/* Canvas 3D avec meilleur éclairage */}
-            <Canvas camera={{ position: [5, 5, 8], fov: 50 }} shadows>
-                <Suspense fallback={<Html center>Chargement...</Html>}>
-                    {/* Éclairage amélioré pour la visibilité */}
-                    <ambientLight intensity={1.2} />
-                    <directionalLight position={[10, 10, 5]} intensity={2} castShadow />
-                    <directionalLight position={[-10, 5, -5]} intensity={1.5} />
-                    <directionalLight position={[0, 10, 0]} intensity={1} />
-                    <pointLight position={[0, 3, 0]} intensity={0.8} />
 
+            {/* Canvas 3D avec éclairage et ombres améliorés */}
+            <Canvas
+                shadows
+                camera={{ position: [6, 6, 10], fov: 45 }}
+                gl={{ toneMapping: THREE.ACESFilmicToneMapping }}
+            >
+                <Suspense fallback={<Html center className="text-indigo-600">Chargement...</Html>}>
+                    {/* Éclairage global doux */}
+                    <ambientLight intensity={0.6} />
+
+                    {/* Directional Light principale avec ombre nette */}
+                    <directionalLight
+                        position={[10, 10, 10]}
+                        intensity={2}
+                        castShadow
+                        shadow-mapSize-width={1024}
+                        shadow-mapSize-height={1024}
+                        shadow-camera-far={50}
+                        shadow-camera-left={-10}
+                        shadow-camera-right={10}
+                        shadow-camera-top={10}
+                        shadow-camera-bottom={-10}
+                    />
+
+                    {/* Rims Lights (éclairage de contre-jour subtil) */}
+                    <directionalLight position={[-8, 4, -8]} intensity={1} color="#c7d2fe" />
+                    <pointLight position={[0, 3, 3]} intensity={1.2} color="#a5b4fc" />
+                    <pointLight position={[0, 5, -2]} intensity={0.5} />
+
+                    {/* Scène personnalisée */}
                     <TitrageScene
                         titrageState={titrageState}
                         setTitrageState={setTitrageState}
@@ -407,10 +420,31 @@ export default function TitrageInteractif() {
                         currentIndicateur={currentIndicateur}
                         getIndicatorColor={getIndicatorColor}
                     />
-                    <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={3} maxDistance={15} />
-                    <ContactShadows position={[0, -2.35, 0]} opacity={0.3} scale={12} blur={2} far={4} />
+
+                    {/* Contrôles de caméra plus fluides */}
+                    <OrbitControls
+                        ref={controlsRef}
+                        enablePan={true}
+                        enableZoom={true}
+                        enableRotate={true}
+                        minDistance={4}
+                        maxDistance={15}
+                        maxPolarAngle={Math.PI / 2.2} // empêche la vue par le dessous
+                    />
+
+                    {/* Ombres douces au sol */}
+                    <ContactShadows
+                        position={[0, -2.4, 0]}
+                        opacity={0.35}
+                        scale={10}
+                        blur={2.5}
+                        far={5}
+                        resolution={512}
+                        color="#4f46e5"
+                    />
                 </Suspense>
             </Canvas>
+
         </div>
     )
 }
@@ -556,136 +590,140 @@ function TitrageScene({
         }
     })
 
-    return (
-        <group>
-            {/* Support coloré */}
-            <Support />
+return ( 
+    <group>
+        {/* Support coloré */}
+        <Support />
 
-            {/* Burette avec étiquette */}
-            <group position={[0, 2, 0]}>
-                <Burette volumeEcoule={titrageState.volumeEcoule} maxVolume={50} isRunning={titrageState.isRunning} />
+        {/* Burette avec étiquette */}
+        <group position={[0, 2, 0]}>
+            <Burette
+                volumeEcoule={titrageState.volumeEcoule}
+                maxVolume={50}
+                isRunning={titrageState.isRunning}
+            />
 
-                {/* Étiquette Burette avec nom du réactif */}
-                <Text position={[-0.8, 1.2, 0]} fontSize={0.1} color={currentTitrant.color} anchorX="center" anchorY="middle">
-                    BURETTE
-                </Text>
-                <Text position={[-0.8, 1.0, 0]} fontSize={0.08} color={currentTitrant.color} anchorX="center" anchorY="middle">
-                    {currentTitrant.label}
-                </Text>
-                <Text position={[-0.8, 0.8, 0]} fontSize={0.06} color="#666666" anchorX="center" anchorY="middle">
-                    {currentTitrant.formula}
-                </Text>
-
-                {/* Volume affiché en permanence */}
-                <Text
-                    position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
-                    fontSize={0.1}
-                    color="#dc2626"
-                    anchorX="right"
-                    anchorY="middle"
-                    rotation={[0, Math.PI / 4, 0]}
-                >
-                    {(50 - titrageState.volumeEcoule).toFixed(1)} mL
-                </Text>
-
-                {/* Goutte animée */}
-                <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
-                    <sphereGeometry args={[0.03]} />
-                    <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
-                </mesh>
-            </group>
-
-            {/* Erlenmeyer avec étiquettes */}
-            <group position={[0, -1, 0]}>
-                <Erlenmeyer
-                    couleurSolution={titrageState.couleurSolution}
-                    niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
-                />
-
-                {/* Étiquette Erlenmeyer avec noms des réactifs */}
-                <Text position={[1.3, 0.6, 0]} fontSize={0.1} color={currentTitré.color} anchorX="center" anchorY="middle">
-                    ERLENMEYER
-                </Text>
-                <Text position={[1.3, 0.4, 0]} fontSize={0.08} color={currentTitré.color} anchorX="center" anchorY="middle">
-                    {currentTitré.label}
-                </Text>
-                <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#666666" anchorX="center" anchorY="middle">
-                    {currentTitré.formula}
-                </Text>
-                <Text
-                    position={[1.3, 0.0, 0]}
-                    fontSize={0.06}
-                    color={currentIndicateur.color}
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    + {currentIndicateur.label}
-                </Text>
-
-                <MagneticStirrer stirBarRef={stirBarRef} />
-            </group>
-
-            {/* Table de laboratoire descendue */}
-            <mesh position={[0, -2.4, 0]} receiveShadow>
-                <boxGeometry args={[8, 0.2, 5]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-
-            {/* Bordures de table */}
-            <mesh position={[0, -2.3, 2.4]} receiveShadow>
-                <boxGeometry args={[8, 0.1, 0.2]} />
-                <meshStandardMaterial color="#654321" />
-            </mesh>
-            <mesh position={[0, -2.3, -2.4]} receiveShadow>
-                <boxGeometry args={[8, 0.1, 0.2]} />
-                <meshStandardMaterial color="#654321" />
-            </mesh>
-
-            {/* Informations pH en 3D */}
-            <Text position={[0, 3.5, 0]} fontSize={0.15} color="#dc2626" anchorX="center" anchorY="middle">
-                pH: {titrageState.pH.toFixed(2)}
+            {/* Étiquette Burette avec nom du réactif */}
+            <Text position={[-0.5, 1.2, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
+                BURETTE
             </Text>
+            <Text position={[-0.5, 1.0, 0]} fontSize={0.08} color="#E0E0FF" anchorX="center" anchorY="middle">
+                {currentTitrant.label}
+            </Text>
+            <Text position={[-0.5, 0.8, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
+                {currentTitrant.formula}
+            </Text>
+
+            {/* Volume affiché en permanence */}
+            <Text
+                position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
+                fontSize={0.1}
+                color="#f87171"
+                anchorX="right"
+                anchorY="middle"
+                rotation={[0, Math.PI / 4, 0]}
+            >
+                {(50 - titrageState.volumeEcoule).toFixed(1)} mL
+            </Text>
+
+            {/* Goutte animée */}
+            <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
+                <sphereGeometry args={[0.03]} />
+                <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
+            </mesh>
         </group>
-    )
+
+        {/* Erlenmeyer avec étiquettes */}
+        <group position={[0, -1, 0]}>
+            <Erlenmeyer
+                couleurSolution={titrageState.couleurSolution}
+                niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
+            />
+
+            {/* Étiquette Erlenmeyer avec noms des réactifs */}
+            <Text position={[1.3, 0.6, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
+                ERLENMEYER
+            </Text>
+            <Text position={[1.3, 0.4, 0]} fontSize={0.08} color="#E0FFE0" anchorX="center" anchorY="middle">
+                {currentTitré.label}
+            </Text>
+            <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
+                {currentTitré.formula}
+            </Text>
+            <Text
+                position={[1.3, 0.0, 0]}
+                fontSize={0.06}
+                color="#FFD700"
+                anchorX="center"
+                anchorY="middle"
+            >
+                + {currentIndicateur.label}
+            </Text>
+
+            <MagneticStirrer stirBarRef={stirBarRef} />
+        </group>
+
+        {/* Table de laboratoire descendue */}
+        <mesh position={[0, -2.5, 0]} receiveShadow>
+            <boxGeometry args={[8, 0.2, 5]} />
+            <meshStandardMaterial color="#8B4513" />
+        </mesh>
+
+        {/* Bordures de table */}
+        <mesh position={[0, -2.3, 2.4]} receiveShadow>
+            <boxGeometry args={[8, 0.1, 0.2]} />
+            <meshStandardMaterial color="#654321" />
+        </mesh>
+        <mesh position={[0, -2.3, -2.4]} receiveShadow>
+            <boxGeometry args={[8, 0.1, 0.2]} />
+            <meshStandardMaterial color="#654321" />
+        </mesh>
+
+        {/* Informations pH en 3D */}
+        <Text position={[0, 5.2, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
+            pH: {titrageState.pH.toFixed(2)}
+        </Text>
+    </group>
+)
+
 }
 
-// Support coloré
 function Support() {
     return (
         <group>
             {/* Base métallique */}
-            <mesh position={[0, -2.2, 0]} castShadow>
+            <mesh position={[0, -2.0, 0]} castShadow>
                 <cylinderGeometry args={[0.8, 0.8, 0.2]} />
-                <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.2} />
+                <meshStandardMaterial color="#A0AEC0" metalness={0.9} roughness={0.15} />
             </mesh>
 
             {/* Tige verticale */}
             <mesh position={[0, 0.5, 0]} castShadow>
                 <cylinderGeometry args={[0.025, 0.025, 4.5]} />
-                <meshStandardMaterial color="#2d3748" metalness={0.9} roughness={0.1} />
+                <meshStandardMaterial color="#CBD5E0" metalness={1.0} roughness={0.05} />
             </mesh>
 
             {/* Bras horizontal */}
             <mesh position={[0, 2.5, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
                 <cylinderGeometry args={[0.02, 0.02, 1.5]} />
-                <meshStandardMaterial color="#2d3748" metalness={0.9} roughness={0.1} />
+                <meshStandardMaterial color="#CBD5E0" metalness={1.0} roughness={0.05} />
             </mesh>
 
             {/* Pince colorée */}
             <mesh position={[0.7, 2.5, 0]} castShadow>
                 <boxGeometry args={[0.1, 0.3, 0.05]} />
-                <meshStandardMaterial color="#1a202c" metalness={0.7} roughness={0.3} />
+                <meshStandardMaterial color="#38BDF8" metalness={0.6} roughness={0.3} />
             </mesh>
 
             {/* Étiquette Support */}
-            <Text position={[0, -1.8, 0]} fontSize={0.08} color="#4a5568" anchorX="center" anchorY="middle">
+            <Text position={[0, -1.8, 0]} fontSize={0.08} color="#E2E8F0" anchorX="center" anchorY="middle">
                 SUPPORT UNIVERSEL
             </Text>
         </group>
     )
 }
 
-// Burette améliorée
+
 function Burette({
     volumeEcoule,
     maxVolume,
@@ -700,15 +738,15 @@ function Burette({
     const clampedVolumeEcoule = Math.min(volumeEcoule, maxVolume)
     const liquidHeight = Math.max(0, buretteHeight * (1 - clampedVolumeEcoule / maxVolume))
 
-    // Graduations plus visibles
+    // Graduations plus lisibles
     for (let i = 0; i <= maxVolume; i += 5) {
         graduations.push(
             <group key={i} position={[0, 1.5 - (i / maxVolume) * buretteHeight, 0]}>
                 <mesh position={[0.12, 0, 0]}>
                     <boxGeometry args={[0.03, 0.02, 0.02]} />
-                    <meshStandardMaterial color="#000000" />
+                    <meshStandardMaterial color="#E5E7EB" /> {/* gris clair */}
                 </mesh>
-                <Text position={[0.25, 0, 0]} fontSize={0.06} color="#000000" anchorX="left" anchorY="middle">
+                <Text position={[0.25, 0, 0]} fontSize={0.06} color="#F9FAFB" anchorX="left" anchorY="middle">
                     {i}
                 </Text>
             </group>,
@@ -725,57 +763,58 @@ function Burette({
 
     return (
         <group>
-            {/* Corps de la burette en verre coloré */}
+            {/* Corps en verre */}
             <mesh castShadow renderOrder={1}>
                 <cylinderGeometry args={[0.1, 0.1, buretteHeight]} />
                 <meshPhysicalMaterial
-                    color="#e0f2fe"
+                    color="#C7D2FE" // bleu très clair
                     transparent
-                    opacity={0.4}
+                    opacity={0.35}
                     roughness={0.1}
                     metalness={0.0}
-                    transmission={0.8}
+                    transmission={0.9}
                     ior={1.5}
                 />
             </mesh>
 
-            {/* Solution dans la burette - toujours visible */}
+            {/* Solution visible */}
             {liquidHeight > 0 && (
                 <mesh position={[0, 1.5 - (buretteHeight - liquidHeight) / 2, 0]} renderOrder={2}>
                     <cylinderGeometry args={[0.09, 0.09, liquidHeight]} />
-                    <meshStandardMaterial color="#3b82f6" transparent opacity={0.9} />
+                    <meshStandardMaterial color="#60A5FA" transparent opacity={0.9} />
                 </mesh>
             )}
 
-            {/* Robinet coloré */}
+            {/* Robinet rouge clair */}
             <mesh ref={stopcockRef} position={[0, -1.6, 0]} castShadow>
                 <boxGeometry args={[0.06, 0.25, 0.06]} />
-                <meshStandardMaterial color="#dc2626" metalness={0.6} roughness={0.4} />
+                <meshStandardMaterial color="#F87171" metalness={0.6} roughness={0.4} />
                 <mesh position={[0, 0, 0.12]} rotation={[0, Math.PI / 2, 0]}>
                     <cylinderGeometry args={[0.04, 0.04, 0.25]} />
-                    <meshStandardMaterial color="#dc2626" metalness={0.6} roughness={0.4} />
+                    <meshStandardMaterial color="#F87171" metalness={0.6} roughness={0.4} />
                 </mesh>
             </mesh>
 
-            {/* Graduations */}
+            {/* Graduations visibles */}
             {graduations}
 
-            {/* Bec verseur coloré */}
+            {/* Bec verseur transparent */}
             <mesh position={[0, -1.7, 0]} renderOrder={1} castShadow>
                 <coneGeometry args={[0.025, 0.12]} />
                 <meshPhysicalMaterial
-                    color="#e0f2fe"
+                    color="#C7D2FE"
                     transparent
-                    opacity={0.4}
+                    opacity={0.35}
                     roughness={0.1}
                     metalness={0.0}
-                    transmission={0.8}
+                    transmission={0.9}
                     ior={1.5}
                 />
             </mesh>
         </group>
     )
 }
+
 
 // Erlenmeyer coloré
 function Erlenmeyer({
@@ -785,76 +824,92 @@ function Erlenmeyer({
     couleurSolution: string
     niveauSolution: number
 }) {
-    // Assurer que la solution est toujours visible
-    const adjustedNiveau = Math.max(0.15, niveauSolution) // Minimum 0.15 pour visibilité
-    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.1) // Hauteur maximale dans l'erlenmeyer
-    const solutionRadius = 0.35 + adjustedNiveau * 0.2 // Rayon qui s'adapte au niveau
+    const adjustedNiveau = Math.max(0.15, niveauSolution)
+    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.1)
+    const solutionRadius = 0.35 + adjustedNiveau * 0.2
 
     return (
         <group>
-            {/* Corps de l'erlenmeyer */}
+            {/* Corps en verre */}
             <mesh castShadow renderOrder={1}>
                 <cylinderGeometry args={[0.8, 0.4, 1.2]} />
                 <meshPhysicalMaterial
-                    color="#f0fdf4"
+                    color="#F0FDFA" // vert très très clair
                     transparent
                     opacity={0.3}
                     roughness={0.1}
                     metalness={0.0}
                     transmission={0.9}
                     ior={1.5}
+                    depthWrite={false}
                 />
             </mesh>
 
-            {/* Col de l'erlenmeyer */}
-            <mesh position={[0, 0.8, 0]} renderOrder={1} castShadow>
+            {/* Col en verre */}
+            <mesh position={[0, 0.8, 0]} castShadow renderOrder={1}>
                 <cylinderGeometry args={[0.15, 0.15, 0.8]} />
                 <meshPhysicalMaterial
-                    color="#f0fdf4"
+                    color="#F0FDFA"
                     transparent
                     opacity={0.3}
                     roughness={0.1}
                     metalness={0.0}
                     transmission={0.9}
                     ior={1.5}
+                    depthWrite={false}
                 />
             </mesh>
 
-            {/* Solution dans l'erlenmeyer - Toujours visible */}
-            <mesh position={[0, -0.6 + solutionHeight / 2, 0]} renderOrder={2}>
-                <cylinderGeometry args={[solutionRadius, 0.38, solutionHeight]} />
-                <meshStandardMaterial color={couleurSolution} transparent opacity={0.95} />
+            {/* Solution interne */}
+            <mesh position={[0, -0.6 + solutionHeight / 2, 0]} renderOrder={3} receiveShadow>
+                <cylinderGeometry args={[solutionRadius, solutionRadius, solutionHeight, 32]} />
+                <meshStandardMaterial
+                    color={couleurSolution}
+                    transparent
+                    opacity={0.95}
+                    roughness={0.3}
+                    metalness={0.05}
+                />
             </mesh>
         </group>
     )
 }
 
-// Agitateur magnétique coloré - POSÉ SUR LA TABLE
+
+
 function MagneticStirrer({ stirBarRef }: { stirBarRef: React.RefObject<THREE.Mesh> }) {
-    return (
-        <group>
-            {/* Base de l'agitateur - Maintenant vraiment posé sur la table */}
-            <mesh position={[0, -2.25, 0]} castShadow>
-                <boxGeometry args={[1.0, 0.1, 1.0]} />
-                <meshStandardMaterial color="#1f2937" metalness={0.5} roughness={0.5} />
-            </mesh>
+  return (
+    <group>
+      {/* Base de l'agitateur – posée au sol (table virtuelle) */}
+      <mesh position={[0, -1.2, 0]} castShadow>
+        <boxGeometry args={[1.0, 0.1, 1.0]} />
+        <meshStandardMaterial color="#374151" metalness={0.6} roughness={0.4} />
+      </mesh>
 
-            {/* Indicateur LED */}
-            <mesh position={[0.3, -2.15, 0.3]} castShadow>
-                <sphereGeometry args={[0.02]} />
-                <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
-            </mesh>
+      {/* LED indicateur – verte vive, lumineuse */}
+      <mesh position={[0.35, -1.15, 0.35]} castShadow>
+        <sphereGeometry args={[0.03]} />
+        <meshStandardMaterial color="#34D399" emissive="#34D399" emissiveIntensity={2.0} />
+      </mesh>
 
-            {/* Barreau agitateur - Dans la solution */}
-            <mesh ref={stirBarRef} position={[0, -0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.04, 0.04, 0.4]} />
-                <meshStandardMaterial color="#fbbf24" metalness={0.8} roughness={0.2} />
-            </mesh>
+      {/* Barreau agitateur – blanc/gris clair pour bon contraste */}
+      <mesh ref={stirBarRef} position={[0, -0.85, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.04, 0.04, 0.4]} />
+        <meshStandardMaterial color="#FDE68A" metalness={0.9} roughness={0.2} />
+      </mesh>
 
-            {/* Étiquette Agitateur */}
-            <Text position={[0, -2.0, 0]} fontSize={0.06} color="#1f2937" anchorX="center" anchorY="middle">
-                AGITATEUR
-            </Text>
-        </group>
-    )
+      {/* Étiquette visible, claire */}
+      <Text
+        position={[0, -1.1, 0.55]}
+        fontSize={0.07}
+        color="#F9FAFB"
+        anchorX="center"
+        anchorY="middle"
+      >
+        AGITATEUR
+      </Text>
+    </group>
+  );
 }
+
+
