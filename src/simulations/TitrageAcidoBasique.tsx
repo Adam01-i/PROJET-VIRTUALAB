@@ -1,0 +1,869 @@
+"use client"
+
+import * as React from "react"
+import { useRef, useState, Suspense, useEffect, useCallback } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { OrbitControls, Text, Html, ContactShadows } from "@react-three/drei"
+import type * as THREE from "three"
+import { FlaskConical, Camera } from "lucide-react"
+
+// Types pour la simulation
+interface TitrageConfig {
+    titrant: string
+    titré: string
+    indicateur: string
+    volumeEquivalence: number
+    initialVolumeErlenmeyer: number
+    concentrationErlenmeyer: number
+    concentrationBurette: number
+}
+
+interface TitrageState extends TitrageConfig {
+    volumeEcoule: number
+    isRunning: boolean
+    debit: number
+    pH: number
+    couleurSolution: string
+    equivalenceAtteinte: boolean
+}
+
+const TITRANTS = [
+    { value: "HCl 0.1M", label: "Acide Chlorhydrique", formula: "HCl", color: "#3b82f6" },
+    { value: "CH₃COOH 0.1M", label: "Acide Acétique", formula: "CH₃COOH", color: "#8b5cf6" },
+]
+
+const TITRÉS = [
+    { value: "NaOH 0.1M", label: "Hydroxyde de Sodium", formula: "NaOH", color: "#10b981" },
+    { value: "NH₄OH 0.1M", label: "Hydroxyde d'Ammonium", formula: "NH₄OH", color: "#f59e0b" },
+]
+
+const INDICATEURS = [
+    { value: "Phénolphtaléine", label: "Phénolphtaléine", color: "#ec4899", range: "pH 8.2-10" },
+    { value: "Bleu de bromothymol", label: "Bleu de Bromothymol", color: "#3b82f6", range: "pH 6.0-7.6" },
+]
+
+export default function TitrageInteractif() {
+    const initialConfig: TitrageConfig = {
+        titrant: "HCl 0.1M",
+        titré: "NaOH 0.1M",
+        indicateur: "Phénolphtaléine",
+        initialVolumeErlenmeyer: 25,
+        concentrationErlenmeyer: 0.1,
+        concentrationBurette: 0.1,
+        volumeEquivalence: 25,
+    }
+
+    const [config, setConfig] = useState<TitrageConfig>(initialConfig)
+    const [titrageState, setTitrageState] = useState<TitrageState>({
+        ...config,
+        volumeEcoule: 0,
+        isRunning: false,
+        debit: 0.5,
+        pH: 13,
+        couleurSolution: "#ff1493",
+        equivalenceAtteinte: false,
+    })
+
+    const controlsRef = useRef<any>(null)
+
+    useEffect(() => {
+        // Calcul correct du volume d'équivalence : C1*V1 = C2*V2
+        const newVolumeEq = (config.concentrationErlenmeyer * config.initialVolumeErlenmeyer) / config.concentrationBurette
+        setConfig((prev) => ({ ...prev, volumeEquivalence: newVolumeEq }))
+        reset()
+    }, [
+        config.concentrationErlenmeyer,
+        config.initialVolumeErlenmeyer,
+        config.concentrationBurette,
+        config.titrant,
+        config.titré,
+        config.indicateur,
+    ])
+
+    const handleConfigChange = <K extends keyof TitrageConfig>(key: K, value: TitrageConfig[K]) => {
+        setConfig((prev) => ({ ...prev, [key]: value }))
+    }
+
+    const reset = () => {
+        // pH initial correct pour une base forte
+        const initialPH = config.titré.includes("NaOH") ? 13 : 11.5 // NaOH plus basique que NH4OH
+        const initialColor = getIndicatorColor(initialPH, config.indicateur)
+
+        setTitrageState({
+            ...config,
+            volumeEcoule: 0,
+            isRunning: false,
+            debit: 0.5,
+            pH: initialPH,
+            couleurSolution: initialColor,
+            equivalenceAtteinte: false,
+        })
+    }
+
+    const toggleTitrage = () => {
+        setTitrageState((prev) => ({ ...prev, isRunning: !prev.isRunning }))
+    }
+
+    const handleDebitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTitrageState((prev) => ({ ...prev, debit: Number(e.target.value) }))
+    }
+
+    const resetCamera = useCallback(() => {
+        if (controlsRef.current) {
+            controlsRef.current.reset()
+        }
+    }, [])
+
+    // Fonction pour calculer la couleur de l'indicateur
+    const getIndicatorColor = (pH: number, indicator: string) => {
+        if (indicator === "Phénolphtaléine") {
+            if (pH < 8.2) return "#ffffff" // Incolore en milieu acide/neutre
+            if (pH < 10) {
+                // Transition progressive du blanc au rose
+                const intensity = (pH - 8.2) / (10 - 8.2)
+                return `hsl(330, 100%, ${100 - intensity * 30}%)`
+            }
+            return "#ff1493" // Rose fuchsia en milieu très basique
+        } else if (indicator === "Bleu de bromothymol") {
+            if (pH < 6.0) return "#ffff00" // Jaune en milieu acide
+            if (pH < 7.6) {
+                // Transition du jaune au bleu via le vert
+                const intensity = (pH - 6.0) / (7.6 - 6.0)
+                if (intensity < 0.5) {
+                    return `hsl(${60 + intensity * 60}, 100%, 50%)` // Jaune vers vert
+                } else {
+                    return `hsl(${120 + (intensity - 0.5) * 120}, 100%, 50%)` // Vert vers bleu
+                }
+            }
+            return "#0066ff" // Bleu en milieu basique
+        }
+        return "#ffffff"
+    }
+
+    // Calculer le pourcentage de progression
+    const progressPercent = Math.min((titrageState.volumeEcoule / titrageState.volumeEquivalence) * 100, 100)
+
+    // Déterminer la phase du titrage
+    const getPhaseInfo = () => {
+        const progress = titrageState.volumeEcoule / titrageState.volumeEquivalence
+        if (progress < 0.1) return { phase: "Début", color: "blue", description: "Milieu très basique" }
+        if (progress < 0.9) return { phase: "Progression", color: "orange", description: "Neutralisation en cours" }
+        if (progress < 1.1) return { phase: "Équivalence", color: "red", description: "Point d'équivalence proche" }
+        return { phase: "Dépassement", color: "purple", description: "Milieu acide" }
+    }
+
+    const phaseInfo = getPhaseInfo()
+
+    // Trouver les objets correspondants pour l'affichage
+    const currentTitrant = TITRANTS.find((t) => t.value === config.titrant) || TITRANTS[0]
+    const currentTitré = TITRÉS.find((t) => t.value === config.titré) || TITRÉS[0]
+    const currentIndicateur = INDICATEURS.find((i) => i.value === config.indicateur) || INDICATEURS[0]
+
+    return (
+        <div className="w-full h-full relative bg-gradient-to-b from-slate-100 to-slate-200">
+            {/* Interface de contrôle - Version compacte */}
+            <div className="absolute top-4 left-4 z-10 bg-indigo-500 rounded-lg p-4 shadow-xl max-w-[300px] space-y-3 border-2 border-gray-300">
+                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <FlaskConical className="w-4 h-4 text-indigo-600" />
+                    Titrage Acide-Base
+                </h2>
+
+                {/* Sélection des réactifs - Version compacte */}
+                <div className="space-y-3 text-sm">
+                    <div>
+                        <label className="font-semibold text-gray-900 mb-1 block text-base">Titrant</label>
+                        <div className="space-y-1">
+                            {TITRANTS.map((titrant) => (
+                                <label key={titrant.value} className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="titrant"
+                                        value={titrant.value}
+                                        checked={config.titrant === titrant.value}
+                                        onChange={(e) => handleConfigChange("titrant", e.target.value)}
+                                        className="w-3 h-3 text-indigo-600"
+                                    />
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: titrant.color }} />
+                                    <span className="text-sm font-medium">{titrant.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <div className="mt-2">
+                            <label className="text-xs text-gray-800">Concentration (M)</label>
+                            <input
+                                type="range"
+                                min={0.05}
+                                max={0.5}
+                                step={0.05}
+                                value={config.concentrationBurette}
+                                onChange={(e) => handleConfigChange("concentrationBurette", Number(e.target.value))}
+                                className="w-full mt-1"
+                            />
+                            <div className="text-xs text-gray-800">{config.concentrationBurette.toFixed(2)} M</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="font-semibold text-gray-900 mb-1 block text-base">Titré</label>
+                        <div className="space-y-1">
+                            {TITRÉS.map((titré) => (
+                                <label key={titré.value} className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="titré"
+                                        value={titré.value}
+                                        checked={config.titré === titré.value}
+                                        onChange={(e) => handleConfigChange("titré", e.target.value)}
+                                        className="w-3 h-3 text-indigo-600"
+                                    />
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: titré.color }} />
+                                    <span className="text-sm font-medium">{titré.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <div className="mt-2 space-y-2">
+                            <div>
+                                <label className="text-xs text-gray-800">Concentration (M)</label>
+                                <input
+                                    type="range"
+                                    min={0.05}
+                                    max={0.5}
+                                    step={0.05}
+                                    value={config.concentrationErlenmeyer}
+                                    onChange={(e) => handleConfigChange("concentrationErlenmeyer", Number(e.target.value))}
+                                    className="w-full mt-1"
+                                />
+                                <div className="text-xs text-gray-800">{config.concentrationErlenmeyer.toFixed(2)} M</div>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-800">Volume initial (mL)</label>
+                                <input
+                                    type="range"
+                                    min={10}
+                                    max={50}
+                                    step={5}
+                                    value={config.initialVolumeErlenmeyer}
+                                    onChange={(e) => handleConfigChange("initialVolumeErlenmeyer", Number(e.target.value))}
+                                    className="w-full mt-1"
+                                />
+                                <div className="text-xs text-gray-800">{config.initialVolumeErlenmeyer} mL</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="font-semibold text-gray-900 mb-1 block text-base">Indicateur</label>
+                        <div className="space-y-1">
+                            {INDICATEURS.map((indicateur) => (
+                                <label key={indicateur.value} className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="indicateur"
+                                        value={indicateur.value}
+                                        checked={config.indicateur === indicateur.value}
+                                        onChange={(e) => handleConfigChange("indicateur", e.target.value)}
+                                        className="w-3 h-3 text-indigo-600"
+                                    />
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: indicateur.color }} />
+                                    <span className="text-sm font-medium">{indicateur.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="font-medium text-gray-800 text-sm">Débit (mL/s)</label>
+                        <input
+                            type="range"
+                            min={0.1}
+                            max={2.0}
+                            step={0.1}
+                            value={titrageState.debit}
+                            onChange={handleDebitChange}
+                            className="w-full mt-1"
+                        />
+                        <div className="text-xs text-gray-800">{titrageState.debit.toFixed(1)} mL/s</div>
+                    </div>
+                </div>
+
+                <div className="flex gap-2">
+                    <button
+                        onClick={toggleTitrage}
+                        className={`flex-1 px-3 py-2 rounded-md text-white font-medium text-sm transition-colors ${titrageState.isRunning ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                            }`}
+                    >
+                        {titrageState.isRunning ? "Arrêter" : "Démarrer"}
+                    </button>
+                    <button
+                        onClick={reset}
+                        className="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium text-sm transition-colors"
+                    >
+                        Reset
+                    </button>
+                </div>
+
+                <button
+                    onClick={resetCamera}
+                    className="w-full px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                >
+                    <Camera className="w-4 h-4" />
+                    Caméra
+                </button>
+            </div>
+
+            {/* Résultats - Version compacte */}
+            <div className="absolute top-4 right-4 z-10 bg-indigo-500 rounded-lg p-4 shadow-xl w-[300px] max-h-[85vh] overflow-y-auto text-sm space-y-3 border-2 border-gray-300">
+                <h3 className="text-lg font-semibold text-indigo-700">Résultats</h3>
+
+                {/* Configuration - Version compacte */}
+                <div className="bg-gray-50 p-2 rounded border text-xs">
+                    <div className="flex items-center gap-1 mb-1">
+                        <div className="w-2 h-2 rounded-full " style={{ backgroundColor: currentTitrant.color }} />
+                        <span>
+                            {currentTitrant.label} ({config.concentrationBurette.toFixed(2)}M)
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1 mb-1">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTitré.color }} />
+                        <span>
+                            {currentTitré.label} ({config.concentrationErlenmeyer.toFixed(2)}M, {config.initialVolumeErlenmeyer}mL)
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentIndicateur.color }} />
+                        <span>{currentIndicateur.label}</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="font-medium">Volume écoulé:</div>
+                    <div className="font-mono">{titrageState.volumeEcoule.toFixed(1)} mL</div>
+                    <div className="font-medium">Vol. équivalence:</div>
+                    <div className="font-mono">{titrageState.volumeEquivalence.toFixed(1)} mL</div>
+                    <div className="font-medium">pH:</div>
+                    <div className="font-mono text-base font-bold">{titrageState.pH.toFixed(2)}</div>
+                    <div className="font-medium">Progression:</div>
+                    <div className="font-mono">{progressPercent.toFixed(0)}%</div>
+                </div>
+
+                {/* Barre de progression */}
+                <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-gray-600">
+                        <span>0%</span>
+                        <span className="font-medium">{phaseInfo.phase}</span>
+                        <span>100%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                            className={`bg-gradient-to-r from-${phaseInfo.color}-400 to-${phaseInfo.color}-600 h-2 rounded-full transition-all duration-300`}
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* État actuel - Version compacte */}
+                <div className="space-y-2">
+                    {titrageState.equivalenceAtteinte ? (
+                        <div className="p-2 bg-green-50 border-l-2 border-green-400 rounded text-green-800 text-xs">
+                            <strong>🎉 Équivalence atteinte!</strong>
+                            <br />
+                            Volume: {titrageState.volumeEcoule.toFixed(1)} mL, pH: {titrageState.pH.toFixed(2)}
+                        </div>
+                    ) : titrageState.isRunning ? (
+                        <div
+                            className={`p-2 bg-${phaseInfo.color}-50 border-l-2 border-${phaseInfo.color}-400 rounded text-${phaseInfo.color}-800 text-xs`}
+                        >
+                            <strong>⚗️ {phaseInfo.phase}</strong>
+                            <br />
+                            {phaseInfo.description}
+                            {progressPercent < 90 && (
+                                <div>
+                                    <br />
+                                    Reste: {(titrageState.volumeEquivalence - titrageState.volumeEcoule).toFixed(1)} mL
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="p-2 bg-gray-50 border-l-2 border-gray-400 rounded text-gray-800 text-xs">
+                            <strong>🔬 Prêt</strong>
+                            <br />
+                            Vol. théorique: {titrageState.volumeEquivalence.toFixed(1)} mL
+                        </div>
+                    )}
+
+                    <div className="p-2 bg-blue-50 border border-blue-200 rounded text-blue-800 text-xs">
+                        <strong>💡 Conseils:</strong> Ajustez le débit • Observez la couleur • Le pH change vite près de
+                        l'équivalence
+                    </div>
+                </div>
+            </div>
+
+            {/* Canvas 3D avec meilleur éclairage */}
+            <Canvas camera={{ position: [5, 5, 8], fov: 50 }} shadows>
+                <Suspense fallback={<Html center>Chargement...</Html>}>
+                    {/* Éclairage amélioré pour la visibilité */}
+                    <ambientLight intensity={1.2} />
+                    <directionalLight position={[10, 10, 5]} intensity={2} castShadow />
+                    <directionalLight position={[-10, 5, -5]} intensity={1.5} />
+                    <directionalLight position={[0, 10, 0]} intensity={1} />
+                    <pointLight position={[0, 3, 0]} intensity={0.8} />
+
+                    <TitrageScene
+                        titrageState={titrageState}
+                        setTitrageState={setTitrageState}
+                        currentTitrant={currentTitrant}
+                        currentTitré={currentTitré}
+                        currentIndicateur={currentIndicateur}
+                        getIndicatorColor={getIndicatorColor}
+                    />
+                    <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={3} maxDistance={15} />
+                    <ContactShadows position={[0, -2.35, 0]} opacity={0.3} scale={12} blur={2} far={4} />
+                </Suspense>
+            </Canvas>
+        </div>
+    )
+}
+
+// Scène 3D améliorée
+function TitrageScene({
+    titrageState,
+    setTitrageState,
+    currentTitrant,
+    currentTitré,
+    currentIndicateur,
+    getIndicatorColor,
+}: {
+    titrageState: TitrageState
+    setTitrageState: React.Dispatch<React.SetStateAction<TitrageState>>
+    currentTitrant: any
+    currentTitré: any
+    currentIndicateur: any
+    getIndicatorColor: (pH: number, indicator: string) => string
+}) {
+    const goutteRef = useRef<THREE.Mesh>(null)
+    const stirBarRef = useRef<THREE.Mesh>(null)
+
+    // Calcul précis du pH pour un titrage acide fort - base forte
+    const calculatePH = (
+        volumeEcoule: number,
+        initialVolumeErlenmeyer: number,
+        concentrationErlenmeyer: number,
+        concentrationBurette: number,
+        titrant: string,
+        titré: string,
+    ) => {
+        const V_base = initialVolumeErlenmeyer / 1000 // Volume initial de base en L
+        const C_base = concentrationErlenmeyer // Concentration de la base
+        const C_acid = concentrationBurette // Concentration de l'acide
+        const V_acid = volumeEcoule / 1000 // Volume d'acide ajouté en L
+
+        // Moles initiales de base
+        const n_base_initial = C_base * V_base
+        // Moles d'acide ajoutées
+        const n_acid_added = C_acid * V_acid
+        // Volume total
+        const V_total = V_base + V_acid
+
+        let pH: number
+
+        if (V_acid === 0) {
+            // pH initial de la base
+            if (titré.includes("NaOH")) {
+                // Base forte
+                const pOH = -Math.log10(C_base)
+                pH = 14 - pOH
+            } else {
+                // Base faible (NH4OH)
+                const Kb = 1.8e-5 // Constante de basicité de NH4OH
+                const OH_concentration = Math.sqrt(Kb * C_base)
+                const pOH = -Math.log10(OH_concentration)
+                pH = 14 - pOH
+            }
+        } else if (n_acid_added < n_base_initial) {
+            // Avant l'équivalence - excès de base
+            const n_base_remaining = n_base_initial - n_acid_added
+            const C_base_remaining = n_base_remaining / V_total
+
+            if (titré.includes("NaOH")) {
+                // Base forte
+                const pOH = -Math.log10(C_base_remaining)
+                pH = 14 - pOH
+            } else {
+                // Base faible
+                const Kb = 1.8e-5
+                const OH_concentration = Math.sqrt(Kb * C_base_remaining)
+                const pOH = -Math.log10(OH_concentration)
+                pH = 14 - pOH
+            }
+        } else if (Math.abs(n_acid_added - n_base_initial) < 1e-10) {
+            // À l'équivalence
+            if (titrant.includes("HCl") && titré.includes("NaOH")) {
+                // Acide fort + Base forte = pH neutre
+                pH = 7.0
+            } else {
+                // Avec base faible, pH légèrement acide à l'équivalence
+                pH = 5.5
+            }
+        } else {
+            // Après l'équivalence - excès d'acide
+            const n_acid_excess = n_acid_added - n_base_initial
+            const C_acid_excess = n_acid_excess / V_total
+
+            if (titrant.includes("HCl")) {
+                // Acide fort
+                pH = -Math.log10(C_acid_excess)
+            } else {
+                // Acide faible
+                const Ka = 1.8e-5 // Constante d'acidité de CH3COOH
+                const H_concentration = Math.sqrt(Ka * C_acid_excess)
+                pH = -Math.log10(H_concentration)
+            }
+        }
+
+        return Math.max(0.5, Math.min(14, pH))
+    }
+
+    useFrame((state, delta) => {
+        if (titrageState.isRunning && !titrageState.equivalenceAtteinte) {
+            setTitrageState((prev) => {
+                const newVolume = prev.volumeEcoule + prev.debit * delta
+
+                const currentPH = calculatePH(
+                    newVolume,
+                    prev.initialVolumeErlenmeyer,
+                    prev.concentrationErlenmeyer,
+                    prev.concentrationBurette,
+                    prev.titrant,
+                    prev.titré,
+                )
+
+                const newCouleur = getIndicatorColor(currentPH, prev.indicateur)
+                const equivalenceAtteinte = newVolume >= prev.volumeEquivalence
+
+                return {
+                    ...prev,
+                    volumeEcoule: newVolume,
+                    pH: currentPH,
+                    couleurSolution: newCouleur,
+                    equivalenceAtteinte,
+                    isRunning: !equivalenceAtteinte && prev.isRunning,
+                }
+            })
+        }
+
+        // Animation de la goutte
+        if (titrageState.isRunning && goutteRef.current) {
+            goutteRef.current.position.y = Math.sin(state.clock.elapsedTime * 10) * 0.1 - 1.5
+            goutteRef.current.visible = true
+        } else if (goutteRef.current) {
+            goutteRef.current.visible = false
+        }
+
+        // Animation du barreau agitateur
+        if (stirBarRef.current) {
+            stirBarRef.current.rotation.y += 0.15
+        }
+    })
+
+    return (
+        <group>
+            {/* Support coloré */}
+            <Support />
+
+            {/* Burette avec étiquette */}
+            <group position={[0, 2, 0]}>
+                <Burette volumeEcoule={titrageState.volumeEcoule} maxVolume={50} isRunning={titrageState.isRunning} />
+
+                {/* Étiquette Burette avec nom du réactif */}
+                <Text position={[-0.8, 1.2, 0]} fontSize={0.1} color={currentTitrant.color} anchorX="center" anchorY="middle">
+                    BURETTE
+                </Text>
+                <Text position={[-0.8, 1.0, 0]} fontSize={0.08} color={currentTitrant.color} anchorX="center" anchorY="middle">
+                    {currentTitrant.label}
+                </Text>
+                <Text position={[-0.8, 0.8, 0]} fontSize={0.06} color="#666666" anchorX="center" anchorY="middle">
+                    {currentTitrant.formula}
+                </Text>
+
+                {/* Volume affiché en permanence */}
+                <Text
+                    position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
+                    fontSize={0.1}
+                    color="#dc2626"
+                    anchorX="right"
+                    anchorY="middle"
+                    rotation={[0, Math.PI / 4, 0]}
+                >
+                    {(50 - titrageState.volumeEcoule).toFixed(1)} mL
+                </Text>
+
+                {/* Goutte animée */}
+                <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
+                    <sphereGeometry args={[0.03]} />
+                    <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
+                </mesh>
+            </group>
+
+            {/* Erlenmeyer avec étiquettes */}
+            <group position={[0, -1, 0]}>
+                <Erlenmeyer
+                    couleurSolution={titrageState.couleurSolution}
+                    niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
+                />
+
+                {/* Étiquette Erlenmeyer avec noms des réactifs */}
+                <Text position={[1.3, 0.6, 0]} fontSize={0.1} color={currentTitré.color} anchorX="center" anchorY="middle">
+                    ERLENMEYER
+                </Text>
+                <Text position={[1.3, 0.4, 0]} fontSize={0.08} color={currentTitré.color} anchorX="center" anchorY="middle">
+                    {currentTitré.label}
+                </Text>
+                <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#666666" anchorX="center" anchorY="middle">
+                    {currentTitré.formula}
+                </Text>
+                <Text
+                    position={[1.3, 0.0, 0]}
+                    fontSize={0.06}
+                    color={currentIndicateur.color}
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    + {currentIndicateur.label}
+                </Text>
+
+                <MagneticStirrer stirBarRef={stirBarRef} />
+            </group>
+
+            {/* Table de laboratoire descendue */}
+            <mesh position={[0, -2.4, 0]} receiveShadow>
+                <boxGeometry args={[8, 0.2, 5]} />
+                <meshStandardMaterial color="#8B4513" />
+            </mesh>
+
+            {/* Bordures de table */}
+            <mesh position={[0, -2.3, 2.4]} receiveShadow>
+                <boxGeometry args={[8, 0.1, 0.2]} />
+                <meshStandardMaterial color="#654321" />
+            </mesh>
+            <mesh position={[0, -2.3, -2.4]} receiveShadow>
+                <boxGeometry args={[8, 0.1, 0.2]} />
+                <meshStandardMaterial color="#654321" />
+            </mesh>
+
+            {/* Informations pH en 3D */}
+            <Text position={[0, 3.5, 0]} fontSize={0.15} color="#dc2626" anchorX="center" anchorY="middle">
+                pH: {titrageState.pH.toFixed(2)}
+            </Text>
+        </group>
+    )
+}
+
+// Support coloré
+function Support() {
+    return (
+        <group>
+            {/* Base métallique */}
+            <mesh position={[0, -2.2, 0]} castShadow>
+                <cylinderGeometry args={[0.8, 0.8, 0.2]} />
+                <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.2} />
+            </mesh>
+
+            {/* Tige verticale */}
+            <mesh position={[0, 0.5, 0]} castShadow>
+                <cylinderGeometry args={[0.025, 0.025, 4.5]} />
+                <meshStandardMaterial color="#2d3748" metalness={0.9} roughness={0.1} />
+            </mesh>
+
+            {/* Bras horizontal */}
+            <mesh position={[0, 2.5, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                <cylinderGeometry args={[0.02, 0.02, 1.5]} />
+                <meshStandardMaterial color="#2d3748" metalness={0.9} roughness={0.1} />
+            </mesh>
+
+            {/* Pince colorée */}
+            <mesh position={[0.7, 2.5, 0]} castShadow>
+                <boxGeometry args={[0.1, 0.3, 0.05]} />
+                <meshStandardMaterial color="#1a202c" metalness={0.7} roughness={0.3} />
+            </mesh>
+
+            {/* Étiquette Support */}
+            <Text position={[0, -1.8, 0]} fontSize={0.08} color="#4a5568" anchorX="center" anchorY="middle">
+                SUPPORT UNIVERSEL
+            </Text>
+        </group>
+    )
+}
+
+// Burette améliorée
+function Burette({
+    volumeEcoule,
+    maxVolume,
+    isRunning,
+}: {
+    volumeEcoule: number
+    maxVolume: number
+    isRunning: boolean
+}) {
+    const graduations = []
+    const buretteHeight = 3
+    const clampedVolumeEcoule = Math.min(volumeEcoule, maxVolume)
+    const liquidHeight = Math.max(0, buretteHeight * (1 - clampedVolumeEcoule / maxVolume))
+
+    // Graduations plus visibles
+    for (let i = 0; i <= maxVolume; i += 5) {
+        graduations.push(
+            <group key={i} position={[0, 1.5 - (i / maxVolume) * buretteHeight, 0]}>
+                <mesh position={[0.12, 0, 0]}>
+                    <boxGeometry args={[0.03, 0.02, 0.02]} />
+                    <meshStandardMaterial color="#000000" />
+                </mesh>
+                <Text position={[0.25, 0, 0]} fontSize={0.06} color="#000000" anchorX="left" anchorY="middle">
+                    {i}
+                </Text>
+            </group>,
+        )
+    }
+
+    const stopcockRef = useRef<THREE.Mesh>(null)
+
+    useFrame(() => {
+        if (stopcockRef.current) {
+            stopcockRef.current.rotation.z = isRunning ? Math.PI / 4 : 0
+        }
+    })
+
+    return (
+        <group>
+            {/* Corps de la burette en verre coloré */}
+            <mesh castShadow renderOrder={1}>
+                <cylinderGeometry args={[0.1, 0.1, buretteHeight]} />
+                <meshPhysicalMaterial
+                    color="#e0f2fe"
+                    transparent
+                    opacity={0.4}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.8}
+                    ior={1.5}
+                />
+            </mesh>
+
+            {/* Solution dans la burette - toujours visible */}
+            {liquidHeight > 0 && (
+                <mesh position={[0, 1.5 - (buretteHeight - liquidHeight) / 2, 0]} renderOrder={2}>
+                    <cylinderGeometry args={[0.09, 0.09, liquidHeight]} />
+                    <meshStandardMaterial color="#3b82f6" transparent opacity={0.9} />
+                </mesh>
+            )}
+
+            {/* Robinet coloré */}
+            <mesh ref={stopcockRef} position={[0, -1.6, 0]} castShadow>
+                <boxGeometry args={[0.06, 0.25, 0.06]} />
+                <meshStandardMaterial color="#dc2626" metalness={0.6} roughness={0.4} />
+                <mesh position={[0, 0, 0.12]} rotation={[0, Math.PI / 2, 0]}>
+                    <cylinderGeometry args={[0.04, 0.04, 0.25]} />
+                    <meshStandardMaterial color="#dc2626" metalness={0.6} roughness={0.4} />
+                </mesh>
+            </mesh>
+
+            {/* Graduations */}
+            {graduations}
+
+            {/* Bec verseur coloré */}
+            <mesh position={[0, -1.7, 0]} renderOrder={1} castShadow>
+                <coneGeometry args={[0.025, 0.12]} />
+                <meshPhysicalMaterial
+                    color="#e0f2fe"
+                    transparent
+                    opacity={0.4}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.8}
+                    ior={1.5}
+                />
+            </mesh>
+        </group>
+    )
+}
+
+// Erlenmeyer coloré
+function Erlenmeyer({
+    couleurSolution,
+    niveauSolution,
+}: {
+    couleurSolution: string
+    niveauSolution: number
+}) {
+    // Assurer que la solution est toujours visible
+    const adjustedNiveau = Math.max(0.15, niveauSolution) // Minimum 0.15 pour visibilité
+    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.1) // Hauteur maximale dans l'erlenmeyer
+    const solutionRadius = 0.35 + adjustedNiveau * 0.2 // Rayon qui s'adapte au niveau
+
+    return (
+        <group>
+            {/* Corps de l'erlenmeyer */}
+            <mesh castShadow renderOrder={1}>
+                <cylinderGeometry args={[0.8, 0.4, 1.2]} />
+                <meshPhysicalMaterial
+                    color="#f0fdf4"
+                    transparent
+                    opacity={0.3}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.9}
+                    ior={1.5}
+                />
+            </mesh>
+
+            {/* Col de l'erlenmeyer */}
+            <mesh position={[0, 0.8, 0]} renderOrder={1} castShadow>
+                <cylinderGeometry args={[0.15, 0.15, 0.8]} />
+                <meshPhysicalMaterial
+                    color="#f0fdf4"
+                    transparent
+                    opacity={0.3}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.9}
+                    ior={1.5}
+                />
+            </mesh>
+
+            {/* Solution dans l'erlenmeyer - Toujours visible */}
+            <mesh position={[0, -0.6 + solutionHeight / 2, 0]} renderOrder={2}>
+                <cylinderGeometry args={[solutionRadius, 0.38, solutionHeight]} />
+                <meshStandardMaterial color={couleurSolution} transparent opacity={0.95} />
+            </mesh>
+        </group>
+    )
+}
+
+// Agitateur magnétique coloré - POSÉ SUR LA TABLE
+function MagneticStirrer({ stirBarRef }: { stirBarRef: React.RefObject<THREE.Mesh> }) {
+    return (
+        <group>
+            {/* Base de l'agitateur - Maintenant vraiment posé sur la table */}
+            <mesh position={[0, -2.25, 0]} castShadow>
+                <boxGeometry args={[1.0, 0.1, 1.0]} />
+                <meshStandardMaterial color="#1f2937" metalness={0.5} roughness={0.5} />
+            </mesh>
+
+            {/* Indicateur LED */}
+            <mesh position={[0.3, -2.15, 0.3]} castShadow>
+                <sphereGeometry args={[0.02]} />
+                <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
+            </mesh>
+
+            {/* Barreau agitateur - Dans la solution */}
+            <mesh ref={stirBarRef} position={[0, -0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.04, 0.04, 0.4]} />
+                <meshStandardMaterial color="#fbbf24" metalness={0.8} roughness={0.2} />
+            </mesh>
+
+            {/* Étiquette Agitateur */}
+            <Text position={[0, -2.0, 0]} fontSize={0.06} color="#1f2937" anchorX="center" anchorY="middle">
+                AGITATEUR
+            </Text>
+        </group>
+    )
+}
