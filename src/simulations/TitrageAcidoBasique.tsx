@@ -162,7 +162,7 @@ export default function TitrageInteractif() {
     return (
         <div className="w-full h-full relative bg-gradient-to-b from-slate-100 to-slate-200">
             {/* Interface de contrôle - Version compacte */}
-            <div className="absolute top-4 left-4 z-10 bg-indigo-500 rounded-lg p-4 shadow-xl max-w-[300px] space-y-3 border-2 border-gray-300">
+            <div className="absolute top-4 left-4 z-10 bg-indigo-500 rounded-lg p-4 shadow-xl w-[300px] space-y-3 border-2 border-gray-300">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                     <FlaskConical className="w-4 h-4 text-indigo-600" />
                     Titrage Acide-Base
@@ -190,6 +190,7 @@ export default function TitrageInteractif() {
                         </div>
                         <div className="mt-2">
                             <label className="text-xs text-gray-800">Concentration (M)</label>
+                            <div className = 'flex items-center space-x-2'>
                             <input
                                 type="range"
                                 min={0.05}
@@ -199,7 +200,8 @@ export default function TitrageInteractif() {
                                 onChange={(e) => handleConfigChange("concentrationBurette", Number(e.target.value))}
                                 className="w-full mt-1"
                             />
-                            <div className="text-xs text-gray-800">{config.concentrationBurette.toFixed(2)} M</div>
+                            <div className="text-xs text-gray-800">{config.concentrationBurette.toFixed(2)}M</div>
+                            </div>
                         </div>
                     </div>
 
@@ -224,6 +226,7 @@ export default function TitrageInteractif() {
                         <div className="mt-2 space-y-2">
                             <div>
                                 <label className="text-xs text-gray-800">Concentration (M)</label>
+                                <div className="flex items-center space-x-2">
                                 <input
                                     type="range"
                                     min={0.05}
@@ -233,10 +236,12 @@ export default function TitrageInteractif() {
                                     onChange={(e) => handleConfigChange("concentrationErlenmeyer", Number(e.target.value))}
                                     className="w-full mt-1"
                                 />
-                                <div className="text-xs text-gray-800">{config.concentrationErlenmeyer.toFixed(2)} M</div>
+                                <div className="text-xs text-gray-800">{config.concentrationErlenmeyer.toFixed(2)}M</div>
+                                </div>
                             </div>
                             <div>
                                 <label className="text-xs text-gray-800">Volume initial (mL)</label>
+                                <div className="flex items-center space-x-2">
                                 <input
                                     type="range"
                                     min={10}
@@ -246,7 +251,8 @@ export default function TitrageInteractif() {
                                     onChange={(e) => handleConfigChange("initialVolumeErlenmeyer", Number(e.target.value))}
                                     className="w-full mt-1"
                                 />
-                                <div className="text-xs text-gray-800">{config.initialVolumeErlenmeyer} mL</div>
+                                <div className="text-xs text-gray-800">{config.initialVolumeErlenmeyer}mL</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -273,6 +279,7 @@ export default function TitrageInteractif() {
 
                     <div>
                         <label className="font-medium text-gray-800 text-sm">Débit (mL/s)</label>
+                        <div className="flex items-center space-x-2">
                         <input
                             type="range"
                             min={0.1}
@@ -282,33 +289,10 @@ export default function TitrageInteractif() {
                             onChange={handleDebitChange}
                             className="w-full mt-1"
                         />
-                        <div className="text-xs text-gray-800">{titrageState.debit.toFixed(1)} mL/s</div>
+                        <div className="text-xs text-gray-800">{titrageState.debit.toFixed(1)}mL/s</div>
+                        </div>
                     </div>
                 </div>
-
-                <div className="flex gap-2">
-                    <button
-                        onClick={toggleTitrage}
-                        className={`flex-1 px-3 py-2 rounded-md text-white font-medium text-sm transition-colors ${titrageState.isRunning ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-                            }`}
-                    >
-                        {titrageState.isRunning ? "Arrêter" : "Démarrer"}
-                    </button>
-                    <button
-                        onClick={reset}
-                        className="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium text-sm transition-colors"
-                    >
-                        Reset
-                    </button>
-                </div>
-
-                <button
-                    onClick={resetCamera}
-                    className="w-full px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                    <Camera className="w-4 h-4" />
-                    Caméra
-                </button>
             </div>
 
             {/* Résultats - Version compacte */}
@@ -317,19 +301,19 @@ export default function TitrageInteractif() {
 
                 {/* Configuration - Version compacte */}
                 <div className="bg-gray-50 p-2 rounded border text-xs">
-                    <div className="flex items-center gap-1 mb-1">
+                    <div className="flex items-center gap-1 mb-1 text-gray-800">
                         <div className="w-2 h-2 rounded-full " style={{ backgroundColor: currentTitrant.color }} />
                         <span>
                             {currentTitrant.label} ({config.concentrationBurette.toFixed(2)}M)
                         </span>
                     </div>
-                    <div className="flex items-center gap-1 mb-1">
+                    <div className="flex items-center gap-1 mb-1 text-gray-800">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTitré.color }} />
                         <span>
                             {currentTitré.label} ({config.concentrationErlenmeyer.toFixed(2)}M, {config.initialVolumeErlenmeyer}mL)
                         </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-gray-800">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentIndicateur.color }} />
                         <span>{currentIndicateur.label}</span>
                     </div>
@@ -345,22 +329,6 @@ export default function TitrageInteractif() {
                     <div className="font-medium">Progression:</div>
                     <div className="font-mono">{progressPercent.toFixed(0)}%</div>
                 </div>
-
-                {/* Barre de progression */}
-                <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-gray-600">
-                        <span>0%</span>
-                        <span className="font-medium">{phaseInfo.phase}</span>
-                        <span>100%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                            className={`bg-gradient-to-r from-${phaseInfo.color}-400 to-${phaseInfo.color}-600 h-2 rounded-full transition-all duration-300`}
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div>
-
                 {/* État actuel - Version compacte */}
                 <div className="space-y-2">
                     {titrageState.equivalenceAtteinte ? (
@@ -396,6 +364,29 @@ export default function TitrageInteractif() {
                         l'équivalence
                     </div>
                 </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={toggleTitrage}
+                        className={`flex-1 px-3 py-2 rounded-md text-white font-medium text-sm transition-colors ${titrageState.isRunning ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                            }`}
+                    >
+                        {titrageState.isRunning ? "Arrêter" : "Démarrer"}
+                    </button>
+                    <button
+                        onClick={reset}
+                        className="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium text-sm transition-colors"
+                    >
+                        Reset
+                    </button>
+                </div>
+
+                <button
+                    onClick={resetCamera}
+                    className="w-full px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                >
+                    <Camera className="w-4 h-4" />
+                    Caméra
+                </button>
             </div>
 
             {/* Canvas 3D avec meilleur éclairage */}
