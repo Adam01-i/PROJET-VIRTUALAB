@@ -590,101 +590,101 @@ function TitrageScene({
         }
     })
 
-return ( 
-    <group>
-        {/* Support coloré */}
-        <Support />
+    return (
+        <group>
+            {/* Support coloré */}
+            <Support />
 
-        {/* Burette avec étiquette */}
-        <group position={[0, 2, 0]}>
-            <Burette
-                volumeEcoule={titrageState.volumeEcoule}
-                maxVolume={50}
-                isRunning={titrageState.isRunning}
-            />
+            {/* Burette avec étiquette */}
+            <group position={[0, 2, 0]}>
+                <Burette
+                    volumeEcoule={titrageState.volumeEcoule}
+                    maxVolume={50}
+                    isRunning={titrageState.isRunning}
+                />
 
-            {/* Étiquette Burette avec nom du réactif */}
-            <Text position={[-0.5, 1.2, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
-                BURETTE
-            </Text>
-            <Text position={[-0.5, 1.0, 0]} fontSize={0.08} color="#E0E0FF" anchorX="center" anchorY="middle">
-                {currentTitrant.label}
-            </Text>
-            <Text position={[-0.5, 0.8, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
-                {currentTitrant.formula}
-            </Text>
+                {/* Étiquette Burette avec nom du réactif */}
+                <Text position={[-0.5, 1.2, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
+                    BURETTE
+                </Text>
+                <Text position={[-0.5, 1.0, 0]} fontSize={0.08} color="#E0E0FF" anchorX="center" anchorY="middle">
+                    {currentTitrant.label}
+                </Text>
+                <Text position={[-0.5, 0.8, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
+                    {currentTitrant.formula}
+                </Text>
 
-            {/* Volume affiché en permanence */}
-            <Text
-                position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
-                fontSize={0.1}
-                color="#f87171"
-                anchorX="right"
-                anchorY="middle"
-                rotation={[0, Math.PI / 4, 0]}
-            >
-                {(50 - titrageState.volumeEcoule).toFixed(1)} mL
-            </Text>
+                {/* Volume affiché en permanence */}
+                <Text
+                    position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
+                    fontSize={0.1}
+                    color="#f87171"
+                    anchorX="right"
+                    anchorY="middle"
+                    rotation={[0, Math.PI / 4, 0]}
+                >
+                    {(50 - titrageState.volumeEcoule).toFixed(1)} mL
+                </Text>
 
-            {/* Goutte animée */}
-            <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
-                <sphereGeometry args={[0.03]} />
-                <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
+                {/* Goutte animée */}
+                <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
+                    <sphereGeometry args={[0.03]} />
+                    <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
+                </mesh>
+            </group>
+
+            {/* Erlenmeyer avec étiquettes */}
+            <group position={[0, -1, 0]}>
+                <Erlenmeyer
+                    couleurSolution={titrageState.couleurSolution}
+                    niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
+                />
+
+                {/* Étiquette Erlenmeyer avec noms des réactifs */}
+                <Text position={[1.3, 0.6, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
+                    ERLENMEYER
+                </Text>
+                <Text position={[1.3, 0.4, 0]} fontSize={0.08} color="#E0FFE0" anchorX="center" anchorY="middle">
+                    {currentTitré.label}
+                </Text>
+                <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
+                    {currentTitré.formula}
+                </Text>
+                <Text
+                    position={[1.3, 0.0, 0]}
+                    fontSize={0.06}
+                    color="#FFD700"
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    + {currentIndicateur.label}
+                </Text>
+
+                <MagneticStirrer stirBarRef={stirBarRef} />
+            </group>
+
+            {/* Table de laboratoire descendue */}
+            <mesh position={[0, -2.5, 0]} receiveShadow>
+                <boxGeometry args={[8, 0.2, 5]} />
+                <meshStandardMaterial color="#8B4513" />
             </mesh>
+
+            {/* Bordures de table */}
+            <mesh position={[0, -2.3, 2.4]} receiveShadow>
+                <boxGeometry args={[8, 0.1, 0.2]} />
+                <meshStandardMaterial color="#654321" />
+            </mesh>
+            <mesh position={[0, -2.3, -2.4]} receiveShadow>
+                <boxGeometry args={[8, 0.1, 0.2]} />
+                <meshStandardMaterial color="#654321" />
+            </mesh>
+
+            {/* Informations pH en 3D */}
+            <Text position={[0, 5.2, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
+                pH: {titrageState.pH.toFixed(2)}
+            </Text>
         </group>
-
-        {/* Erlenmeyer avec étiquettes */}
-        <group position={[0, -1, 0]}>
-            <Erlenmeyer
-                couleurSolution={titrageState.couleurSolution}
-                niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
-            />
-
-            {/* Étiquette Erlenmeyer avec noms des réactifs */}
-            <Text position={[1.3, 0.6, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
-                ERLENMEYER
-            </Text>
-            <Text position={[1.3, 0.4, 0]} fontSize={0.08} color="#E0FFE0" anchorX="center" anchorY="middle">
-                {currentTitré.label}
-            </Text>
-            <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
-                {currentTitré.formula}
-            </Text>
-            <Text
-                position={[1.3, 0.0, 0]}
-                fontSize={0.06}
-                color="#FFD700"
-                anchorX="center"
-                anchorY="middle"
-            >
-                + {currentIndicateur.label}
-            </Text>
-
-            <MagneticStirrer stirBarRef={stirBarRef} />
-        </group>
-
-        {/* Table de laboratoire descendue */}
-        <mesh position={[0, -2.5, 0]} receiveShadow>
-            <boxGeometry args={[8, 0.2, 5]} />
-            <meshStandardMaterial color="#8B4513" />
-        </mesh>
-
-        {/* Bordures de table */}
-        <mesh position={[0, -2.3, 2.4]} receiveShadow>
-            <boxGeometry args={[8, 0.1, 0.2]} />
-            <meshStandardMaterial color="#654321" />
-        </mesh>
-        <mesh position={[0, -2.3, -2.4]} receiveShadow>
-            <boxGeometry args={[8, 0.1, 0.2]} />
-            <meshStandardMaterial color="#654321" />
-        </mesh>
-
-        {/* Informations pH en 3D */}
-        <Text position={[0, 5.2, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
-            pH: {titrageState.pH.toFixed(2)}
-        </Text>
-    </group>
-)
+    )
 
 }
 
@@ -716,8 +716,8 @@ function Support() {
             </mesh>
 
             {/* Étiquette Support */}
-            <Text position={[0, -1.8, 0]} fontSize={0.08} color="#E2E8F0" anchorX="center" anchorY="middle">
-                SUPPORT UNIVERSEL
+            <Text position={[0, -1.9, 0.9]} fontSize={0.08} color="#E2E8F0" anchorX="center" anchorY="middle">
+                PLATEAU MAGNETIQUE
             </Text>
         </group>
     )
@@ -769,7 +769,7 @@ function Burette({
                 <meshPhysicalMaterial
                     color="#C7D2FE" // bleu très clair
                     transparent
-                    opacity={0.35}
+                    opacity={4.35}
                     roughness={0.1}
                     metalness={0.0}
                     transmission={0.9}
@@ -824,19 +824,26 @@ function Erlenmeyer({
     couleurSolution: string
     niveauSolution: number
 }) {
-    const adjustedNiveau = Math.max(0.15, niveauSolution)
-    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.1)
-    const solutionRadius = 0.35 + adjustedNiveau * 0.2
+    // Niveau minimum pour éviter 0 (invisible), niveau maximum implicite dans le calcul
+    const adjustedNiveau = Math.max(0.05, niveauSolution)
+
+    // Hauteur réelle du liquide (limitée à 1.1)
+    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.8)
+
+    // Rayon haut proportionnel à la hauteur, pour épouser le profil du récipient
+    const rayonBas = 0.3
+    const rayonMaxHaut = 1.0
+    const rayonHaut = rayonBas + (rayonMaxHaut - rayonBas) * (solutionHeight / 1.6)
 
     return (
         <group>
             {/* Corps en verre */}
-            <mesh castShadow renderOrder={1}>
-                <cylinderGeometry args={[0.8, 0.4, 1.2]} />
+            <mesh castShadow renderOrder={2}>
+                <cylinderGeometry args={[1.0, 0.3, 1.6, 64]} />
                 <meshPhysicalMaterial
-                    color="#F0FDFA" // vert très très clair
+                    color="#F0FDFA"
                     transparent
-                    opacity={0.3}
+                    opacity={4.05}
                     roughness={0.1}
                     metalness={0.0}
                     transmission={0.9}
@@ -847,11 +854,11 @@ function Erlenmeyer({
 
             {/* Col en verre */}
             <mesh position={[0, 0.8, 0]} castShadow renderOrder={1}>
-                <cylinderGeometry args={[0.15, 0.15, 0.8]} />
+                <cylinderGeometry args={[0.15, 0.15, 0.8, 32]} />
                 <meshPhysicalMaterial
                     color="#F0FDFA"
                     transparent
-                    opacity={0.3}
+                    opacity={0.05}
                     roughness={0.1}
                     metalness={0.0}
                     transmission={0.9}
@@ -861,8 +868,14 @@ function Erlenmeyer({
             </mesh>
 
             {/* Solution interne */}
-            <mesh position={[0, -0.6 + solutionHeight / 2, 0]} renderOrder={3} receiveShadow>
-                <cylinderGeometry args={[solutionRadius, solutionRadius, solutionHeight, 32]} />
+            <mesh
+                position={[0, -0.8 + solutionHeight / 2, 0]} // alignement avec le bas du récipient
+                renderOrder={3}
+                receiveShadow
+            >
+                <cylinderGeometry
+                    args={[rayonHaut, rayonBas, solutionHeight, 64]}
+                />
                 <meshStandardMaterial
                     color={couleurSolution}
                     transparent
@@ -877,39 +890,38 @@ function Erlenmeyer({
 
 
 
+
 function MagneticStirrer({ stirBarRef }: { stirBarRef: React.RefObject<THREE.Mesh> }) {
-  return (
-    <group>
-      {/* Base de l'agitateur – posée au sol (table virtuelle) */}
-      <mesh position={[0, -1.2, 0]} castShadow>
-        <boxGeometry args={[1.0, 0.1, 1.0]} />
-        <meshStandardMaterial color="#374151" metalness={0.6} roughness={0.4} />
-      </mesh>
+    return (
+        <group>
+            {/* Base de l'agitateur – posée au sol (table virtuelle) */}
+            <mesh position={[0, -1.2, 0]} castShadow>
+                <boxGeometry args={[2.0, 0.3, 2.0]} />
+                <meshStandardMaterial color="#374151" metalness={0.6} roughness={0.4} />
+            </mesh>
 
-      {/* LED indicateur – verte vive, lumineuse */}
-      <mesh position={[0.35, -1.15, 0.35]} castShadow>
-        <sphereGeometry args={[0.03]} />
-        <meshStandardMaterial color="#34D399" emissive="#34D399" emissiveIntensity={2.0} />
-      </mesh>
+            {/* LED indicateur – verte vive, lumineuse */}
+            <mesh position={[0.35, -1.15, 0.35]} castShadow>
+                <sphereGeometry args={[0.03]} />
+                <meshStandardMaterial color="#34D399" emissive="#34D399" emissiveIntensity={2.0} />
+            </mesh>
 
-      {/* Barreau agitateur – blanc/gris clair pour bon contraste */}
-      <mesh ref={stirBarRef} position={[0, -0.85, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.04, 0.04, 0.4]} />
-        <meshStandardMaterial color="#FDE68A" metalness={0.9} roughness={0.2} />
-      </mesh>
+            {/* Barreau agitateur – blanc/gris clair pour bon contraste */}
+            <mesh ref={stirBarRef} position={[0, -0.65, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+                <cylinderGeometry args={[0.04, 0.04, 0.4]} />
+                <meshStandardMaterial color="#FDE68A" metalness={9} roughness={2.2} />
+            </mesh>
 
-      {/* Étiquette visible, claire */}
-      <Text
-        position={[0, -1.1, 0.55]}
-        fontSize={0.07}
-        color="#F9FAFB"
-        anchorX="center"
-        anchorY="middle"
-      >
-        AGITATEUR
-      </Text>
-    </group>
-  );
+            {/* Étiquette visible, claire */}
+            <Text
+                position={[0.5, -0.6, 0.25]}
+                fontSize={0.07}
+                color="#F9FAFB"
+                anchorX="center"
+                anchorY="middle"
+            >
+                AGITATEUR
+            </Text>
+        </group>
+    );
 }
-
-
