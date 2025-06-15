@@ -617,7 +617,7 @@ function TitrageScene({
                 {/* Volume affiché en permanence */}
                 <Text
                     position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
-                    fontSize={0.1}
+                    fontSize={0.19}
                     color="#f87171"
                     anchorX="right"
                     anchorY="middle"
@@ -680,7 +680,7 @@ function TitrageScene({
             </mesh>
 
             {/* Informations pH en 3D */}
-            <Text position={[0, 5.2, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
+            <Text position={[0.5, 3.7, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
                 pH: {titrageState.pH.toFixed(2)}
             </Text>
         </group>
