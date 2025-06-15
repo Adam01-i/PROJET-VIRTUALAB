@@ -19,6 +19,7 @@ import {
   BookOpen,
   CheckCircle,
   XCircle,
+  MousePointer,
 } from "lucide-react"
 
 // Types optimisés
@@ -91,49 +92,11 @@ const REACTANTS = {
 const EXPERIMENT_CONFIG = {
   REACTION_DURATION: 8000,
   POUR_DURATION: 2000,
+  INSERT_DURATION: 1500,
   SOLUTION_VOLUME: 250,
   INITIAL_CONCENTRATION: 0.1,
   INCOMPLETE_THRESHOLD: 0.6,
 } as const
-
-// Hook pour le drag 2D optimisé
-function useDrag2D() {
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
-
-  const handlePointerDown = useCallback((event: any) => {
-    event.stopPropagation()
-    setIsDragging(true)
-    setDragStart({ x: event.clientX, y: event.clientY })
-    document.body.style.cursor = "grabbing"
-  }, [])
-
-  const handlePointerMove = useCallback(
-    (event: any, onMove: (deltaX: number, deltaY: number) => void) => {
-      if (!isDragging || !dragStart) return
-
-      const deltaX = (event.clientX - dragStart.x) * 0.005
-      const deltaY = -(event.clientY - dragStart.y) * 0.005
-
-      onMove(deltaX, deltaY)
-      setDragStart({ x: event.clientX, y: event.clientY })
-    },
-    [isDragging, dragStart],
-  )
-
-  const handlePointerUp = useCallback(() => {
-    setIsDragging(false)
-    setDragStart(null)
-    document.body.style.cursor = "default"
-  }, [])
-
-  return {
-    isDragging,
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerUp,
-  }
-}
 
 // Hook pour la gestion optimisée du zoom
 function useCameraZoom() {
@@ -353,33 +316,32 @@ const ImprovedBeaker3D = React.memo(
   },
 )
 
-// Composant Barre de Fer 2D
+// Composant Barre de Fer 2D avec clic simple
 function IronBar2D({
-  initialPosition,
-  onPositionChange,
+  position,
   copperDeposit,
   disabled,
   reactantType,
   reactionType,
+  onClick,
+  isAnimating,
 }: {
-  initialPosition: [number, number, number]
-  onPositionChange: (position: [number, number, number]) => void
+  position: [number, number, number]
   copperDeposit: number
   disabled: boolean
   reactantType: ReactantType
   reactionType: ReactionType
+  onClick: () => void
+  isAnimating: boolean
 }) {
-  const [position, setPosition] = useState(initialPosition)
   const meshRef = useRef<THREE.Group>(null)
-  const { isDragging, handlePointerDown, handlePointerMove, handlePointerUp } = useDrag2D()
+  const reactant = REACTANTS[reactantType]
 
   const { scale, rotationZ } = useSpring({
-    scale: isDragging ? 1.1 : 1,
-    rotationZ: isDragging ? 0.05 : 0,
+    scale: isAnimating ? 1.1 : 1,
+    rotationZ: isAnimating ? 0.05 : 0,
     config: config.wobbly,
   })
-
-  const reactant = REACTANTS[reactantType]
 
   const depositColor = useMemo(() => {
     if (reactionType === "incomplete") {
@@ -388,39 +350,15 @@ function IronBar2D({
     return reactant.depositColor
   }, [reactionType, reactant.depositColor])
 
-  const handleMove = useCallback(
-    (deltaX: number, deltaY: number) => {
-      const newPosition: [number, number, number] = [
-        Math.max(-2, Math.min(2, position[0] + deltaX)),
-        Math.max(-2, Math.min(2, position[1] + deltaY)),
-        position[2],
-      ]
-      setPosition(newPosition)
-      onPositionChange(newPosition)
+  const handleClick = useCallback(
+    (event: any) => {
+      event.stopPropagation()
+      if (!disabled && !isAnimating) {
+        onClick()
+      }
     },
-    [position, onPositionChange],
+    [onClick, disabled, isAnimating],
   )
-
-  useEffect(() => {
-    if (disabled) return
-
-    const handleMouseMove = (e: MouseEvent) => handlePointerMove(e, handleMove)
-    const handleMouseUp = () => handlePointerUp()
-
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
-    }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isDragging, handlePointerMove, handlePointerUp, handleMove, disabled])
-
-  useEffect(() => {
-    setPosition(initialPosition)
-  }, [initialPosition])
 
   return (
     <animated.group
@@ -428,8 +366,8 @@ function IronBar2D({
       position={position}
       scale={scale}
       rotation-z={rotationZ}
-      onPointerDown={disabled ? undefined : handlePointerDown}
-      onPointerOver={() => !disabled && (document.body.style.cursor = "grab")}
+      onClick={handleClick}
+      onPointerOver={() => !disabled && !isAnimating && (document.body.style.cursor = "pointer")}
       onPointerOut={() => (document.body.style.cursor = "default")}
     >
       <mesh>
@@ -453,9 +391,15 @@ function IronBar2D({
         Barre Fe
       </Text>
 
-      {isDragging && (
+      {!disabled && !isAnimating && (
         <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#6366f1" anchorX="center" anchorY="middle">
-          Glissez-moi !
+          Cliquez-moi !
+        </Text>
+      )}
+
+      {isAnimating && (
+        <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#f59e0b" anchorX="center" anchorY="middle">
+          Insertion...
         </Text>
       )}
     </animated.group>
@@ -521,12 +465,12 @@ function ReactionBubbles3D({ active, position }: { active: boolean; position: [n
 function Scene({
   experimentState,
   onFaucetClick,
-  onIronPositionChange,
+  onIronClick,
   reactantType,
 }: {
   experimentState: any
   onFaucetClick: () => void
-  onIronPositionChange: (pos: [number, number, number]) => void
+  onIronClick: () => void
   reactantType: ReactantType
 }) {
   const reactant = REACTANTS[reactantType]
@@ -563,12 +507,13 @@ function Scene({
       />
 
       <IronBar2D
-        initialPosition={experimentState.ironPosition}
-        onPositionChange={onIronPositionChange}
+        position={experimentState.ironPosition}
         copperDeposit={experimentState.copperDeposit}
-        disabled={experimentState.currentStep === "reacting"}
+        disabled={experimentState.currentStep === "reacting" || experimentState.currentStep === "inserting"}
         reactantType={reactantType}
         reactionType={experimentState.reactionType}
+        onClick={onIronClick}
+        isAnimating={experimentState.currentStep === "inserting"}
       />
 
       <LiquidStream3D active={experimentState.isPouring} reactantColor={reactant.color} />
@@ -615,6 +560,7 @@ export default function RedoxReaction() {
   // Références pour les timers
   const pourTimerRef = useRef<NodeJS.Timeout>()
   const reactionTimerRef = useRef<NodeJS.Timeout>()
+  const insertTimerRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<number>(0)
 
   // Gestion du zoom avec la molette
@@ -626,8 +572,11 @@ export default function RedoxReaction() {
     }
   }, [handleWheel])
 
-  // Fonction de reset complète
+  // Fonction de reset complète et corrigée
   const handleReset = useCallback(() => {
+    console.log("🔄 Reset de l'expérience...")
+
+    // Nettoyer TOUS les timers
     if (pourTimerRef.current) {
       clearInterval(pourTimerRef.current)
       pourTimerRef.current = undefined
@@ -636,7 +585,12 @@ export default function RedoxReaction() {
       clearInterval(reactionTimerRef.current)
       reactionTimerRef.current = undefined
     }
+    if (insertTimerRef.current) {
+      clearInterval(insertTimerRef.current)
+      insertTimerRef.current = undefined
+    }
 
+    // Reset COMPLET de tous les états
     setCurrentStep("initial")
     setSolutionLevel(0)
     setSolutionColor(selectedReactant.color)
@@ -648,12 +602,15 @@ export default function RedoxReaction() {
     setFaucetOpen(false)
     setReactionType("complete")
     startTimeRef.current = 0
+
+    console.log("✅ Reset terminé")
   }, [selectedReactant.color])
 
   // Gestion du robinet
   const handleFaucetClick = useCallback(() => {
     if (currentStep !== "initial") return
 
+    console.log("🚰 Démarrage du versement")
     setFaucetOpen(true)
     setCurrentStep("pouring")
     setIsPouring(true)
@@ -669,6 +626,7 @@ export default function RedoxReaction() {
           setCurrentStep("poured")
           setIsPouring(false)
           setFaucetOpen(false)
+          console.log("✅ Versement terminé")
           return 1
         }
         return newLevel
@@ -676,30 +634,53 @@ export default function RedoxReaction() {
     }, 100)
   }, [currentStep])
 
-  // Gestion de la barre de fer
-  const handleIronPositionChange = useCallback(
-    (position: [number, number, number]) => {
-      setIronPosition(position)
+  // Gestion du clic sur le fer
+  const handleIronClick = useCallback(() => {
+    if (currentStep !== "poured" || solutionLevel < 0.5) return
 
-      const isInSolution =
-        position[0] > -0.8 && position[0] < 0.8 && position[1] < 0.2 && position[1] > -1.2 && solutionLevel > 0.5
+    console.log("🔧 Insertion automatique du fer")
+    setCurrentStep("inserting")
 
-      if (isInSolution && currentStep === "poured") {
-        if (!selectedReactant.canReact) {
-          return
+    // Animation d'insertion automatique
+    let progress = 0
+    insertTimerRef.current = setInterval(() => {
+      progress += 0.02
+
+      // Position interpolée vers le centre du bécher
+      const startPos: [number, number, number] = [2.5, 0, 0]
+      const endPos: [number, number, number] = [0, -0.5, 0]
+
+      const newPosition: [number, number, number] = [
+        startPos[0] + (endPos[0] - startPos[0]) * progress,
+        startPos[1] + (endPos[1] - startPos[1]) * progress,
+        startPos[2] + (endPos[2] - startPos[2]) * progress,
+      ]
+
+      setIronPosition(newPosition)
+
+      if (progress >= 1) {
+        clearInterval(insertTimerRef.current!)
+        insertTimerRef.current = undefined
+        setIronPosition(endPos)
+
+        // Démarrer la réaction
+        if (selectedReactant.canReact) {
+          const isIncomplete = Math.random() > selectedReactant.reactionProbability
+          const newReactionType: ReactionType = isIncomplete ? "incomplete" : "complete"
+
+          console.log("⚗️ Démarrage de la réaction:", newReactionType)
+          setReactionType(newReactionType)
+          setCurrentStep("reacting")
+          startTimeRef.current = Date.now()
+          startReaction(newReactionType)
+        } else {
+          console.log("❌ Aucune réaction possible")
+          setCurrentStep("complete")
+          setReactionType("none")
         }
-
-        const isIncomplete = Math.random() > selectedReactant.reactionProbability
-        const newReactionType: ReactionType = isIncomplete ? "incomplete" : "complete"
-
-        setReactionType(newReactionType)
-        setCurrentStep("reacting")
-        startTimeRef.current = Date.now()
-        startReaction(newReactionType)
       }
-    },
-    [currentStep, solutionLevel, selectedReactant],
-  )
+    }, 30)
+  }, [currentStep, solutionLevel, selectedReactant])
 
   // Démarrer la réaction
   const startReaction = useCallback(
@@ -731,6 +712,7 @@ export default function RedoxReaction() {
           const finalStep = reactionTypeParam === "incomplete" ? "incomplete" : "complete"
           setCurrentStep(finalStep)
           setElapsedTime(duration / 1000)
+          console.log("✅ Réaction terminée:", finalStep)
         }
       }, 50)
     },
@@ -740,13 +722,12 @@ export default function RedoxReaction() {
   // Changement de réactif avec reset automatique
   const handleReactantChange = useCallback(
     (newReactant: ReactantType) => {
-      if (currentStep !== "initial") {
-        handleReset()
-      }
+      console.log("🧪 Changement de réactif:", newReactant)
+      handleReset()
       setReactantType(newReactant)
       setSolutionColor(REACTANTS[newReactant].color)
     },
-    [currentStep, handleReset],
+    [handleReset],
   )
 
   // État de l'expérience pour la scène
@@ -800,13 +781,17 @@ export default function RedoxReaction() {
                     ? "bg-orange-100 text-orange-800"
                     : currentStep === "reacting"
                       ? "bg-yellow-100 text-yellow-800"
-                      : "bg-blue-100 text-blue-800"
+                      : currentStep === "inserting"
+                        ? "bg-purple-100 text-purple-800"
+                        : "bg-blue-100 text-blue-800"
               }`}
             >
               {currentStep === "incomplete" && <AlertTriangle size={10} />}
+              {currentStep === "inserting" && <MousePointer size={10} />}
               {currentStep === "initial" && "Prêt"}
               {currentStep === "pouring" && "Versement"}
               {currentStep === "poured" && "Solution prête"}
+              {currentStep === "inserting" && "Insertion"}
               {currentStep === "reacting" && "Réaction"}
               {currentStep === "complete" && "Terminé"}
               {currentStep === "incomplete" && "Incomplète"}
@@ -816,10 +801,11 @@ export default function RedoxReaction() {
             <p className="text-xs text-indigo-800">
               {currentStep === "initial" && "Cliquez sur la poignée rouge du robinet"}
               {currentStep === "pouring" && "Versement en cours..."}
-              {currentStep === "poured" && "Glissez la barre de fer dans le bécher"}
+              {currentStep === "poured" && "Cliquez sur la barre de fer pour l'insérer"}
+              {currentStep === "inserting" && "Insertion automatique de la barre..."}
               {currentStep === "reacting" && "Réaction en cours"}
-              {currentStep === "complete" && "Réaction complète terminée !"}
-              {currentStep === "incomplete" && "Réaction incomplète - conditions défavorables"}
+              {currentStep === "complete" && "Réaction terminée !"}
+              {currentStep === "incomplete" && "Réaction incomplète"}
             </p>
           </div>
         </div>
@@ -1037,7 +1023,7 @@ export default function RedoxReaction() {
         <Scene
           experimentState={experimentState}
           onFaucetClick={handleFaucetClick}
-          onIronPositionChange={handleIronPositionChange}
+          onIronClick={handleIronClick}
           reactantType={reactantType}
         />
       </Canvas>
