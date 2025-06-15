@@ -1,36 +1,41 @@
 import type { Experience } from '../../types/Experience/experience';
 
 export const experienceData: Experience[] = [
-  {
-    id: '1',
-    classe_id: '',
-    titre: 'Réactions d\'oxydo-réduction',
-    description: 'Découvrez les transferts d\'électrons et leurs applications dans la vie quotidienne.',
-    duree: '45 min',
-    niveau: 'Première',
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
-    simulationPath: 'RedoxReaction',
-    objectifs: [
-      'Comprendre le principe des réactions d\'oxydo-réduction',
-      'Identifier les espèces oxydantes et réductrices',
-      'Écrire les demi-équations électroniques',
-      'Observer les changements de couleur caractéristiques'
-    ],
-    materiel: [
-      'Solution de sulfate de cuivre (II) - 50mL',
-      'Lame de zinc',
-      'Bécher en verre - 100mL',
-      'Pipette graduée',
-      'Gants de protection',
-      'Lunettes de sécurité'
-    ],
-    resultatsAttendus: [
-      'Formation d\'un dépôt de cuivre métallique rouge sur la lame de zinc',
-      'Décoloration progressive de la solution bleue de sulfate de cuivre',
-      'Augmentation de la concentration en ions Zn2+',
-      'Équation bilan : Cu2+ + Zn → Cu + Zn2+'
-    ]
-  },
+{
+  id: '1',
+  classe_id: '',
+  titre: 'Réactions d\'oxydo-réduction avec le fer',
+  description: 'Explorez les réactions redox en observant l\'interaction entre le fer métallique et différents sels métalliques en solution.',
+  duree: '30 min',
+  niveau: 'Première',
+  image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
+  simulationPath: 'RedoxReaction',
+  objectifs: [
+    'Comprendre le principe des réactions d\'oxydo-réduction',
+    'Identifier les espèces oxydantes et réductrices selon la série électrochimique',
+    'Observer les changements de couleur et la formation de dépôts métalliques',
+    'Analyser l\'influence du type de réactif sur la réaction',
+    'Distinguer les réactions complètes, incomplètes et impossibles'
+  ],
+  materiel: [
+    'Solution de sulfate de cuivre (II) CuSO₄ - 0,1M - 250mL',
+    'Solution de nitrate d\'argent AgNO₃ - 0,1M - 250mL', 
+    'Solution de sulfate de zinc ZnSO₄ - 0,1M - 250mL',
+    'Barre de fer métallique',
+    'Bécher en verre gradué - 250mL',
+    'Robinet doseur avec réservoir',
+    'Gants de protection',
+    'Lunettes de sécurité'
+  ],
+  resultatsAttendus: [
+    'Avec CuSO₄ : Formation d\'un dépôt rouge-brun de cuivre métallique sur le fer',
+    'Avec CuSO₄ : Changement de couleur de bleu vers vert (formation de FeSO₄)',
+    'Avec AgNO₃ : Formation d\'un dépôt gris argenté d\'argent métallique',
+    'Avec AgNO₃ : Décoloration de la solution violette',
+    'Avec ZnSO₄ : Aucune réaction observable (fer moins réactif que le zinc)',
+    'Équations : Fe + CuSO₄ → FeSO₄ + Cu | Fe + 2AgNO₃ → Fe(NO₃)₂ + 2Ag | Fe + ZnSO₄ → Pas de réaction'
+  ]
+},
   {
     id: '2',
     classe_id: '',

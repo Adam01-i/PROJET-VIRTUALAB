@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ExperienceCard from './ExperienceCard';
 import ExperienceDetailView from './ExperienceDetailView';
 import { supabase } from '../../../../lib/supabaseClient';
+import { experienceData } from '../../../../data/Experience/experienceData';
 
 const ITEMS_PER_PAGE = 3;
 
@@ -29,6 +30,15 @@ const getLocalSimulations = async (): Promise<any[]> => {
   });
 };
 
+const enrichLocalSimulations = (simulations: any[]) => {
+  return simulations.map((sim) => {
+    const detailed = experienceData.find((d) => sim.simulationPath === d.simulationPath);
+    return detailed
+      ? { ...sim, ...detailed, id: sim.id } // on garde l'ID local
+      : sim;
+  });
+};
+
 export default function ExperienceView() {
   const [activeExperience, setActiveExperience] = useState<string | null>(null);
   const [experiences, setExperiences] = useState<any[]>([]);
@@ -36,7 +46,7 @@ export default function ExperienceView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [prenom, setPrenom] = useState('');
-  const [filtre, setFiltre] = useState<'all' | 'supabase'>('all');
+  const [filtre, setFiltre] = useState<'all' | 'supabase' | 'local'>('all');
 
   const handleStartExperience = async (experienceId: string) => {
     const experience = experiences.find((e) => e.id === experienceId);
@@ -65,8 +75,9 @@ export default function ExperienceView() {
       const { data: session } = await supabase.auth.getSession();
       const user = session?.session?.user;
 
-      const localSimulations = await getLocalSimulations();
-      const localIdSet = new Set(localSimulations.map((sim) => sim.id));
+      const rawLocalSimulations = await getLocalSimulations();
+      const enrichedLocalSimulations = enrichLocalSimulations(rawLocalSimulations);
+      const localIdSet = new Set(enrichedLocalSimulations.map((sim) => sim.id));
       setLocalIds(localIdSet);
 
       if (!user) {
@@ -75,7 +86,7 @@ export default function ExperienceView() {
           .select('*')
           .order('created_at', { ascending: false });
 
-        setExperiences([...(allExperiences || []), ...localSimulations]);
+        setExperiences([...(allExperiences || []), ...enrichedLocalSimulations]);
         setLoading(false);
         return;
       }
@@ -98,7 +109,6 @@ export default function ExperienceView() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // ✅ Ici on n'ajoute PAS les locales
       setExperiences(classeExperiences || []);
       setLoading(false);
     };
@@ -108,6 +118,7 @@ export default function ExperienceView() {
 
   const filteredExperiences = experiences.filter((exp) => {
     if (filtre === 'supabase') return !localIds.has(exp.id);
+    if (filtre === 'local') return localIds.has(exp.id);
     return true;
   });
 
@@ -148,26 +159,19 @@ export default function ExperienceView() {
 
       {!prenom && (
         <div className="flex gap-3 flex-wrap">
-          <button
-            onClick={() => setFiltre('all')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
-              filtre === 'all'
-                ? 'bg-purple-600 text-white border-purple-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            Toutes
-          </button>
-          <button
-            onClick={() => setFiltre('supabase')}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
-              filtre === 'supabase'
-                ? 'bg-purple-600 text-white border-purple-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            Supabase
-          </button>
+          {['all', 'supabase', 'local'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFiltre(f as any)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
+                filtre === f
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {f === 'all' ? 'Toutes' : f === 'supabase' ? 'Supabase' : 'Locales'}
+            </button>
+          ))}
         </div>
       )}
 
