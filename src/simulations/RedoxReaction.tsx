@@ -267,10 +267,10 @@ const ImprovedBeaker3D = React.memo(
           />
         </mesh>
 
-        <mesh position={[0, 1.05, 0]} castShadow>
+        {/* <mesh position={[0, 1.05, 0]} castShadow>
           <torusGeometry args={[1, 0.05, 8, 32]} />
           <meshStandardMaterial color="#e5e7eb" roughness={0.3} />
-        </mesh>
+        </mesh> */}
 
         <mesh position={[1.05, 0.8, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow>
           <coneGeometry args={[0.1, 0.2, 8]} />
