@@ -9,7 +9,7 @@ export const experienceData: Experience[] = [
     duree: '45 min',
     niveau: 'Première',
     image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
-    simulationPath: '',
+    simulationPath: 'RedoxReaction',
     objectifs: [
       'Comprendre le principe des réactions d\'oxydo-réduction',
       'Identifier les espèces oxydantes et réductrices',
