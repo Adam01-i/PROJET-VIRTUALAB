@@ -184,10 +184,10 @@ function AlignedFaucet3D({
         <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      <mesh position={[0, 1.2, 0]} castShadow>
+      {/* <mesh position={[0, 1.2, 0]} castShadow>
         <cylinderGeometry args={[0.3, 0.3, 0.6, 16]} />
         <meshStandardMaterial color="#e5e7eb" roughness={0.3} />
-      </mesh>
+      </mesh> */}
 
       <mesh position={[0, 1.2, 0]}>
         <cylinderGeometry args={[0.28, 0.28, 0.55, 16]} />
