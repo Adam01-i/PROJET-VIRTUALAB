@@ -4,12 +4,11 @@ import {
   FlaskRound as Flask,
   Clock,
   Maximize2,
-  Minimize2,
   ArrowLeft,
   Book,
   ListChecks,
 } from 'lucide-react';
-import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
+import { useCallback, useState, lazy, Suspense } from 'react';
 import type { Experience } from '../../../../types/Experience/experience';
 
 const simulationModules = import.meta.glob('../../../../simulations/*.tsx');
@@ -29,7 +28,6 @@ type ExperienceDetailViewProps = {
 
 export default function ExperienceDetailView({ experience, onBack }: ExperienceDetailViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -41,16 +39,7 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
     }
   }, []);
 
-  useEffect(() => {
-    if (!isFullscreen) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setShowControls(e.clientY < 50);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, [isFullscreen]);
 
   const renderSimulation = () => {
     if (!experience.simulationPath) {
@@ -84,20 +73,16 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 z-50 bg-white overflow-hidden">
-        {/* Header flottant uniquement au survol haut */}
-        <div
-          className={`absolute top-0 right-0  flex justify-end px-6 py-4 z-50 
-          bg-gradient-to-b from-white/90 to-transparent backdrop-blur-sm 
-          ${showControls ? '' : 'opacity-0 pointer-events-none'}`}
-        >
+        {/* Bouton 'X' fixe centré en haut */}
+        <div className="absolute top-1 left-1/2 transform -translate-x-1/2 z-50">
           <button
             onClick={toggleFullscreen}
-            className="flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow"
+            className="px-4 py-1 bg-red-600 hover:bg-red-700 text-white text-lg font-bold rounded-full shadow"
           >
-            <Minimize2 size={16} />
-            Quitter le plein écran
+            Exit X
           </button>
         </div>
+
 
         {/* Simulation 100% écran */}
         <SimulationContainer height="h-full" />
