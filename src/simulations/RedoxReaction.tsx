@@ -100,7 +100,7 @@ const EXPERIMENT_CONFIG = {
 
 // Hook pour la gestion optimisée du zoom
 function useCameraZoom() {
-  const [zoom, setZoom] = useState(5)
+  const [zoom, setZoom] = useState(6.5)
 
   const handleWheel = useCallback((event: WheelEvent) => {
     event.preventDefault()
@@ -260,7 +260,7 @@ const ImprovedBeaker3D = React.memo(
           <meshPhysicalMaterial
             color="#ffffff"
             transparent
-            opacity={0.12}
+            opacity={0.3}
             roughness={0.05}
             transmission={0.85}
             thickness={0.05}
@@ -387,8 +387,8 @@ function IronBar2D({
         </mesh>
       )}
 
-      <Text position={[0, 0.9, 0.01]} fontSize={0.05} color="#333333" anchorX="center" anchorY="middle">
-        Barre Fe
+      <Text position={[0, 0.9, 0.01]} fontSize={0.1} color="#333333" anchorX="center" anchorY="middle">
+        Barre de Fer
       </Text>
 
       {!disabled && !isAnimating && (
