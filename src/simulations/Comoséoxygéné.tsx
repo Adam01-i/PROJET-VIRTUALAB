@@ -1,671 +1,1215 @@
 "use client"
 
-import { useState, useEffect, useRef, type SetStateAction } from "react"
-import { Flame, ChevronDown, RotateCcw, BookOpen, Info, Beaker } from "lucide-react"
+import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { OrbitControls, Html, Cylinder, Box, Sphere } from "@react-three/drei"
+import { Flame, ChevronDown, RotateCcw, BookOpen, Info, BeakerIcon, Pause } from "lucide-react"
+import * as THREE from "three"
 
-export default function ComposesOxygenes() {
-  // Références pour les animations
-  const tubeRef = useRef(null)
+// ===================================
+// TYPES ET INTERFACES
+// ===================================
 
-  // États pour les menus et sélections
-  const [alcoholMenu, setAlcoholMenu] = useState(false)
-  const [oxidantMenu, setOxidantMenu] = useState(false)
+interface AlcoholType {
+  id: string
+  name: string
+  color: string
+  formula: string
+  type: string
+  colorHex: string
+}
 
-  // États pour les animations de versement
-  const [pouringLeft, setPouringLeft] = useState(false)
-  const [pouringRight, setPouringRight] = useState(false)
+interface OxidantType {
+  id: string
+  name: string
+  color: string
+  formula: string
+  colorHex: string
+}
 
-  // États pour la simulation
+// ===================================
+// DONNÉES DE LABORATOIRE
+// ===================================
+
+const alcohols: AlcoholType[] = [
+  {
+    id: "ethanol",
+    name: "Éthanol",
+    color: "bg-blue-50/80",
+    formula: "CH₃CH₂OH",
+    type: "primaire",
+    colorHex: "#3b82f6",
+  },
+  {
+    id: "methanol",
+    name: "Méthanol",
+    color: "bg-blue-100/80",
+    formula: "CH₃OH",
+    type: "primaire",
+    colorHex: "#2563eb",
+  },
+  {
+    id: "propanol",
+    name: "Propanol",
+    color: "bg-blue-200/80",
+    formula: "CH₃CH₂CH₂OH",
+    type: "primaire",
+    colorHex: "#1d4ed8",
+  },
+  {
+    id: "isopropanol",
+    name: "Isopropanol",
+    color: "bg-blue-300/80",
+    formula: "(CH₃)₂CHOH",
+    type: "secondaire",
+    colorHex: "#1e40af",
+  },
+  {
+    id: "butanol",
+    name: "Butanol",
+    color: "bg-blue-400/80",
+    formula: "CH₃(CH₂)₃OH",
+    type: "primaire",
+    colorHex: "#1e3a8a",
+  },
+]
+
+const oxidants: OxidantType[] = [
+  {
+    id: "dichromate",
+    name: "Dichromate K₂Cr₂O₇",
+    color: "bg-orange-500/90",
+    formula: "K₂Cr₂O₇ + H₂SO₄",
+    colorHex: "#f97316",
+  },
+  {
+    id: "permanganate",
+    name: "Permanganate KMnO₄",
+    color: "bg-purple-500/90",
+    formula: "KMnO₄",
+    colorHex: "#a855f7",
+  },
+  {
+    id: "fehling",
+    name: "Liqueur de Fehling",
+    color: "bg-blue-500/90",
+    formula: "Cu²⁺ + tartrate",
+    colorHex: "#3b82f6",
+  },
+  {
+    id: "tollens",
+    name: "Réactif de Tollens",
+    color: "bg-gray-300/90",
+    formula: "Ag(NH₃)₂⁺",
+    colorHex: "#9ca3af",
+  },
+]
+
+// ===================================
+// UTILITAIRES CHIMIQUES OPTIMISÉS
+// ===================================
+
+class ChemistryCalculator {
+  static getSolutionColor(
+    alcoholAdded: boolean,
+    oxidantAdded: boolean,
+    heating: boolean,
+    reactionComplete: boolean,
+    selectedAlcohol: AlcoholType,
+    selectedOxidant: OxidantType,
+  ): string {
+    if (!alcoholAdded && !oxidantAdded) return "#ffffff"
+    if (alcoholAdded && !oxidantAdded) return selectedAlcohol.colorHex
+    if (alcoholAdded && oxidantAdded && !reactionComplete) {
+      return heating ? this.getTransitionColor(selectedOxidant) : selectedOxidant.colorHex
+    }
+    if (reactionComplete) return this.getResultColor(selectedAlcohol, selectedOxidant)
+    return "#ffffff"
+  }
+
+  static getTransitionColor(selectedOxidant: OxidantType): string {
+    const transitions: Record<string, string> = {
+      dichromate: "#16a34a",
+      permanganate: "#f9a8d4",
+      fehling: "#ef4444",
+      tollens: "#4b5563",
+    }
+    return transitions[selectedOxidant.id] || selectedOxidant.colorHex
+  }
+
+  static getResultColor(selectedAlcohol: AlcoholType, selectedOxidant: OxidantType): string {
+    if (selectedOxidant.id === "dichromate") return "#16a34a"
+    if (selectedOxidant.id === "permanganate") return "#f9a8d4"
+    if (selectedOxidant.id === "fehling") {
+      return selectedAlcohol.type === "primaire" ? "#ef4444" : "#3b82f6"
+    }
+    if (selectedOxidant.id === "tollens") {
+      return selectedAlcohol.type === "primaire" ? "#1f2937" : "#9ca3af"
+    }
+    return "#6b7280"
+  }
+
+  static getFillLevel(alcoholAdded: boolean, oxidantAdded: boolean): number {
+    let level = 0
+    if (alcoholAdded) level += 0.3
+    if (oxidantAdded) level += 0.2
+    return Math.min(level, 0.8)
+  }
+
+  static getChemicalEquation(selectedAlcohol: AlcoholType, selectedOxidant: OxidantType): string {
+    const equations: Record<string, Record<string, string>> = {
+      ethanol: {
+        dichromate: "CH₃CH₂OH + Cr₂O₇²⁻ + 8H⁺ → CH₃CHO + 2Cr³⁺ + 7H₂O",
+        permanganate: "5CH₃CH₂OH + 4MnO₄⁻ + 12H⁺ → 5CH₃CHO + 4Mn²⁺ + 11H₂O",
+        fehling: "CH₃CH₂OH + 2Cu²⁺ + 5OH⁻ → CH₃CHO + Cu₂O + 3H₂O",
+        tollens: "CH₃CH₂OH + 2Ag(NH₃)₂⁺ + 3OH⁻ → CH₃CHO + 2Ag + 4NH₃ + 2H₂O",
+      },
+      methanol: {
+        dichromate: "CH₃OH + Cr₂O₇²⁻ + 8H⁺ → HCHO + 2Cr³⁺ + 7H₂O",
+        permanganate: "5CH₃OH + 4MnO₄⁻ + 12H⁺ → 5HCHO + 4Mn²⁺ + 11H₂O",
+        fehling: "CH₃OH + 2Cu²⁺ + 5OH⁻ → HCHO + Cu₂O + 3H₂O",
+        tollens: "CH₃OH + 2Ag(NH₃)₂⁺ + 3OH⁻ → HCHO + 2Ag + 4NH₃ + 2H₂O",
+      },
+      isopropanol: {
+        dichromate: "(CH₃)₂CHOH + Cr₂O₇²⁻ + 8H⁺ → (CH₃)₂CO + 2Cr³⁺ + 7H₂O",
+        permanganate: "5(CH₃)₂CHOH + 2MnO₄⁻ + 6H⁺ → 5(CH₃)₂CO + 2Mn²⁺ + 8H₂O",
+        fehling: "(CH₃)₂CHOH + Cu²⁺ → (CH₃)₂CO + Cu⁺ + H⁺",
+        tollens: "(CH₃)₂CHOH + Ag⁺ → (CH₃)₂CO + Ag + H⁺",
+      },
+    }
+
+    return (
+      equations[selectedAlcohol.id]?.[selectedOxidant.id] ||
+      `${selectedAlcohol.formula} + ${selectedOxidant.formula} → produits oxydés`
+    )
+  }
+
+  static getDetailedResult(
+    selectedAlcohol: AlcoholType,
+    selectedOxidant: OxidantType,
+  ): {
+    product: string
+    mechanism: string
+    observation: string
+    interpretation: string
+  } {
+    const results: Record<string, Record<string, any>> = {
+      ethanol: {
+        dichromate: {
+          product: "Acétaldéhyde (CH₃CHO) puis acide acétique (CH₃COOH)",
+          mechanism: "Oxydation en deux étapes : alcool → aldéhyde → acide carboxylique",
+          observation: "Changement de couleur orange → vert, dégagement de chaleur",
+          interpretation: "Le dichromate (Cr⁶⁺) orange est réduit en Cr³⁺ vert",
+        },
+        permanganate: {
+          product: "Acétaldéhyde (CH₃CHO) puis acide acétique (CH₃COOH)",
+          mechanism: "Oxydation par transfert d'électrons via MnO₄⁻",
+          observation: "Décoloration du permanganate violet → incolore/rose pâle",
+          interpretation: "MnO₄⁻ (Mn⁷⁺) est réduit en Mn²⁺ incolore",
+        },
+        fehling: {
+          product: "Acétaldéhyde (CH₃CHO) + précipité rouge Cu₂O",
+          mechanism: "Test spécifique aux alcools primaires",
+          observation: "Formation d'un précipité rouge brique",
+          interpretation: "Cu²⁺ bleu est réduit en Cu₂O rouge, confirmant l'alcool primaire",
+        },
+        tollens: {
+          product: "Acétaldéhyde (CH₃CHO) + miroir d'argent",
+          mechanism: "Réduction des ions Ag⁺ en argent métallique",
+          observation: "Formation d'un miroir d'argent sur les parois",
+          interpretation: "Test positif confirmant la présence d'un alcool primaire",
+        },
+      },
+      isopropanol: {
+        dichromate: {
+          product: "Acétone (CH₃COCH₃)",
+          mechanism: "Oxydation de l'alcool secondaire en cétone",
+          observation: "Changement de couleur orange → vert",
+          interpretation: "L'alcool secondaire s'oxyde uniquement en cétone (pas d'acide)",
+        },
+        permanganate: {
+          product: "Acétone (CH₃COCH₃)",
+          mechanism: "Oxydation ménagée de l'alcool secondaire",
+          observation: "Décoloration du permanganate",
+          interpretation: "Formation d'une cétone, réaction moins vigoureuse qu'avec un alcool primaire",
+        },
+        fehling: {
+          product: "Pas de réaction",
+          mechanism: "Les alcools secondaires ne réagissent pas avec Fehling",
+          observation: "Pas de changement, solution reste bleue",
+          interpretation: "Test négatif confirmant que ce n'est pas un alcool primaire",
+        },
+        tollens: {
+          product: "Pas de réaction",
+          mechanism: "Les alcools secondaires ne réduisent pas Ag⁺",
+          observation: "Pas de formation de miroir d'argent",
+          interpretation: "Test négatif, distingue les alcools secondaires des primaires",
+        },
+      },
+    }
+
+    const alcoholKey =
+      selectedAlcohol.id === "methanol" || selectedAlcohol.id === "propanol" || selectedAlcohol.id === "butanol"
+        ? "ethanol"
+        : selectedAlcohol.id
+
+    return (
+      results[alcoholKey]?.[selectedOxidant.id] || {
+        product: "Produit d'oxydation",
+        mechanism: "Mécanisme d'oxydation standard",
+        observation: "Changement de couleur observé",
+        interpretation: "Réaction d'oxydation réussie",
+      }
+    )
+  }
+}
+
+// ===================================
+// COMPOSANTS 3D OPTIMISÉS
+// ===================================
+
+const LabTable = () => (
+  <group>
+    <Box args={[8, 0.2, 4]} position={[0, -1, 0]} castShadow receiveShadow>
+      <meshStandardMaterial color="#4f46e5" roughness={0.3} metalness={0.1} />
+    </Box>
+    {[
+      [-3.5, -2, -1.5],
+      [3.5, -2, -1.5],
+      [-3.5, -2, 1.5],
+      [3.5, -2, 1.5],
+    ].map((pos, i) => (
+      <Cylinder key={i} args={[0.1, 0.1, 2]} position={pos as [number, number, number]} castShadow>
+        <meshStandardMaterial color="#374151" roughness={0.4} metalness={0.7} />
+      </Cylinder>
+    ))}
+  </group>
+)
+
+
+const Beaker = ({ 
+  position,
+  color,
+  fillLevel = 0.7,
+  onClick,
+  isPouring = false,
+  label,
+}: {
+  position: [number, number, number]
+  color: string
+  fillLevel?: number
+  onClick?: () => void
+  isPouring?: boolean
+  label: string
+}) => {
+  const meshRef = useRef<THREE.Group>(null)
+  const liquidRef = useRef<THREE.Group>(null)
+
+  useFrame(() => {
+    if (!meshRef.current) return
+
+    if (isPouring) {
+      const targetY = 4
+      const targetRotation = position[0] < 0 ? -0.85 : 0.85
+      const targetX = position[0] < 0 ? position[1] + 0.3 : position[1] - 0.3
+
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.05)
+      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.05)
+      meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, targetRotation, 0.05)
+
+      if (liquidRef.current) {
+        liquidRef.current.rotation.z = meshRef.current.rotation.z * 0.3
+      }
+    } else {
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.03)
+      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, position[0], 0.03)
+      meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.03)
+      if (liquidRef.current) {
+        liquidRef.current.rotation.z = THREE.MathUtils.lerp(liquidRef.current.rotation.z, 0, 0.03)
+      }
+    }
+  })
+
+  const isLeft = position[0] < 0
+  const spoutX = isLeft ? 0.5 : -0.5
+  const spoutRotationZ = isLeft ? Math.PI / 2 : -Math.PI / 2
+  const jetDirection = isLeft ? 1 : -1 // CORRECTION : jet vers l’avant
+
+  return (
+    <group position={position} onClick={onClick}>
+      <group ref={meshRef}>
+        {/* Bécher */}
+        <Cylinder args={[0.5, 0.45, 1.5, 22]} position={[0, 0, 0]} castShadow>
+          <meshStandardMaterial color="#f8fafc" transparent opacity={0.2} roughness={0.05} metalness={0.1} />
+        </Cylinder>
+        <Cylinder args={[0.52, 0.5, 0.08, 32]} position={[0, 0.71, 0]} castShadow>
+          <meshStandardMaterial color="#e2e8f0" roughness={0.2} metalness={0.3} />
+        </Cylinder>
+
+        {/* Liquide */}
+        <group ref={liquidRef}>
+          <Cylinder args={[0.45, 0.4, fillLevel * 1.4]} position={[0, -0.75 + fillLevel * 0.7, 0]}>
+            <meshStandardMaterial color={color} transparent opacity={0.9} roughness={0.1} />
+          </Cylinder>
+          <Cylinder args={[0.45, 0.45, 0.02]} position={[0, -0.05 + fillLevel * 0.7, 0]}>
+            <meshStandardMaterial color={color} transparent opacity={0.95} roughness={0.0} metalness={0.1} />
+          </Cylinder>
+        </group>
+
+        {/* Bec verseur */}
+        <Cylinder args={[0.08, 0.12, 0.3, 16]} position={[spoutX, 0.5, 0]} rotation={[0, 0, spoutRotationZ]}>
+          <meshStandardMaterial color="#e2e8f0" transparent opacity={0.3} roughness={0.1} />
+        </Cylinder>
+
+        {/* Marques de niveau */}
+        {[0.2, 0.4, 0.6].map((height, i) => (
+          <Cylinder key={i} args={[0.51, 0.51, 0.01, 32]} position={[0, -0.5 + height, 0]}>
+            <meshStandardMaterial color="#94a3b8" transparent opacity={0.4} />
+          </Cylinder>
+        ))}
+
+        {/* Jet plus courbé et dans le bon sens */}
+        {isPouring && (
+          <mesh>
+            <tubeGeometry
+              args={[
+                new THREE.CatmullRomCurve3([
+                  new THREE.Vector3(spoutX, 0.5, 0),                                            // sortie bec
+                  new THREE.Vector3(spoutX + 0.3 * jetDirection, 0.2, 0),                     // début de courbe
+                ]),
+                64,
+                0.05,
+                8,
+                false,
+              ]}
+            />
+            <meshStandardMaterial
+              color={color}
+              transparent
+              opacity={0.85}
+              emissive={color}
+              emissiveIntensity={0.25}
+            />
+          </mesh>
+        )}
+      </group>
+
+      {/* Label HTML */}
+      <Html position={[0, -1, 0]} center>
+        <div className="bg-white/95 text-gray-800 px-3 py-2 rounded-lg text-sm font-medium shadow-lg border border-gray-200">
+          <div className="text-center">
+            <div className="font-semibold">{label}</div>
+            <div className="text-xs text-gray-600 mt-1">{Math.round(fillLevel * 100)}mL</div>
+          </div>
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+const TestTube = ({
+  position,
+  solutionColor,
+  fillLevel = 0,
+  isHeating = false,
+  showBubbles = false,
+}: {
+  position: [number, number, number]
+  solutionColor: string
+  fillLevel: number
+  isHeating?: boolean
+  showBubbles?: boolean
+}) => {
+  const bubblesRef = useRef<THREE.Group>(null)
+  const tubeRef = useRef<THREE.Group>(null)
+
+  useFrame((state) => {
+    if (bubblesRef.current && showBubbles) {
+      bubblesRef.current.children.forEach((bubble, i) => {
+        const speed = 0.02 + Math.random() * 0.01
+        bubble.position.y += speed
+        bubble.position.x += Math.sin(state.clock.elapsedTime * 2 + i) * 0.002
+        bubble.position.z += Math.cos(state.clock.elapsedTime * 1.5 + i) * 0.002
+
+        if (bubble.position.y > 2) {
+          bubble.position.y = -1.5 + Math.random() * 0.5
+          bubble.position.x = (Math.random() - 0.5) * 0.4
+          bubble.position.z = (Math.random() - 0.5) * 0.4
+        }
+      })
+    }
+
+    if (tubeRef.current && isHeating) {
+      tubeRef.current.position.x = position[0] + Math.sin(state.clock.elapsedTime * 8) * 0.005
+      tubeRef.current.position.z = position[2] + Math.cos(state.clock.elapsedTime * 6) * 0.005
+    }
+  })
+
+  return (
+    <group position={position}>
+      <group position={[0, -0.9, 0]}>
+        <Box args={[0.8, 0.1, 0.4]} position={[0, 0, 0]} castShadow>
+          <meshStandardMaterial color="#374151" roughness={0.4} metalness={0.7} />
+        </Box>
+        <Cylinder args={[0.02, 0.02, 1.8]} position={[0, 0.9, 0]} castShadow>
+          <meshStandardMaterial color="#4b5563" roughness={0.3} metalness={0.8} />
+        </Cylinder>
+        <Cylinder args={[0.015, 0.015, 0.6]} position={[0.3, 1.7, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <meshStandardMaterial color="#4b5563" roughness={0.3} metalness={0.8} />
+        </Cylinder>
+        <group position={[0.6, 1.7, 0]}>
+          <Cylinder args={[0.3, 0.3, 0.05]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+            <meshStandardMaterial color="#6b7280" roughness={0.2} metalness={0.9} />
+          </Cylinder>
+          <Cylinder args={[0.02, 0.02, 0.1]} position={[0, 0, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
+            <meshStandardMaterial color="#374151" roughness={0.4} metalness={0.8} />
+          </Cylinder>
+        </group>
+      </group>
+
+      <group ref={tubeRef} position={[0, 1.4, 0]}>
+        <Cylinder args={[0.25, 0.2, 3.5, 32]} position={[0, 0, 0]} castShadow>
+          <meshStandardMaterial color="#f8fafc" transparent opacity={0.15} roughness={0.02} metalness={0.1} />
+        </Cylinder>
+        <Sphere args={[0.2, 16, 16]} position={[0, -1.75, 0]}>
+          <meshStandardMaterial color="#f8fafc" transparent opacity={0.15} roughness={0.02} metalness={0.1} />
+        </Sphere>
+        <Cylinder args={[0.26, 0.25, 0.1]} position={[0, 1.75, 0]} castShadow>
+          <meshStandardMaterial color="#e2e8f0" roughness={0.2} metalness={0.3} />
+        </Cylinder>
+
+        {fillLevel > 0 && (
+          <group>
+            <Cylinder args={[0.22, 0.18, fillLevel * 3.2]} position={[0, -1.75 + fillLevel * 1.6, 0]}>
+              <meshStandardMaterial color={solutionColor} transparent opacity={0.9} roughness={0.2} metalness={0.0} />
+            </Cylinder>
+            <Cylinder args={[0.22, 0.22, 0.02]} position={[0, -1.75 + fillLevel * 3.2, 0]}>
+              <meshStandardMaterial color={solutionColor} transparent opacity={0.95} roughness={0.0} metalness={0.1} />
+            </Cylinder>
+          </group>
+        )}
+
+        {showBubbles && (
+          <group ref={bubblesRef}>
+            {Array.from({ length: 15 }, (_, i) => (
+              <Sphere
+                key={i}
+                args={[0.015 + Math.random() * 0.02]}
+                position={[(Math.random() - 0.5) * 0.4, -1.5 + Math.random() * 0.5, (Math.random() - 0.5) * 0.4]}
+              >
+                <meshStandardMaterial
+                  color="#ffffff"
+                  transparent
+                  opacity={0.7}
+                  emissive="#ffffff"
+                  emissiveIntensity={0.1}
+                />
+              </Sphere>
+            ))}
+          </group>
+        )}
+
+        <Cylinder args={[0.05, 0.03, 3]} position={[-0.15, 0, 0]}>
+          <meshStandardMaterial color="#ffffff" transparent opacity={0.3} emissive="#ffffff" emissiveIntensity={0.1} />
+        </Cylinder>
+
+        {[0.5, 1.0, 1.5, 2.0, 2.5].map((height, i) => (
+          <Cylinder key={i} args={[0.26, 0.26, 0.005]} position={[0, -1.5 + height, 0]}>
+            <meshStandardMaterial color="#64748b" transparent opacity={0.4} />
+          </Cylinder>
+        ))}
+      </group>
+
+      <Html position={[0.4, 1.4, 0]} center>
+        <div className="bg-white/95 text-gray-800 px-2 py-1 rounded text-xs font-medium shadow-lg border border-gray-200">
+          Tube à essai
+          <br />
+          <span className="text-gray-600">{Math.round(fillLevel * 25)}mL</span>
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+const BunsenBurner = ({
+  position,
+  isHeating = false,
+  onClick,
+}: {
+  position: [number, number, number]
+  isHeating: boolean
+  onClick?: () => void
+}) => {
+  const flameRef = useRef<THREE.Group>(null)
+  const innerFlameRef = useRef<THREE.Mesh>(null)
+
+  useFrame((state) => {
+    if (flameRef.current && isHeating) {
+      const time = state.clock.elapsedTime
+      flameRef.current.scale.setScalar(1 + Math.sin(time * 6) * 0.15 + Math.sin(time * 4) * 0.1)
+      flameRef.current.rotation.z = Math.sin(time * 3) * 0.1
+
+      if (innerFlameRef.current) {
+        innerFlameRef.current.scale.setScalar(1 + Math.sin(time * 8) * 0.2)
+      }
+    }
+  })
+
+  return (
+    <group position={position} onClick={onClick}>
+      <Cylinder args={[0.3, 0.3, 0.2]} position={[0, -0.8, 0]} castShadow>
+        <meshStandardMaterial color="#1f2937" roughness={0.4} metalness={0.8} />
+      </Cylinder>
+      <Cylinder args={[0.32, 0.32, 0.04]} position={[0, -0.75, 0]} castShadow>
+        <meshStandardMaterial color="#374151" roughness={0.3} metalness={0.9} />
+      </Cylinder>
+      <Cylinder args={[0.06, 0.06, 0.9]} position={[0, -0.35, 0]} castShadow>
+        <meshStandardMaterial color="#4b5563" roughness={0.2} metalness={0.8} />
+      </Cylinder>
+      <Cylinder args={[0.08, 0.08, 0.05]} position={[0, -0.55, 0]} castShadow>
+        <meshStandardMaterial color="#374151" roughness={0.3} metalness={0.9} />
+      </Cylinder>
+
+      {Array.from({ length: 4 }, (_, i) => (
+        <Box
+          key={i}
+          args={[0.015, 0.04, 0.12]}
+          position={[Math.cos((i * Math.PI) / 2) * 0.07, -0.55, Math.sin((i * Math.PI) / 2) * 0.07]}
+        >
+          <meshStandardMaterial color="#1f2937" />
+        </Box>
+      ))}
+
+      <Cylinder args={[0.04, 0.06, 0.08]} position={[0, 0.12, 0]} castShadow>
+        <meshStandardMaterial color="#6b7280" roughness={0.2} metalness={0.7} />
+      </Cylinder>
+
+      {isHeating && (
+        <group ref={flameRef} position={[0, 0.3, 0]}>
+          <Cylinder args={[0.1, 0.04, 0.6]} position={[0, 0.3, 0]}>
+            <meshStandardMaterial
+              color="#f97316"
+              transparent
+              opacity={0.8}
+              emissive="#f97316"
+              emissiveIntensity={0.6}
+            />
+          </Cylinder>
+          <Cylinder ref={innerFlameRef} args={[0.06, 0.02, 0.45]} position={[0, 0.225, 0]}>
+            <meshStandardMaterial
+              color="#3b82f6"
+              transparent
+              opacity={0.7}
+              emissive="#3b82f6"
+              emissiveIntensity={0.8}
+            />
+          </Cylinder>
+          <Cylinder args={[0.03, 0.01, 0.2]} position={[0, 0.1, 0]}>
+            <meshStandardMaterial
+              color="#1e40af"
+              transparent
+              opacity={0.5}
+              emissive="#1e40af"
+              emissiveIntensity={0.3}
+            />
+          </Cylinder>
+          {Array.from({ length: 4 }, (_, i) => (
+            <Sphere
+              key={i}
+              args={[0.005]}
+              position={[(Math.random() - 0.5) * 0.15, 0.6 + Math.random() * 0.3, (Math.random() - 0.5) * 0.15]}
+            >
+              <meshStandardMaterial
+                color="#fbbf24"
+                transparent
+                opacity={0.6}
+                emissive="#fbbf24"
+                emissiveIntensity={0.8}
+              />
+            </Sphere>
+          ))}
+        </group>
+      )}
+
+      <group position={[0.35, -0.65, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <Cylinder args={[0.025, 0.025, 0.15]} castShadow>
+          <meshStandardMaterial color="#374151" roughness={0.3} metalness={0.8} />
+        </Cylinder>
+        <Cylinder args={[0.04, 0.04, 0.025]} position={[0.1, 0, 0]} castShadow>
+          <meshStandardMaterial color="#4b5563" roughness={0.2} metalness={0.9} />
+        </Cylinder>
+      </group>
+
+      <Cylinder args={[0.015, 0.015, 0.5]} position={[0.25, -1, 0]} rotation={[0, 0, Math.PI / 4]}>
+        <meshStandardMaterial color="#1f2937" roughness={0.6} />
+      </Cylinder>
+
+      <Html position={[1, -1, 0]} center>
+        <div className="bg-white/95 text-gray-800 px-2 py-1 rounded text-xs font-medium shadow-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+          <div className="text-center">
+            <div className="font-semibold flex items-center gap-1">              
+              Bec Bunsen
+            </div>
+          </div>
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+const LabLighting = () => (
+  <>
+    <ambientLight intensity={0.4} color="#e0e7ff" />
+    <directionalLight
+      position={[10, 10, 5]}
+      intensity={1.0}
+      color="#ffffff"
+      castShadow
+      shadow-mapSize-width={2048}
+      shadow-mapSize-height={2048}
+      shadow-camera-far={50}
+      shadow-camera-left={-10}
+      shadow-camera-right={10}
+      shadow-camera-top={10}
+      shadow-camera-bottom={-10}
+    />
+    <directionalLight position={[-5, 5, -5]} intensity={0.3} color="#c7d2fe" />
+    <pointLight position={[0, 3, 0]} intensity={0.4} color="#ffffff" distance={8} decay={2} />
+    <pointLight position={[-3, 2, 2]} intensity={0.2} color="#a5b4fc" distance={6} decay={2} />
+    <pointLight position={[3, 2, 2]} intensity={0.2} color="#a5b4fc" distance={6} decay={2} />
+  </>
+)
+
+// ===================================
+// SCÈNE PRINCIPALE OPTIMISÉE
+// ===================================
+
+const LabScene = ({
+  selectedAlcohol,
+  selectedOxidant,
+  alcoholAdded,
+  oxidantAdded,
+  heating,
+  reactionComplete,
+  pouringLeft,
+  pouringRight,
+  onPourAlcohol,
+  onPourOxidant,
+  onToggleHeating,
+}: {
+  selectedAlcohol: AlcoholType
+  selectedOxidant: OxidantType
+  alcoholAdded: boolean
+  oxidantAdded: boolean
+  heating: boolean
+  reactionComplete: boolean
+  pouringLeft: boolean
+  pouringRight: boolean
+  onPourAlcohol: () => void
+  onPourOxidant: () => void
+  onToggleHeating: () => void
+}) => {
+  const solutionColor = useMemo(
+    () =>
+      ChemistryCalculator.getSolutionColor(
+        alcoholAdded,
+        oxidantAdded,
+        heating,
+        reactionComplete,
+        selectedAlcohol,
+        selectedOxidant,
+      ),
+    [alcoholAdded, oxidantAdded, heating, reactionComplete, selectedAlcohol, selectedOxidant],
+  )
+
+  const fillLevel = useMemo(
+    () => ChemistryCalculator.getFillLevel(alcoholAdded, oxidantAdded),
+    [alcoholAdded, oxidantAdded],
+  )
+
+  return (
+    <>
+      <color attach="background" args={["#312e81"]} />
+      <LabLighting />
+      <LabTable />
+      <Beaker
+        position={[-1, -0.15, 0]}
+        color={selectedAlcohol.colorHex}
+        fillLevel={alcoholAdded ? 0.4 : 0.7}
+        onClick={onPourAlcohol}
+        isPouring={pouringLeft}
+        label={selectedAlcohol.name}
+      />
+      <Beaker
+        position={[1, -0.15, 0]}
+        color={selectedOxidant.colorHex}
+        fillLevel={oxidantAdded ? 0.4 : 0.7}
+        onClick={onPourOxidant}
+        isPouring={pouringRight}
+        label={selectedOxidant.name}
+      />
+      <TestTube
+        position={[0, 0, 0]}
+        solutionColor={solutionColor}
+        fillLevel={fillLevel}
+        isHeating={heating}
+        showBubbles={heating}
+      />
+      <BunsenBurner position={[0, -0.9, 0]} isHeating={heating} onClick={onToggleHeating} />
+      <OrbitControls
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        minDistance={4}
+        maxDistance={15}
+        maxPolarAngle={Math.PI / 2.2}
+        minPolarAngle={Math.PI / 6}
+        enableDamping={true}
+        dampingFactor={0.05}
+        rotateSpeed={0.5}
+        zoomSpeed={0.8}
+        panSpeed={0.8}
+        target={[0, 0, 0]}
+      />
+    </>
+  )
+}
+
+// ===================================
+// HOOK OPTIMISÉ
+// ===================================
+
+const useLabSimulation = () => {
+  const [selectedAlcohol, setSelectedAlcohol] = useState(alcohols[0])
+  const [selectedOxidant, setSelectedOxidant] = useState(oxidants[0])
+  const [alcoholAdded, setAlcoholAdded] = useState(false)
+  const [oxidantAdded, setOxidantAdded] = useState(false)
   const [heating, setHeating] = useState(false)
   const [reactionComplete, setReactionComplete] = useState(false)
   const [showFormula, setShowFormula] = useState(false)
   const [showResult, setShowResult] = useState(false)
+  const [pouringLeft, setPouringLeft] = useState(false)
+  const [pouringRight, setPouringRight] = useState(false)
+  const [alcoholMenu, setAlcoholMenu] = useState(false)
+  const [oxidantMenu, setOxidantMenu] = useState(false)
 
-  // Liste des alcools disponibles
-  const alcohols = [
-    { id: "ethanol", name: "Éthanol (CH₃CH₂OH)", color: "bg-blue-50/80", formula: "CH₃CH₂OH", type: "primaire" },
-    { id: "methanol", name: "Méthanol (CH₃OH)", color: "bg-blue-100/80", formula: "CH₃OH", type: "primaire" },
-    {
-      id: "propanol",
-      name: "Propanol (CH₃CH₂CH₂OH)",
-      color: "bg-blue-200/80",
-      formula: "CH₃CH₂CH₂OH",
-      type: "primaire",
-    },
-    {
-      id: "isopropanol",
-      name: "Isopropanol ((CH₃)₂CHOH)",
-      color: "bg-blue-300/80",
-      formula: "(CH₃)₂CHOH",
-      type: "secondaire",
-    },
-    { id: "butanol", name: "Butanol (CH₃(CH₂)₃OH)", color: "bg-blue-400/80", formula: "CH₃(CH₂)₃OH", type: "primaire" },
-  ]
-
-  // Liste des oxydants disponibles
-  const oxidants = [
-    { id: "dichromate", name: "Dichromate de K + H₂SO₄", color: "bg-orange-500/90", formula: "K₂Cr₂O₇ + H₂SO₄" },
-    { id: "permanganate", name: "Permanganate de K", color: "bg-purple-500/90", formula: "KMnO₄" },
-    { id: "fehling", name: "Liqueur de Fehling", color: "bg-blue-500/90", formula: "Cu²⁺ + tartrate" },
-    { id: "tollens", name: "Réactif de Tollens", color: "bg-gray-300/90", formula: "Ag(NH₃)₂⁺" },
-  ]
-
-  // États pour les solutions sélectionnées
-  const [selectedAlcohol, setSelectedAlcohol] = useState(alcohols[0])
-  const [selectedOxidant, setSelectedOxidant] = useState(oxidants[0])
-
-  // États pour les solutions versées
-  const [alcoholAdded, setAlcoholAdded] = useState(false)
-  const [oxidantAdded, setOxidantAdded] = useState(false)
-
-  // Gestion du chauffage et de la réaction
+  // Reset automatique optimisé
   useEffect(() => {
-    let timer: string | number | NodeJS.Timeout | undefined
-    if (heating && alcoholAdded && oxidantAdded) {
-      timer = setTimeout(() => {
-        setHeating(false)
-        setTimeout(() => {
-          setReactionComplete(true)
-          setShowResult(true)
-        }, 2000)
-      }, 5000)
+    const resetState = () => {
+      setAlcoholAdded(false)
+      setOxidantAdded(false)
+      setHeating(false)
+      setReactionComplete(false)
+      setShowResult(false)
+      setShowFormula(false)
+      setPouringLeft(false)
+      setPouringRight(false)
     }
+    resetState()
+  }, [selectedAlcohol.id, selectedOxidant.id])
+
+  // Gestion automatique de la réaction optimisée
+  useEffect(() => {
+    if (!heating || !alcoholAdded || !oxidantAdded) return
+
+    const timer = setTimeout(() => {
+      setHeating(false)
+      setShowFormula(true) // Affichage automatique de l'équation
+      setTimeout(() => {
+        setReactionComplete(true)
+        setShowResult(true)
+      }, 1000)
+    }, 4000)
+
     return () => clearTimeout(timer)
   }, [heating, alcoholAdded, oxidantAdded])
 
-  // Couleur de la solution basée sur les réactifs et l'état
-  const getSolutionColor = () => {
-    if (!alcoholAdded && !oxidantAdded) return "transparent"
-    if (alcoholAdded && !oxidantAdded) return selectedAlcohol.color
-    if (alcoholAdded && oxidantAdded && !reactionComplete) {
-      return heating ? getTransitionColor() : selectedOxidant.color
-    }
-    if (reactionComplete) return getResultColor()
-    return "transparent"
-  }
-
-  // Couleur de transition pendant le chauffage
-  const getTransitionColor = () => {
-    if (selectedOxidant.id === "dichromate") {
-      return "bg-gradient-to-b from-orange-500/90 to-green-600/80"
-    } else if (selectedOxidant.id === "permanganate") {
-      return "bg-gradient-to-b from-purple-500/90 to-pink-300/80"
-    } else if (selectedOxidant.id === "fehling") {
-      return "bg-gradient-to-b from-blue-500/90 to-red-500/80"
-    } else if (selectedOxidant.id === "tollens") {
-      return "bg-gradient-to-b from-gray-300/90 to-gray-600/80"
-    }
-    return selectedOxidant.color
-  }
-
-  // Couleur du résultat final
-  const getResultColor = () => {
-    if (selectedOxidant.id === "dichromate") {
-      return "bg-green-600/80"
-    } else if (selectedOxidant.id === "permanganate") {
-      return "bg-pink-300/80"
-    } else if (selectedOxidant.id === "fehling") {
-      // Fehling ne réagit qu'avec les aldéhydes (alcools primaires)
-      return selectedAlcohol.type === "primaire" ? "bg-red-500/80" : "bg-blue-500/90"
-    } else if (selectedOxidant.id === "tollens") {
-      // Tollens ne réagit qu'avec les aldéhydes (alcools primaires)
-      return selectedAlcohol.type === "primaire" ? "bg-gray-800/90" : "bg-gray-300/90"
-    }
-    return "bg-gray-400/80"
-  }
-
-  // Hauteur de la solution
-  const getSolutionHeight = () => {
-    let height = 0
-    if (alcoholAdded) height += 30
-    if (oxidantAdded) height += 20
-    return `${height}%`
-  }
-
-  // Bulles d'ébullition
-  const renderBubbles = () => {
-    if (!heating) return null
-
-    return (
-      <div className="absolute bottom-0 left-0 w-full">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute bottom-0 rounded-full bg-white/70 animate-bubble"
-            style={{
-              left: `${10 + Math.random() * 80}%`,
-              width: `${3 + Math.random() * 4}px`,
-              height: `${3 + Math.random() * 4}px`,
-              animationDuration: `${1 + Math.random() * 2}s`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div>
-    )
-  }
-
-  // Verser l'alcool
-  const pourAlcohol = () => {
+  const pourAlcohol = useCallback(() => {
     if (alcoholAdded || pouringLeft) return
-
     setPouringLeft(true)
     setTimeout(() => {
       setAlcoholAdded(true)
       setPouringLeft(false)
     }, 1500)
-  }
+  }, [alcoholAdded, pouringLeft])
 
-  // Verser l'oxydant
-  const pourOxidant = () => {
+  const pourOxidant = useCallback(() => {
     if (oxidantAdded || pouringRight) return
-
     setPouringRight(true)
     setTimeout(() => {
       setOxidantAdded(true)
       setPouringRight(false)
     }, 1500)
-  }
+  }, [oxidantAdded, pouringRight])
 
-  // Réinitialisation de la simulation
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setHeating(false)
     setReactionComplete(false)
     setShowFormula(false)
     setShowResult(false)
     setAlcoholAdded(false)
     setOxidantAdded(false)
-  }
+    setPouringLeft(false)
+    setPouringRight(false)
+  }, [])
 
-  // Sélection d'un alcool
-  const selectAlcohol = (
-    alcohol: SetStateAction<{ id: string; name: string; color: string; formula: string; type: string }>,
-  ) => {
-    setSelectedAlcohol(alcohol)
-    setAlcoholMenu(false)
-    if (alcoholAdded) {
-      setAlcoholAdded(false)
-      setReactionComplete(false)
-      setShowResult(false)
+  const toggleHeating = useCallback(() => {
+    if (alcoholAdded && oxidantAdded) {
+      setHeating(!heating)
     }
-  }
+  }, [alcoholAdded, oxidantAdded, heating])
 
-  // Sélection d'un oxydant
-  const selectOxidant = (oxidant: SetStateAction<{ id: string; name: string; color: string; formula: string }>) => {
-    setSelectedOxidant(oxidant)
-    setOxidantMenu(false)
-    if (oxidantAdded) {
-      setOxidantAdded(false)
-      setReactionComplete(false)
-      setShowResult(false)
-    }
-  }
-
-  // Obtenir l'équation chimique basée sur les réactifs sélectionnés
-  const getChemicalEquation = () => {
-    if (selectedAlcohol.id === "ethanol" && selectedOxidant.id === "dichromate") {
-      return (
-        <>
-          <p className="mb-2">Oxydation de l'éthanol en éthanal:</p>
-          <p>CH₃CH₂OH + Cr₂O₇²⁻ + H⁺ → CH₃CHO + Cr³⁺ + H₂O</p>
-          <p className="mt-3 mb-2">Oxydation complète en acide éthanoïque:</p>
-          <p>CH₃CH₂OH + 2Cr₂O₇²⁻ + 8H⁺ → CH₃COOH + 4Cr³⁺ + 5H₂O</p>
-        </>
-      )
-    } else if (selectedAlcohol.id === "methanol" && selectedOxidant.id === "dichromate") {
-      return (
-        <>
-          <p className="mb-2">Oxydation du méthanol en méthanal:</p>
-          <p>CH₃OH + Cr₂O₇²⁻ + H⁺ → HCHO + Cr³⁺ + H₂O</p>
-          <p className="mt-3 mb-2">Oxydation complète en acide formique:</p>
-          <p>CH₃OH + 2Cr₂O₇²⁻ + 8H⁺ → HCOOH + 4Cr³⁺ + 5H₂O</p>
-        </>
-      )
-    } else if (selectedOxidant.id === "dichromate") {
-      return (
-        <>
-          <p className="mb-2">Oxydation par le dichromate de potassium:</p>
-          <p>{selectedAlcohol.formula} + Cr₂O₇²⁻ + H⁺ → produit oxydé + Cr³⁺ + H₂O</p>
-          <p className="mt-3 text-xs text-gray-500">Le dichromate (Cr₂O₇²⁻) orange est réduit en ions Cr³⁺ verts</p>
-        </>
-      )
-    } else if (selectedOxidant.id === "permanganate") {
-      return (
-        <>
-          <p className="mb-2">Oxydation par le permanganate de potassium:</p>
-          <p>{selectedAlcohol.formula} + MnO₄⁻ + H⁺ → produit oxydé + Mn²⁺ + H₂O</p>
-          <p className="mt-3 text-xs text-gray-500">Le permanganate (MnO₄⁻) violet est réduit en ions Mn²⁺ rose pâle</p>
-        </>
-      )
-    } else if (selectedOxidant.id === "fehling") {
-      return (
-        <>
-          <p className="mb-2">Test de Fehling (spécifique aux aldéhydes):</p>
-          <p>R-CHO + 2Cu²⁺ + 5OH⁻ → R-COOH + Cu₂O↓ + 3H₂O</p>
-          <p className="mt-3 text-xs text-gray-500">Formation d'un précipité rouge de Cu₂O avec les aldéhydes</p>
-        </>
-      )
-    } else if (selectedOxidant.id === "tollens") {
-      return (
-        <>
-          <p className="mb-2">Test de Tollens (spécifique aux aldéhydes):</p>
-          <p>R-CHO + 2Ag(NH₃)₂⁺ + 3OH⁻ → R-COOH + 2Ag↓ + 4NH₃ + 2H₂O</p>
-          <p className="mt-3 text-xs text-gray-500">Formation d'un miroir d'argent avec les aldéhydes</p>
-        </>
-      )
-    }
-
-    return (
-      <p>
-        Réaction d'oxydation: {selectedAlcohol.formula} + {selectedOxidant.formula} → produits oxydés
-      </p>
-    )
-  }
-
-  // Rendu de l'animation de versement
-  const renderPouring = (side: string) => {
-    const isPouring = side === "left" ? pouringLeft : pouringRight
-    const color = side === "left" ? selectedAlcohol.color : selectedOxidant.color
-
-    if (!isPouring) return null
-
-    return (
-      <div className="absolute z-10 pointer-events-none">
-        <div
-          className={`w-2 h-40 ${color} rounded-b-sm`}
-          style={{
-            position: "absolute",
-            top: "30px",
-            left: side === "left" ? "20px" : "-20px",
-            transformOrigin: "top center",
-            transform: `rotate(${side === "left" ? "15deg" : "-15deg"})`,
-          }}
-        ></div>
-        <div
-          className={`w-4 h-4 ${color} rounded-full animate-bounce`}
-          style={{
-            position: "absolute",
-            top: "70px",
-            left: side === "left" ? "22px" : "-22px",
-          }}
-        ></div>
-      </div>
-    )
-  }
-
-  // Obtenir le message d'état actuel
-  const getStatusMessage = () => {
+  const getStatusMessage = useCallback(() => {
     if (!alcoholAdded && !oxidantAdded) return "Cliquez sur les béchers pour verser les solutions dans le tube à essai."
     if (alcoholAdded && !oxidantAdded) return "Alcool ajouté. Ajoutez maintenant l'oxydant."
     if (!alcoholAdded && oxidantAdded) return "Oxydant ajouté. Ajoutez maintenant l'alcool."
-    if (alcoholAdded && oxidantAdded && !heating) return "Solutions mélangées. Chauffez le mélange."
-    if (heating) return "Chauffage en cours... Observez les changements."
-    if (reactionComplete) return "Réaction terminée! La couleur a changé, indiquant l'oxydation de l'alcool."
+    if (alcoholAdded && oxidantAdded && !heating) return "Solutions mélangées. Cliquez sur le bec Bunsen pour chauffer."
+    if (heating) return "Chauffage en cours... Observez les changements de couleur."
+    if (reactionComplete) return "Réaction terminée! Analysez les résultats détaillés ci-dessous."
     return ""
+  }, [alcoholAdded, oxidantAdded, heating, reactionComplete])
+
+  const getChemicalEquation = useCallback(
+    () => ChemistryCalculator.getChemicalEquation(selectedAlcohol, selectedOxidant),
+    [selectedAlcohol, selectedOxidant],
+  )
+
+  const getDetailedResult = useCallback(
+    () => (reactionComplete ? ChemistryCalculator.getDetailedResult(selectedAlcohol, selectedOxidant) : null),
+    [reactionComplete, selectedAlcohol, selectedOxidant],
+  )
+
+  return {
+    selectedAlcohol,
+    selectedOxidant,
+    alcoholAdded,
+    oxidantAdded,
+    heating,
+    reactionComplete,
+    showFormula,
+    showResult,
+    pouringLeft,
+    pouringRight,
+    alcoholMenu,
+    oxidantMenu,
+    setSelectedAlcohol,
+    setSelectedOxidant,
+    setShowFormula,
+    setAlcoholMenu,
+    setOxidantMenu,
+    pourAlcohol,
+    pourOxidant,
+    handleReset,
+    toggleHeating,
+    getStatusMessage,
+    getChemicalEquation,
+    getDetailedResult,
   }
+}
 
-  // Obtenir le résultat de la réaction
-  const getReactionResult = () => {
-    if (!reactionComplete) return null
+// ===================================
+// COMPOSANTS UI OPTIMISÉS
+// ===================================
 
-    if (selectedOxidant.id === "dichromate") {
-      if (selectedAlcohol.type === "primaire") {
-        return (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat positif:</p>
-            <p>L'alcool primaire ({selectedAlcohol.name}) a été oxydé en aldéhyde puis en acide carboxylique.</p>
-            <p className="mt-2">
-              La couleur orange du dichromate (Cr₂O₇²⁻) est devenue verte (Cr³⁺), confirmant l'oxydation.
-            </p>
-          </div>
-        )
-      } else {
-        return (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat positif:</p>
-            <p>L'alcool secondaire ({selectedAlcohol.name}) a été oxydé en cétone.</p>
-            <p className="mt-2">
-              La couleur orange du dichromate (Cr₂O₇²⁻) est devenue verte (Cr³⁺), confirmant l'oxydation.
-            </p>
-          </div>
-        )
-      }
-    } else if (selectedOxidant.id === "permanganate") {
-      if (selectedAlcohol.type === "primaire") {
-        return (
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat positif:</p>
-            <p>L'alcool primaire ({selectedAlcohol.name}) a été oxydé en aldéhyde puis en acide carboxylique.</p>
-            <p className="mt-2">
-              La couleur violette du permanganate (MnO₄⁻) est devenue rose pâle (Mn²⁺), confirmant l'oxydation.
-            </p>
-          </div>
-        )
-      } else {
-        return (
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat positif:</p>
-            <p>L'alcool secondaire ({selectedAlcohol.name}) a été oxydé en cétone.</p>
-            <p className="mt-2">
-              La couleur violette du permanganate (MnO₄⁻) est devenue rose pâle (Mn²⁺), confirmant l'oxydation.
-            </p>
-          </div>
-        )
-      }
-    } else if (selectedOxidant.id === "fehling") {
-      if (selectedAlcohol.type === "primaire") {
-        return (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat positif:</p>
-            <p>
-              L'alcool primaire ({selectedAlcohol.name}) a été oxydé en aldéhyde qui a réduit la liqueur de Fehling.
-            </p>
-            <p className="mt-2">La formation d'un précipité rouge brique (Cu₂O) confirme la présence d'un aldéhyde.</p>
-          </div>
-        )
-      } else {
-        return (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat négatif:</p>
-            <p>
-              L'alcool secondaire ({selectedAlcohol.name}) s'oxyde en cétone, qui ne réagit pas avec la liqueur de
-              Fehling.
-            </p>
-            <p className="mt-2">La solution reste bleue, indiquant l'absence d'aldéhyde.</p>
-          </div>
-        )
-      }
-    } else if (selectedOxidant.id === "tollens") {
-      if (selectedAlcohol.type === "primaire") {
-        return (
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat positif:</p>
-            <p>
-              L'alcool primaire ({selectedAlcohol.name}) a été oxydé en aldéhyde qui a réduit le réactif de Tollens.
-            </p>
-            <p className="mt-2">
-              La formation d'un miroir d'argent sur les parois du tube confirme la présence d'un aldéhyde.
-            </p>
-          </div>
-        )
-      } else {
-        return (
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-black">
-            <p className="font-medium mb-1">Résultat négatif:</p>
-            <p>
-              L'alcool secondaire ({selectedAlcohol.name}) s'oxyde en cétone, qui ne réagit pas avec le réactif de
-              Tollens.
-            </p>
-            <p className="mt-2">La solution reste incolore, indiquant l'absence d'aldéhyde.</p>
-          </div>
-        )
-      }
-    }
+const UIControls = ({
+  selectedAlcohol,
+  selectedOxidant,
+  alcoholMenu,
+  oxidantMenu,
+  alcoholAdded,
+  oxidantAdded,
+  heating,
+  setSelectedAlcohol,
+  setSelectedOxidant,
+  setAlcoholMenu,
+  setOxidantMenu,
+  toggleHeating,
+  handleReset,
+  setShowFormula,
+  showFormula,
+}: any) => (
+  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl">
+    <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
+      <BeakerIcon className="mr-2 text-indigo-600" size={18} />
+      Contrôles de l'Expérience
+    </h3>
 
-    return (
-      <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-black">
-        <p>Réaction terminée. Observez le changement de couleur.</p>
+    <div className="space-y-3 mb-4">
+      <div className="relative">
+        <label className="text-xs text-gray-600 mb-1 block font-medium">Alcool sélectionné:</label>
+        <button
+          onClick={() => setAlcoholMenu(!alcoholMenu)}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 rounded-md border border-gray-300 text-gray-800 text-sm hover:bg-gray-100 transition-colors"
+        >
+          <span className="font-medium">{selectedAlcohol.name}</span>
+          <ChevronDown size={16} className="text-gray-500" />
+        </button>
+
+        {alcoholMenu && (
+          <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-40 overflow-y-auto">
+            {alcohols.map((alcohol) => (
+              <button
+                key={alcohol.id}
+                onClick={() => {
+                  setSelectedAlcohol(alcohol)
+                  setAlcoholMenu(false)
+                }}
+                className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-800 text-sm transition-colors border-b border-gray-100 last:border-b-0"
+              >
+                <div className="font-medium">{alcohol.name}</div>
+                <div className="text-xs text-gray-500">
+                  ({alcohol.type}) - {alcohol.formula}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    )
-  }
+
+      <div className="relative">
+        <label className="text-xs text-gray-600 mb-1 block font-medium">Oxydant sélectionné:</label>
+        <button
+          onClick={() => setOxidantMenu(!oxidantMenu)}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 rounded-md border border-gray-300 text-gray-800 text-sm hover:bg-gray-100 transition-colors"
+        >
+          <span className="font-medium">{selectedOxidant.name}</span>
+          <ChevronDown size={16} className="text-gray-500" />
+        </button>
+
+        {oxidantMenu && (
+          <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-40 overflow-y-auto">
+            {oxidants.map((oxidant) => (
+              <button
+                key={oxidant.id}
+                onClick={() => {
+                  setSelectedOxidant(oxidant)
+                  setOxidantMenu(false)
+                }}
+                className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-800 text-sm transition-colors border-b border-gray-100 last:border-b-0"
+              >
+                <div className="font-medium">{oxidant.name}</div>
+                <div className="text-xs text-gray-500">{oxidant.formula}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <button
+        onClick={toggleHeating}
+        disabled={!(alcoholAdded && oxidantAdded)}
+        className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          alcoholAdded && oxidantAdded
+            ? heating
+              ? "bg-red-500 hover:bg-red-600 text-white"
+              : "bg-orange-500 hover:bg-orange-600 text-white"
+            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+        }`}
+      >
+        {heating ? <Pause size={16} /> : <Flame size={16} />}
+        {heating ? "Arrêter le chauffage" : "Démarrer le chauffage"}
+      </button>
+
+      <div className="flex gap-2">
+        <button
+          onClick={handleReset}
+          className="flex-1 flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md text-sm transition-colors"
+        >
+          <RotateCcw size={14} />
+          Réinitialiser
+        </button>
+
+        <button
+          onClick={() => setShowFormula(!showFormula)}
+          className="flex-1 flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm transition-colors"
+        >
+          <BookOpen size={14} />
+          Équation
+        </button>
+      </div>
+    </div>
+  </div>
+)
+
+const UIResults = ({
+  alcoholAdded,
+  oxidantAdded,
+  heating,
+  reactionComplete,
+  getStatusMessage,
+  getDetailedResult,
+}: any) => {
+  const detailedResult = getDetailedResult()
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg w-full h-full relative">
-      <style>{`
-        @keyframes bubble {
-          0% {
-            transform: translateY(0) scale(0.8);
-            opacity: 0.8;
-          }
-          100% {
-            transform: translateY(-100px) scale(1.2);
-            opacity: 0;
-          }
-        }
-        
-        @keyframes pour {
-          0% {
-            height: 0;
-          }
-          100% {
-            height: 100px;
-          }
-        }
-      `}</style>
+    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-xl">
+      <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
+        <Info className="mr-2 text-indigo-600" size={16} />
+        Résultats
+      </h3>
 
-      {/* Menus de sélection en haut à gauche */}
-      <div className="absolute top-4 left-4 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 z-20">
-        {/* Menu des alcools */}
-        <div className="relative">
-          <div className="flex items-center mb-1 text-xs text-gray-300">
-            <span>Alcool:</span>
-          </div>
-          <button
-            onClick={() => setAlcoholMenu(!alcoholMenu)}
-            className="flex items-center justify-between w-40 px-2 py-1.5 bg-white/10 rounded-md border border-white/20 shadow-sm text-white text-sm"
-          >
-            <div className="flex items-center">
-              <div className={`w-4 h-4 rounded-full mr-2 ${selectedAlcohol.color}`}></div>
-              <span>{selectedAlcohol.name}</span>
-            </div>
-            <ChevronDown size={16} />
-          </button>
-
-          {alcoholMenu && (
-            <div className="absolute top-full left-0 w-full mt-1 bg-indigo-900/90 rounded-md shadow-lg z-30 border border-white/20 max-h-60 overflow-y-auto">
-              {alcohols.map((alcohol) => (
-                <button
-                  key={alcohol.id}
-                  onClick={() => selectAlcohol(alcohol)}
-                  className="w-full text-left px-3 py-2 hover:bg-white/10 flex items-center text-white text-sm"
-                >
-                  <div className={`w-4 h-4 rounded-full mr-2 ${alcohol.color}`}></div>
-                  <div>
-                    <span>{alcohol.name}</span>
-                    <span className="text-xs text-gray-300 block">Alcool {alcohol.type}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Menu des oxydants */}
-        <div className="relative">
-          <div className="flex items-center mb-1 text-xs text-gray-300">
-            <span>Oxydant:</span>
-          </div>
-          <button
-            onClick={() => setOxidantMenu(!oxidantMenu)}
-            className="flex items-center justify-between w-40 px-2 py-1.5 bg-white/10 rounded-md border border-white/20 shadow-sm text-white text-sm"
-          >
-            <div className="flex items-center">
-              <div className={`w-4 h-4 rounded-full mr-2 ${selectedOxidant.color}`}></div>
-              <span>{selectedOxidant.name}</span>
-            </div>
-            <ChevronDown size={16} />
-          </button>
-
-          {oxidantMenu && (
-            <div className="absolute top-full left-0 w-full mt-1 bg-indigo-900/90 rounded-md shadow-lg z-30 border border-white/20 max-h-60 overflow-y-auto">
-              {oxidants.map((oxidant) => (
-                <button
-                  key={oxidant.id}
-                  onClick={() => selectOxidant(oxidant)}
-                  className="w-full text-left px-3 py-2 hover:bg-white/10 flex items-center text-white text-sm"
-                >
-                  <div className={`w-4 h-4 rounded-full mr-2 ${oxidant.color}`}></div>
-                  {oxidant.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
+        <p className="text-xs text-gray-700 font-medium">{getStatusMessage()}</p>
       </div>
 
-      {/* Zone des béchers et du tube à essai */}
-      <div className="absolute inset-0 pt-24 pb-24">
-        <div className="relative h-full w-full flex justify-center items-start">
-          {/* Bécher gauche (alcool) */}
-          <div
-            className={`absolute left-1/4 transform -translate-x-1/2 top-10 ${alcoholAdded ? "opacity-50" : "cursor-pointer hover:scale-105 transition-transform"}`}
-            onClick={pourAlcohol}
-            style={{
-              transform: pouringLeft ? "rotate(45deg)" : "translateX(-50%)",
-              transformOrigin: "bottom right",
-              transition: "transform 0.5s ease-out",
-            }}
-          >
-            <div className="relative w-24 h-32">
-              <div className="absolute bottom-0 w-full h-full border-2 border-gray-400 rounded-md overflow-hidden">
-                <div
-                  className={`absolute bottom-0 left-0 w-full transition-all duration-300 ${selectedAlcohol.color}`}
-                  style={{ height: pouringLeft ? "40%" : "80%" }}
-                ></div>
-                <div className="absolute top-2 left-3 w-2 h-16 bg-white/30 rounded-full"></div>
-              </div>
-              {renderPouring("left")}
-              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium bg-white/20 px-2 py-1 rounded text-white">
-                {selectedAlcohol.name.split(" ")[0]}
-              </div>
-              {!alcoholAdded && !pouringLeft && (
-                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-300 bg-white/10 px-2 py-1 rounded flex items-center">
-                  <Beaker size={12} className="mr-1" />
-                  <span>Cliquer pour verser</span>
-                </div>
-              )}
-            </div>
+      {detailedResult && (
+        <div className="space-y-2 mb-3">
+          <div className="p-2 bg-green-50 rounded border border-green-200">
+            <h4 className="font-semibold text-green-800 text-xs mb-1">🧪 Produit:</h4>
+            <p className="text-xs text-green-700">{detailedResult.product}</p>
           </div>
 
-          {/* Tube à essai au centre et plus bas */}
-          <div className="relative top-2/3 -translate-y-1/2">
-            {/* Support de tube à essai */}
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-48 h-6 bg-gray-700 rounded-md"></div>
+          <div className="p-2 bg-purple-50 rounded border border-purple-200">
+            <h4 className="font-semibold text-purple-800 text-xs mb-1">👁️ Observation:</h4>
+            <p className="text-xs text-purple-700">{detailedResult.observation}</p>
+          </div>
+        </div>
+      )}
 
-            {/* Tube à essai */}
-            <div
-              ref={tubeRef}
-              className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-20 h-52 bg-white/20 backdrop-blur-sm rounded-b-full border-2 border-gray-300 overflow-hidden"
-            >
-              {/* Solution */}
-              <div
-                className={`absolute bottom-0 left-0 w-full transition-all duration-1000 ${getSolutionColor()}`}
-                style={{
-                  height: getSolutionHeight(),
-                  boxShadow: heating ? "inset 0 0 10px rgba(255,255,255,0.5)" : "none",
-                }}
+      <div className="space-y-1">
+        <h4 className="font-semibold text-gray-700 text-xs">État:</h4>
+        <div className="grid grid-cols-2 gap-1">
+          {[
+            { label: "Alcool", value: alcoholAdded, icon: "🍶" },
+            { label: "Oxydant", value: oxidantAdded, icon: "⚗️" },
+            { label: "Chauffage", value: heating, special: "heating", icon: "🔥" },
+            { label: "Réaction", value: reactionComplete, special: "reaction", icon: "✨" },
+          ].map(({ label, value, special, icon }) => (
+            <div key={label} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
+              <span className="text-gray-600 flex items-center gap-1">
+                <span className="text-xs">{icon}</span>
+                {label}
+              </span>
+              <span
+                className={`font-medium text-xs ${
+                  special === "heating"
+                    ? value
+                      ? "text-orange-600"
+                      : "text-gray-500"
+                    : special === "reaction"
+                      ? value
+                        ? "text-green-600"
+                        : "text-gray-500"
+                      : value
+                        ? "text-green-600"
+                        : "text-gray-500"
+                }`}
               >
-                {renderBubbles()}
-              </div>
-
-              {/* Reflet */}
-              <div className="absolute top-5 left-3 w-4 h-40 bg-white/30 rounded-full transform rotate-12"></div>
+                {value ? "✓" : "✗"}
+              </span>
             </div>
-
-            {/* Bec bunsen */}
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-              <div className="w-20 h-10 bg-gray-700 rounded-md relative">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-900"></div>
-                {heating && (
-                  <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 w-10 h-14">
-                    <div className="w-full h-full relative">
-                      <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-orange-500 to-yellow-300 rounded-t-full animate-pulse"></div>
-                      <div className="absolute bottom-0 left-1/4 w-1/2 h-14 bg-gradient-to-t from-blue-500/40 to-transparent rounded-t-full animate-pulse"></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bouton de chauffage sous le tube à essai */}
-            <button
-              onClick={() => setHeating(!heating)}
-              disabled={!(alcoholAdded && oxidantAdded)}
-              className={`absolute -bottom-16 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-md ${
-                alcoholAdded && oxidantAdded
-                  ? heating
-                    ? "bg-red-500 text-white"
-                    : "bg-red-100 hover:bg-red-200 text-red-800"
-                  : "bg-gray-600/50 text-gray-300 cursor-not-allowed"
-              }`}
-            >
-              <Flame size={20} />
-              <span>{heating ? "Arrêter" : "Chauffer"}</span>
-            </button>
-          </div>
-
-          {/* Bécher droit (oxydant) */}
-          <div
-            className={`absolute right-1/4 transform translate-x-1/2 top-10 ${oxidantAdded ? "opacity-50" : "cursor-pointer hover:scale-105 transition-transform"}`}
-            onClick={pourOxidant}
-            style={{
-              transform: pouringRight ? "rotate(-45deg)" : "translateX(50%)",
-              transformOrigin: "bottom left",
-              transition: "transform 0.5s ease-out",
-            }}
-          >
-            <div className="relative w-24 h-32">
-              <div className="absolute bottom-0 w-full h-full border-2 border-gray-400 rounded-md overflow-hidden">
-                <div
-                  className={`absolute bottom-0 left-0 w-full transition-all duration-300 ${selectedOxidant.color}`}
-                  style={{ height: pouringRight ? "40%" : "80%" }}
-                ></div>
-                <div className="absolute top-2 left-3 w-2 h-16 bg-white/30 rounded-full"></div>
-              </div>
-              {renderPouring("right")}
-              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium bg-white/20 px-2 py-1 rounded text-white">
-                {selectedOxidant.name.split(" ")[0]}
-              </div>
-              {!oxidantAdded && !pouringRight && (
-                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-300 bg-white/10 px-2 py-1 rounded flex items-center">
-                  <Beaker size={12} className="mr-1" />
-                  <span>Cliquer pour verser</span>
-                </div>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Panneau de contrôle en bas */}
-      <div className="absolute bottom-0 left-0 right-0 bg-indigo-900/80 rounded-b-lg shadow-md p-4 flex flex-col">
-        {/* Message d'état */}
-        <div className="flex items-start mb-3">
-          <Info size={18} className="text-purple-300 mr-2 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-white">{getStatusMessage()}</p>
-        </div>
+// ===================================
+// COMPOSANT PRINCIPAL OPTIMISÉ
+// ===================================
 
-        {/* Résultat de la réaction */}
-        {showResult && <div className="mb-3">{getReactionResult()}</div>}
+export default function ComposesOxygenes3D() {
+  const {
+    selectedAlcohol,
+    selectedOxidant,
+    alcoholAdded,
+    oxidantAdded,
+    heating,
+    reactionComplete,
+    showFormula,
+    showResult,
+    pouringLeft,
+    pouringRight,
+    alcoholMenu,
+    oxidantMenu,
+    setSelectedAlcohol,
+    setSelectedOxidant,
+    setShowFormula,
+    setAlcoholMenu,
+    setOxidantMenu,
+    pourAlcohol,
+    pourOxidant,
+    handleReset,
+    toggleHeating,
+    getStatusMessage,
+    getChemicalEquation,
+    getDetailedResult,
+  } = useLabSimulation()
 
-        {/* Boutons de contrôle */}
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-sm"
-          >
-            <RotateCcw size={16} />
-            <span>Réinitialiser</span>
-          </button>
+  return (
+    <div className="w-full h-full bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-900 relative">
+      <Canvas
+        camera={{ position: [4, 4, 8], fov: 50, near: 0.1, far: 100 }}
+        shadows={{ enabled: true }}
+        className="w-full h-full"
+        gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+      >
+        <Suspense fallback={null}>
+          <LabScene
+            selectedAlcohol={selectedAlcohol}
+            selectedOxidant={selectedOxidant}
+            alcoholAdded={alcoholAdded}
+            oxidantAdded={oxidantAdded}
+            heating={heating}
+            reactionComplete={reactionComplete}
+            pouringLeft={pouringLeft}
+            pouringRight={pouringRight}
+            onPourAlcohol={pourAlcohol}
+            onPourOxidant={pourOxidant}
+            onToggleHeating={toggleHeating}
+          />
+        </Suspense>
+      </Canvas>
 
-          <button
-            onClick={() => setShowFormula(!showFormula)}
-            className="flex items-center gap-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 px-3 py-1.5 rounded-md text-sm"
-          >
-            <BookOpen size={16} />
-            <span>{showFormula ? "Masquer" : "Afficher"} l'équation</span>
-          </button>
-        </div>
-      </div>
+      <UIControls
+        selectedAlcohol={selectedAlcohol}
+        selectedOxidant={selectedOxidant}
+        alcoholMenu={alcoholMenu}
+        oxidantMenu={oxidantMenu}
+        alcoholAdded={alcoholAdded}
+        oxidantAdded={oxidantAdded}
+        heating={heating}
+        setSelectedAlcohol={setSelectedAlcohol}
+        setSelectedOxidant={setSelectedOxidant}
+        setAlcoholMenu={setAlcoholMenu}
+        setOxidantMenu={setOxidantMenu}
+        toggleHeating={toggleHeating}
+        handleReset={handleReset}
+        setShowFormula={setShowFormula}
+        showFormula={showFormula}
+      />
 
-      {/* Équation chimique */}
+      <UIResults
+        showResult={showResult}
+        alcoholAdded={alcoholAdded}
+        oxidantAdded={oxidantAdded}
+        heating={heating}
+        reactionComplete={reactionComplete}
+        getStatusMessage={getStatusMessage}
+        getDetailedResult={getDetailedResult}
+      />
+
       {showFormula && (
-        <div className="absolute left-0 right-0 bottom-24 mx-4 bg-indigo-900/80 p-4 rounded-lg shadow-md">
-          <div className="p-3 bg-indigo-800/50 rounded-md font-mono text-sm overflow-x-auto text-white">
+        <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl">
+          <h4 className="text-gray-800 font-semibold mb-2 flex items-center">
+            <BookOpen className="mr-2 text-indigo-600" size={16} />
+            Équation chimique équilibrée:
+          </h4>
+          <div className="bg-gray-50 p-3 rounded-md font-mono text-sm text-gray-800 border border-gray-200">
             {getChemicalEquation()}
           </div>
         </div>
       )}
+
+      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-xs">
+        <p className="text-xs text-gray-600">
+          💡 <strong>Navigation:</strong> Cliquez-glissez pour tourner, molette pour zoomer.
+          <br />🧪 <strong>Interaction:</strong> Cliquez sur les béchers et le bec Bunsen.
+        </p>
+      </div>
     </div>
   )
 }
