@@ -368,7 +368,6 @@ const Calorimeter3D = ({
   position,
   solutionColor,
   fillLevel = 0,
-  temperature = 25,
   isReacting = false,
   showBubbles = false,
 }: {
@@ -556,7 +555,7 @@ const Thermometer3D = ({
       </group>
 
       {/* Graduations */}
-      {[20, 30, 40, 50].map((temp, i) => (
+      {[20, 30, 40, 50].map((i) => (
         <group key={i} position={[0, -1 + i * 0.4, 0]}>
           <Box args={[0.02, 0.01, 0.12]} position={[0.1, 0, 0]}>
             <meshStandardMaterial color="#374151" />
@@ -795,7 +794,6 @@ const useCalorimetrySimulation = () => {
     if (!reactionData) return
 
     const targetTemp = initialTemp + reactionData.expectedDeltaT * (0.95 + Math.random() * 0.1)
-    const currentTemp = initialTemp
     const startTime = Date.now()
     const duration = 8000
 
