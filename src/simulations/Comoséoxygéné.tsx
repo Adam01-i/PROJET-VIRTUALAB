@@ -395,8 +395,8 @@ const Beaker = ({
       </group>
 
       {/* Label HTML */}
-      <Html position={[0, -1, 0]} center>
-        <div className="bg-white/95 text-gray-800 px-3 py-2 rounded-lg text-sm font-medium shadow-lg border border-gray-200">
+      <Html position={[0, +1.5, 6]} center>
+        <div className="bg-white/95 text-gray-800 px-2 py-1 rounded-lg text-sm font-medium shadow-lg border border-gray-200 flex flex-col items-center">
           <div className="text-center">
             <div className="font-semibold">{label}</div>
             <div className="text-xs text-gray-600 mt-1">{Math.round(fillLevel * 100)}mL</div>
@@ -520,7 +520,7 @@ const TestTube = ({
         ))}
       </group>
 
-      <Html position={[0.4, 1.4, 0]} center>
+      <Html position={[0.6, 2, 0]} center>
         <div className="bg-white/95 text-gray-800 px-2 py-1 rounded text-xs font-medium shadow-lg border border-gray-200">
           Tube à essai
           <br />
@@ -1203,13 +1203,6 @@ export default function ComposesOxygenes3D() {
           </div>
         </div>
       )}
-
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-xs">
-        <p className="text-xs text-gray-600">
-          💡 <strong>Navigation:</strong> Cliquez-glissez pour tourner, molette pour zoomer.
-          <br />🧪 <strong>Interaction:</strong> Cliquez sur les béchers et le bec Bunsen.
-        </p>
-      </div>
     </div>
   )
 }
