@@ -1,10 +1,9 @@
 "use client"
 
 import * as React from "react"
-
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Environment, ContactShadows, Text } from "@react-three/drei"
-import { useState, useRef, useCallback, useEffect, useMemo } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { Environment, ContactShadows, Text, OrbitControls } from "@react-three/drei"
+import { useState, useRef, useCallback, useMemo } from "react"
 import { useSpring, animated, config } from "@react-spring/three"
 import * as THREE from "three"
 import {
@@ -12,14 +11,18 @@ import {
   Thermometer,
   Timer,
   Zap,
-  Activity,
   Settings,
   FlaskConical,
   AlertTriangle,
   BookOpen,
   CheckCircle,
   XCircle,
-  MousePointer,
+  Eye,
+  Calculator,
+  Award,
+  Info,
+  TrendingUp,
+  Camera,
 } from "lucide-react"
 
 // Types optimisés
@@ -27,12 +30,29 @@ type ExperimentStep = "initial" | "pouring" | "poured" | "inserting" | "reacting
 type ReactantType = "CuSO4" | "AgNO3" | "ZnSO4"
 type ReactionType = "complete" | "incomplete" | "none"
 
+interface ExperimentData {
+  id: string
+  timestamp: Date
+  reactant: ReactantType
+  reactionType: ReactionType
+  results: {
+    reactionTime: number
+    conversion: number
+    massDeposited: number
+    efficiency: number
+    finalConcentration: number
+    temperature: number
+    pH: number
+  }
+  observations: string
+}
+
 // Configuration des réactifs optimisée
 const REACTANTS = {
   CuSO4: {
     name: "Sulfate de Cuivre",
     formula: "CuSO₄",
-    color: "#6366f1",
+    color: "#3b82f6",
     finalColor: "#22c55e",
     incompleteColor: "#f59e0b",
     depositColor: "#b45309",
@@ -40,6 +60,8 @@ const REACTANTS = {
     incompleteEquation: "Fe(s) + CuSO₄(aq) → FeSO₄(aq) + Cu(s) (partielle)",
     canReact: true,
     reactionProbability: 0.85,
+    molarMass: 159.6,
+    density: 1.12,
     explanation: {
       complete:
         "Réaction redox complète : Le fer métallique a complètement réduit les ions Cu²⁺ en cuivre métallique. Le dépôt rouge-brun sur la barre de fer confirme la formation de cuivre pur.",
@@ -59,6 +81,8 @@ const REACTANTS = {
     incompleteEquation: "Fe(s) + AgNO₃(aq) → Fe(NO₃)₂(aq) + Ag(s) (partielle)",
     canReact: true,
     reactionProbability: 0.75,
+    molarMass: 169.9,
+    density: 1.18,
     explanation: {
       complete:
         "Réaction redox complète : Le fer a réduit les ions Ag⁺ en argent métallique. Le dépôt gris argenté sur la barre confirme la précipitation d'argent pur.",
@@ -78,6 +102,8 @@ const REACTANTS = {
     incompleteEquation: "Fe(s) + ZnSO₄(aq) → Pas de réaction",
     canReact: false,
     reactionProbability: 0,
+    molarMass: 161.4,
+    density: 1.06,
     explanation: {
       complete:
         "Aucune réaction observée : Le fer ne peut pas réduire les ions Zn²⁺ car le zinc est plus réactif que le fer dans la série électrochimique.",
@@ -97,31 +123,6 @@ const EXPERIMENT_CONFIG = {
   INITIAL_CONCENTRATION: 0.1,
   INCOMPLETE_THRESHOLD: 0.6,
 } as const
-
-// Hook pour la gestion optimisée du zoom
-function useCameraZoom() {
-  const [zoom, setZoom] = useState(6.5)
-
-  const handleWheel = useCallback((event: WheelEvent) => {
-    event.preventDefault()
-    const delta = event.deltaY > 0 ? 0.5 : -0.5
-    setZoom((prev) => Math.max(2, Math.min(10, prev + delta)))
-  }, [])
-
-  return { zoom, handleWheel }
-}
-
-// Composant Contrôleur de Caméra
-function CameraController({ zoom }: { zoom: number }) {
-  const { camera } = useThree()
-
-  useEffect(() => {
-    camera.position.z = zoom
-    camera.updateProjectionMatrix()
-  }, [camera, zoom])
-
-  return null
-}
 
 // Composant Table 3D
 const LabTable = React.memo(() => {
@@ -146,7 +147,7 @@ const LabTable = React.memo(() => {
   )
 })
 
-// Composant Robinet 3D
+// Composant Robinet 3D amélioré
 function AlignedFaucet3D({
   position,
   isOpen,
@@ -179,31 +180,31 @@ function AlignedFaucet3D({
 
   return (
     <group position={position}>
+      {/* Tige verticale */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <cylinderGeometry args={[0.05, 0.05, 1, 16]} />
         <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      {/* <mesh position={[0, 1.2, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.3, 0.6, 16]} />
-        <meshStandardMaterial color="#e5e7eb" roughness={0.3} />
-      </mesh> */}
-
+      {/* Réservoir avec solution colorée */}
       <mesh position={[0, 1.2, 0]}>
         <cylinderGeometry args={[0.28, 0.28, 0.55, 16]} />
         <meshStandardMaterial color={reactant.color} transparent opacity={0.8} />
       </mesh>
 
+      {/* Corps du robinet */}
       <mesh position={[0, 0, 0]} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 0.4, 16]} />
         <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
       </mesh>
 
+      {/* Bec verseur */}
       <mesh position={[0, -0.15, 0.25]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <cylinderGeometry args={[0.04, 0.06, 0.3, 16]} />
         <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
       </mesh>
 
+      {/* Poignée rotative */}
       <animated.group rotation-y={rotation}>
         <mesh
           position={[0.2, 0.08, 0]}
@@ -217,8 +218,15 @@ function AlignedFaucet3D({
         </mesh>
       </animated.group>
 
-      <Text position={[0, 1.6, 0]} fontSize={0.08} color="#333333" anchorX="center" anchorY="middle">
+      {/* Étiquettes */}
+      <Text position={[0, 1.6, 0]} fontSize={0.08} color="#374151" anchorX="center" anchorY="middle">
+        {reactant.name}
+      </Text>
+      <Text position={[0, 1.45, 0]} fontSize={0.06} color="#6b7280" anchorX="center" anchorY="middle">
         {reactant.formula}
+      </Text>
+      <Text position={[0, 1.3, 0]} fontSize={0.05} color="#9ca3af" anchorX="center" anchorY="middle">
+        {reactant.molarMass}g/mol • {reactant.density}g/mL
       </Text>
 
       <Text
@@ -234,7 +242,7 @@ function AlignedFaucet3D({
   )
 }
 
-// Composant Bécher 3D
+// Composant Bécher 3D amélioré
 const ImprovedBeaker3D = React.memo(
   ({
     position,
@@ -255,6 +263,7 @@ const ImprovedBeaker3D = React.memo(
 
     return (
       <group position={position}>
+        {/* Corps en verre */}
         <mesh castShadow receiveShadow>
           <cylinderGeometry args={[1, 0.8, 2, 32]} />
           <meshPhysicalMaterial
@@ -267,16 +276,13 @@ const ImprovedBeaker3D = React.memo(
           />
         </mesh>
 
-        {/* <mesh position={[0, 1.05, 0]} castShadow>
-          <torusGeometry args={[1, 0.05, 8, 32]} />
-          <meshStandardMaterial color="#e5e7eb" roughness={0.3} />
-        </mesh> */}
-
+        {/* Bec verseur */}
         <mesh position={[1.05, 0.8, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow>
           <coneGeometry args={[0.1, 0.2, 8]} />
           <meshPhysicalMaterial color="#ffffff" transparent opacity={0.12} transmission={0.85} />
         </mesh>
 
+        {/* Solution avec animation */}
         {solutionLevel > 0 && (
           <>
             <mesh position={[0, -1 + solutionLevel * 0.9, 0]}>
@@ -290,16 +296,17 @@ const ImprovedBeaker3D = React.memo(
           </>
         )}
 
+        {/* Graduations */}
         {[0.25, 0.5, 0.75, 1].map((height, index) => (
           <group key={index}>
             <mesh position={[1.1, -1 + height * 1.8, 0]}>
               <boxGeometry args={[0.08, 0.02, 0.02]} />
-              <meshStandardMaterial color="#333333" />
+              <meshStandardMaterial color="#374151" />
             </mesh>
             <Text
               position={[1.3, -1 + height * 1.8, 0]}
               fontSize={0.06}
-              color="#333333"
+              color="#374151"
               anchorX="left"
               anchorY="middle"
             >
@@ -308,7 +315,7 @@ const ImprovedBeaker3D = React.memo(
           </group>
         ))}
 
-        <Text position={[0, -1.3, 1.1]} fontSize={0.08} color="#333333" anchorX="center" anchorY="middle">
+        <Text position={[0, -1.3, 1.1]} fontSize={0.08} color="#374151" anchorX="center" anchorY="middle">
           Bécher 250mL
         </Text>
       </group>
@@ -316,7 +323,7 @@ const ImprovedBeaker3D = React.memo(
   },
 )
 
-// Composant Barre de Fer 2D avec clic simple
+// Composant Barre de Fer amélioré
 function IronBar2D({
   position,
   copperDeposit,
@@ -370,11 +377,13 @@ function IronBar2D({
       onPointerOver={() => !disabled && !isAnimating && (document.body.style.cursor = "pointer")}
       onPointerOut={() => (document.body.style.cursor = "default")}
     >
+      {/* Barre de fer principale */}
       <mesh>
         <planeGeometry args={[0.08, 1.5]} />
         <meshStandardMaterial color="#4a5568" side={THREE.DoubleSide} />
       </mesh>
 
+      {/* Dépôt métallique */}
       {copperDeposit > 0 && (
         <mesh position={[0, 0, 0.001]}>
           <planeGeometry args={[0.1, 1.5 * copperDeposit]} />
@@ -387,19 +396,23 @@ function IronBar2D({
         </mesh>
       )}
 
-      <Text position={[0, 0.9, 0.01]} fontSize={0.1} color="#333333" anchorX="center" anchorY="middle">
+      {/* Étiquettes */}
+      <Text position={[0, 0.9, 0.01]} fontSize={0.1} color="#374151" anchorX="center" anchorY="middle">
         Barre de Fer
+      </Text>
+      <Text position={[0, 0.7, 0.01]} fontSize={0.06} color="#6b7280" anchorX="center" anchorY="middle">
+        Fe (s) - 55.8 g/mol
       </Text>
 
       {!disabled && !isAnimating && (
         <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#6366f1" anchorX="center" anchorY="middle">
-          Cliquez-moi !
+          Cliquez pour insérer !
         </Text>
       )}
 
       {isAnimating && (
         <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#f59e0b" anchorX="center" anchorY="middle">
-          Insertion...
+          Insertion en cours...
         </Text>
       )}
     </animated.group>
@@ -530,7 +543,7 @@ export default function RedoxReaction() {
   // États principaux
   const [currentStep, setCurrentStep] = useState<ExperimentStep>("initial")
   const [solutionLevel, setSolutionLevel] = useState(0)
-  const [solutionColor, setSolutionColor] = useState("#6366f1")
+  const [solutionColor, setSolutionColor] = useState("#3b82f6")
   const [ironPosition, setIronPosition] = useState<[number, number, number]>([2.5, 0, 0])
   const [copperDeposit, setCopperDeposit] = useState(0)
   const [reactionProgress, setReactionProgress] = useState(0)
@@ -539,38 +552,43 @@ export default function RedoxReaction() {
   const [faucetOpen, setFaucetOpen] = useState(false)
   const [reactionType, setReactionType] = useState<ReactionType>("complete")
   const [reactantType, setReactantType] = useState<ReactantType>("CuSO4")
+  const [showResult, setShowResult] = useState(false)
+  const [experiments, setExperiments] = useState<ExperimentData[]>([])
+  const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
 
-  // Zoom optimisé
-  const { zoom, handleWheel } = useCameraZoom()
+  const controlsRef = useRef<any>(null)
 
   // Réactif sélectionné
   const selectedReactant = REACTANTS[reactantType]
 
   // Données calculées avec mémoisation
-  const calculatedData = useMemo(
-    () => ({
-      temperature: 22.5 + Math.sin(Date.now() * 0.001) * 0.3 + reactionProgress * 2,
-      pH: 7.0 + reactionProgress * 1.2,
-      concentration: 0.1 * (1 - reactionProgress),
-      efficiency: reactionType === "incomplete" ? reactionProgress * 0.6 : reactionProgress,
-    }),
-    [reactionProgress, reactionType],
-  )
+  const calculatedData = useMemo(() => {
+    const baseTemp = 22.5
+    const tempIncrease = currentStep === "reacting" ? reactionProgress * 3 : reactionProgress * 2
+    const currentTemp = baseTemp + tempIncrease + Math.sin(Date.now() * 0.001) * 0.2
+
+    const basePH = 7.0
+    const pHChange = selectedReactant.canReact ? reactionProgress * 1.5 : 0
+    const currentPH = basePH + pHChange
+
+    const currentConcentration = EXPERIMENT_CONFIG.INITIAL_CONCENTRATION * (1 - reactionProgress * 0.8)
+    const currentEfficiency = reactionType === "incomplete" ? reactionProgress * 60 : reactionProgress * 100
+    const currentMassDeposited = copperDeposit * 0.635 * (selectedReactant.molarMass / 100)
+
+    return {
+      temperature: currentTemp,
+      pH: currentPH,
+      concentration: currentConcentration,
+      efficiency: currentEfficiency,
+      massDeposited: currentMassDeposited,
+    }
+  }, [reactionProgress, reactionType, copperDeposit, selectedReactant, currentStep])
 
   // Références pour les timers
   const pourTimerRef = useRef<NodeJS.Timeout>()
   const reactionTimerRef = useRef<NodeJS.Timeout>()
   const insertTimerRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<number>(0)
-
-  // Gestion du zoom avec la molette
-  useEffect(() => {
-    const canvas = document.querySelector("canvas")
-    if (canvas) {
-      canvas.addEventListener("wheel", handleWheel, { passive: false })
-      return () => canvas.removeEventListener("wheel", handleWheel)
-    }
-  }, [handleWheel])
 
   // Fonction de reset complète et corrigée
   const handleReset = useCallback(() => {
@@ -601,6 +619,8 @@ export default function RedoxReaction() {
     setIsPouring(false)
     setFaucetOpen(false)
     setReactionType("complete")
+    setCurrentExperiment(null)
+    setShowResult(false)
     startTimeRef.current = 0
 
     console.log("✅ Reset terminé")
@@ -677,6 +697,7 @@ export default function RedoxReaction() {
           console.log("❌ Aucune réaction possible")
           setCurrentStep("complete")
           setReactionType("none")
+          createExperiment("none")
         }
       }
     }, 30)
@@ -713,10 +734,45 @@ export default function RedoxReaction() {
           setCurrentStep(finalStep)
           setElapsedTime(duration / 1000)
           console.log("✅ Réaction terminée:", finalStep)
+          createExperiment(reactionTypeParam)
         }
       }, 50)
     },
     [selectedReactant],
+  )
+
+  // Créer une expérience
+  const createExperiment = useCallback(
+    (finalReactionType: ReactionType) => {
+      // Calculer les données finales au moment de la création
+      const finalTemperature = 22.5 + reactionProgress * 2 + (Math.random() - 0.5) * 0.5
+      const finalPH = 7.0 + reactionProgress * 1.2 + (Math.random() - 0.5) * 0.2
+      const finalConcentration = EXPERIMENT_CONFIG.INITIAL_CONCENTRATION * (1 - reactionProgress)
+      const finalEfficiency = finalReactionType === "incomplete" ? reactionProgress * 60 : reactionProgress * 100
+      const finalMassDeposited = copperDeposit * 0.635 * (selectedReactant.molarMass / 100)
+
+      const experiment: ExperimentData = {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        reactant: reactantType,
+        reactionType: finalReactionType,
+        results: {
+          reactionTime: elapsedTime,
+          conversion: reactionProgress * 100,
+          massDeposited: finalMassDeposited,
+          efficiency: finalEfficiency,
+          finalConcentration: finalConcentration,
+          temperature: finalTemperature,
+          pH: finalPH,
+        },
+        observations: selectedReactant.explanation[finalReactionType],
+      }
+
+      console.log("📊 Expérience créée:", experiment)
+      setCurrentExperiment(experiment)
+      setExperiments((prev) => [experiment, ...prev.slice(0, 9)])
+    },
+    [reactantType, elapsedTime, reactionProgress, copperDeposit, selectedReactant],
   )
 
   // Changement de réactif avec reset automatique
@@ -729,6 +785,12 @@ export default function RedoxReaction() {
     },
     [handleReset],
   )
+
+  const resetCamera = useCallback(() => {
+    if (controlsRef.current) {
+      controlsRef.current.reset()
+    }
+  }, [])
 
   // État de l'expérience pour la scène
   const experimentState = useMemo(
@@ -745,268 +807,671 @@ export default function RedoxReaction() {
     [currentStep, solutionLevel, solutionColor, ironPosition, copperDeposit, isPouring, faucetOpen, reactionType],
   )
 
+  const getStatusMessage = useCallback(() => {
+    switch (currentStep) {
+      case "initial":
+        return "🚰 Cliquez sur la poignée rouge du robinet pour verser la solution"
+      case "pouring":
+        return "⏳ Versement en cours... Patientez."
+      case "poured":
+        return "🔧 Solution prête. Cliquez sur la barre de fer pour l'insérer automatiquement"
+      case "inserting":
+        return "⏳ Insertion automatique de la barre de fer en cours..."
+      case "reacting":
+        return "⚗️ Réaction redox en cours. Observez les changements de couleur et le dépôt"
+      case "complete":
+        return "✅ Réaction terminée ! Analysez les résultats obtenus"
+      case "incomplete":
+        return "⚠️ Réaction incomplète. Conditions expérimentales défavorables"
+      default:
+        return ""
+    }
+  }, [currentStep])
+
+  const progressPercent = Math.min((reactionProgress / 1) * 100, 100)
+
+  const getPhaseInfo = () => {
+    if (currentStep === "initial" || currentStep === "pouring") {
+      return { phase: "Préparation", color: "blue", description: "Mise en place de l'expérience" }
+    }
+    if (currentStep === "poured" || currentStep === "inserting") {
+      return { phase: "Insertion", color: "purple", description: "Introduction de la barre de fer" }
+    }
+    if (currentStep === "reacting") {
+      return { phase: "Réaction", color: "orange", description: "Réaction redox en cours" }
+    }
+    if (currentStep === "complete") {
+      return { phase: "Terminé", color: "green", description: "Réaction complète" }
+    }
+    if (currentStep === "incomplete") {
+      return { phase: "Incomplète", color: "yellow", description: "Réaction partielle" }
+    }
+    return { phase: "Attente", color: "gray", description: "En attente" }
+  }
+
+  const phaseInfo = getPhaseInfo()
+
   return (
     <div className="w-full h-full relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900">
-      {/* Section Contrôles Expérience */}
-      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-xl w-72 border border-indigo-200">
-        <h2 className="text-md font-bold text-indigo-900 flex items-center gap-2 mb-3">
-          <Settings className="w-4 h-4" />
-          Expérience
+      {/* Configuration de l'Expérience - GAUCHE */}
+      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-xl w-80 border border-gray-200">
+        <h2 className="text-gray-800 font-semibold mb-3 flex items-center gap-2">
+          <Settings className="w-5 h-5 text-indigo-600" />
+          Configuration de l'Expérience
         </h2>
 
-        {/* Sélection des réactifs */}
-        <div className="mb-3">
-          <label className="text-xs font-medium text-gray-700 block mb-1">Réactif</label>
-          <select
-            value={reactantType}
-            onChange={(e) => handleReactantChange(e.target.value as ReactantType)}
-            disabled={currentStep !== "initial"}
-            className="w-full p-2 text-xs border rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 text-gray-700"
-          >
-            <option value="CuSO4">Sulfate de Cuivre (CuSO₄)</option>
-            <option value="AgNO3">Nitrate d'Argent (AgNO₃)</option>
-            <option value="ZnSO4">Sulfate de Zinc (ZnSO₄) - Pas de réaction</option>
-          </select>
-        </div>
-
-        {/* État et instructions */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-gray-700">État</span>
-            <div
-              className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
-                currentStep === "complete"
-                  ? "bg-green-100 text-green-800"
-                  : currentStep === "incomplete"
-                    ? "bg-orange-100 text-orange-800"
-                    : currentStep === "reacting"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : currentStep === "inserting"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-blue-100 text-blue-800"
-              }`}
-            >
-              {currentStep === "incomplete" && <AlertTriangle size={10} />}
-              {currentStep === "inserting" && <MousePointer size={10} />}
-              {currentStep === "initial" && "Prêt"}
-              {currentStep === "pouring" && "Versement"}
-              {currentStep === "poured" && "Solution prête"}
-              {currentStep === "inserting" && "Insertion"}
-              {currentStep === "reacting" && "Réaction"}
-              {currentStep === "complete" && "Terminé"}
-              {currentStep === "incomplete" && "Incomplète"}
-            </div>
-          </div>
-          <div className="bg-indigo-50 p-2 rounded border border-indigo-200">
-            <p className="text-xs text-indigo-800">
-              {currentStep === "initial" && "Cliquez sur la poignée rouge du robinet"}
-              {currentStep === "pouring" && "Versement en cours..."}
-              {currentStep === "poured" && "Cliquez sur la barre de fer pour l'insérer"}
-              {currentStep === "inserting" && "Insertion automatique de la barre..."}
-              {currentStep === "reacting" && "Réaction en cours"}
-              {currentStep === "complete" && "Réaction terminée !"}
-              {currentStep === "incomplete" && "Réaction incomplète"}
-            </p>
-          </div>
-        </div>
-
-        {/* Mesures */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          <div className="bg-gray-50 p-2 rounded text-center">
-            <Thermometer size={12} className="text-red-500 mx-auto mb-1" />
-            <div className="text-xs font-mono text-gray-800">{calculatedData.temperature.toFixed(1)}°C</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded text-center">
-            <Zap size={12} className="text-blue-500 mx-auto mb-1" />
-            <div className="text-xs font-mono text-gray-800">pH {calculatedData.pH.toFixed(1)}</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded text-center">
-            <FlaskConical size={12} className="text-purple-500 mx-auto mb-1" />
-            <div className="text-xs font-mono text-gray-800">{(solutionLevel * 250).toFixed(0)}mL</div>
-          </div>
-        </div>
-
-        {/* Zoom info */}
-        <div className="bg-gray-50 p-2 rounded">
-          <div className="text-xs text-gray-600">🖱️ Molette : Zoom ({zoom.toFixed(1)}x)</div>
-        </div>
-      </div>
-
-      {/* Section Résultats et Contrôles */}
-      <div className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-xl w-72 border border-indigo-200">
-        <h3 className="text-md font-bold text-indigo-900 flex items-center gap-2 mb-3">
-          <Activity className="w-4 h-4" />
-          Résultats & Analyse
-        </h3>
-
-        {/* Bouton Reset */}
-        <div className="mb-3">
-          <button
-            onClick={handleReset}
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors"
-          >
-            <RotateCcw size={12} />
-            Reset Expérience
-          </button>
-        </div>
-
-        {/* Progression */}
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-medium text-gray-700">Progression</span>
-            <span className="text-xs font-mono text-gray-800">{(reactionProgress * 100).toFixed(1)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all duration-500 ${
-                reactionType === "incomplete"
-                  ? "bg-gradient-to-r from-orange-400 to-orange-600"
-                  : "bg-gradient-to-r from-indigo-500 to-indigo-600"
-              }`}
-              style={{ width: `${reactionProgress * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Données principales */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="bg-gray-50 p-2 rounded">
-            <div className="flex items-center gap-1 mb-1">
-              <Timer size={10} className="text-purple-500" />
-              <span className="text-xs font-medium text-gray-700">Temps</span>
-            </div>
-            <div className="text-xs font-mono text-gray-800">{elapsedTime.toFixed(1)}s</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded">
-            <span className="text-xs font-medium text-gray-700 block">Dépôt</span>
-            <div className="text-xs font-mono text-gray-800">{(copperDeposit * 0.635).toFixed(3)}g</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded">
-            <span className="text-xs font-medium text-gray-700 block">Efficacité</span>
-            <div className="text-xs font-mono text-gray-800">{(calculatedData.efficiency * 100).toFixed(0)}%</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded">
-            <span className="text-xs font-medium text-gray-700 block">Type</span>
-            <div className="text-xs font-mono text-gray-800 capitalize">{reactionType}</div>
-          </div>
-        </div>
-
-        {/* Concentration */}
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-medium text-gray-700">[{selectedReactant.formula}]</span>
-            <span className="text-xs font-mono text-gray-800">{calculatedData.concentration.toFixed(3)}M</span>
-          </div>
-          <div className="w-full bg-blue-200 rounded-full h-1">
-            <div
-              className="bg-blue-500 h-1 rounded-full transition-all duration-300"
-              style={{ width: `${(1 - reactionProgress) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Équation */}
-        {(currentStep === "complete" || currentStep === "incomplete") && (
-          <div
-            className={`p-2 rounded border mb-3 ${
-              reactionType === "incomplete"
-                ? "bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200"
-                : "bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200"
-            }`}
-          >
-            <div className="text-center text-xs font-mono mb-1 text-gray-800">
-              {reactionType === "incomplete" ? selectedReactant.incompleteEquation : selectedReactant.equation}
-            </div>
-            <div className="text-center text-xs text-gray-600">
-              {selectedReactant.canReact
-                ? reactionType === "incomplete"
-                  ? "Réaction partielle"
-                  : "Réaction complète"
-                : "Aucune réaction"}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Section Explication des Résultats */}
-      {(currentStep === "complete" || currentStep === "incomplete") && (
-        <div className="absolute bottom-4 left-4 right-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-indigo-200">
-          <h4 className="text-md font-bold text-indigo-900 flex items-center gap-2 mb-3">
-            <BookOpen className="w-4 h-4" />
-            Explication des Résultats
-          </h4>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Observation */}
-            <div className="bg-gray-50 p-3 rounded border">
-              <h5 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-1">
-                {selectedReactant.canReact ? (
-                  reactionType === "complete" ? (
-                    <CheckCircle size={14} className="text-green-500" />
-                  ) : (
-                    <AlertTriangle size={14} className="text-orange-500" />
-                  )
-                ) : (
-                  <XCircle size={14} className="text-red-500" />
-                )}
-                Observation
-              </h5>
-              <p className="text-xs text-gray-700 leading-relaxed">
-                {selectedReactant.explanation[reactionType === "none" ? "none" : reactionType]}
-              </p>
-            </div>
-
-            {/* Données Quantitatives */}
-            <div className="bg-gray-50 p-3 rounded border">
-              <h5 className="text-sm font-semibold text-gray-800 mb-2">Données Quantitatives</h5>
-              <div className="space-y-1 text-xs text-gray-700">
-                <div className="flex justify-between">
-                  <span>Temps de réaction :</span>
-                  <span className="font-mono">{elapsedTime.toFixed(1)}s</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Conversion :</span>
-                  <span className="font-mono">{(reactionProgress * 100).toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Masse déposée :</span>
-                  <span className="font-mono">{(copperDeposit * 0.635).toFixed(3)}g</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Efficacité :</span>
-                  <span className="font-mono">{(calculatedData.efficiency * 100).toFixed(0)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Concentration finale :</span>
-                  <span className="font-mono">{calculatedData.concentration.toFixed(3)}M</span>
-                </div>
+        <div className="space-y-3">
+          {/* Sélection du réactif */}
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              Réactif en Solution
+            </h4>
+            <div className="space-y-2">
+              <select
+                value={reactantType}
+                onChange={(e) => handleReactantChange(e.target.value as ReactantType)}
+                disabled={currentStep !== "initial"}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+              >
+                <option value="CuSO4">Sulfate de Cuivre (CuSO₄)</option>
+                <option value="AgNO3">Nitrate d'Argent (AgNO₃)</option>
+                <option value="ZnSO4">Sulfate de Zinc (ZnSO₄)</option>
+              </select>
+              <div className="text-xs text-gray-600 space-y-1">
+                <div>• Masse molaire: {selectedReactant.molarMass} g/mol</div>
+                <div>• Densité: {selectedReactant.density} g/mL</div>
+                <div>• Concentration: {EXPERIMENT_CONFIG.INITIAL_CONCENTRATION} M</div>
+                <div>• Volume: {EXPERIMENT_CONFIG.SOLUTION_VOLUME} mL</div>
               </div>
             </div>
           </div>
 
-          {/* Conclusion */}
-          <div className="mt-3 p-3 bg-indigo-50 rounded border border-indigo-200">
-            <h5 className="text-sm font-semibold text-indigo-800 mb-1">Conclusion</h5>
-            <p className="text-xs text-indigo-700 leading-relaxed">
+          {/* Métal réducteur */}
+          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+              Métal Réducteur
+            </h4>
+            <div className="text-xs text-gray-600 space-y-1">
+              <div>• Fer métallique (Fe)</div>
+              <div>• Masse molaire: 55.8 g/mol</div>
+              <div>• Densité: 7.87 g/cm³</div>
+              <div>• Potentiel standard: -0.44 V</div>
+            </div>
+          </div>
+
+          {/* Prédiction théorique */}
+          <div
+            className={`p-3 rounded-lg border ${selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+              }`}
+          >
+            <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
+              {selectedReactant.canReact ? (
+                <CheckCircle className="w-3 h-3 text-green-600" />
+              ) : (
+                <XCircle className="w-3 h-3 text-red-600" />
+              )}
+              Prédiction Théorique
+            </h4>
+            <div className="text-xs text-gray-600">
               {selectedReactant.canReact
-                ? reactionType === "complete"
-                  ? `La réaction redox s'est déroulée de manière optimale avec une conversion de ${(reactionProgress * 100).toFixed(1)}%. 
-                   Le dépôt métallique formé confirme la réduction complète des ions métalliques par le fer.`
-                  : `La réaction redox s'est déroulée partiellement avec une conversion de ${(reactionProgress * 100).toFixed(1)}%. 
-                   Les conditions expérimentales (température, agitation, surface de contact) ont limité l'efficacité de la réaction.`
-                : `Aucune réaction n'a eu lieu car le fer ne peut pas réduire les ions ${selectedReactant.formula.replace(
-                    /[₀-₉]/g,
-                    (match) => String.fromCharCode(8304 + Number.parseInt(match)),
-                  )} selon la série électrochimique des métaux.`}
-            </p>
+                ? `Réaction possible (probabilité: ${(selectedReactant.reactionProbability * 100).toFixed(0)}%)`
+                : "Aucune réaction prévue selon la série électrochimique"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Observations en Temps Réel - DROITE */}
+      <div className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-80 border border-gray-200 shadow-xl">
+        <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
+          <Eye className="mr-2 text-indigo-600" size={16} />
+          Observations en Temps Réel
+        </h3>
+
+        <div className="space-y-3">
+          {/* État actuel */}
+          <div className="p-2 bg-blue-50 rounded border border-blue-200">
+            <div className="text-xs text-gray-800 font-medium">
+              {currentStep === "complete" || currentStep === "incomplete" ? (
+                <span className="flex items-center gap-1">
+                  <CheckCircle size={12} className="text-green-600" />
+                  Expérience terminée!
+                </span>
+              ) : currentStep === "reacting" ? (
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                  Réaction en cours...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  {getStatusMessage()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Données en temps réel */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-red-50 p-2 rounded border">
+              <div className="font-semibold text-gray-800 flex items-center gap-1">
+                <Thermometer size={10} />
+                Température
+              </div>
+              <div className="text-lg font-mono text-gray-900">{calculatedData.temperature.toFixed(1)}°C</div>
+            </div>
+            <div className="bg-blue-50 p-2 rounded border">
+              <div className="font-semibold text-gray-800 flex items-center gap-1">
+                <Zap size={10} />
+                pH
+              </div>
+              <div className="text-lg font-mono text-gray-900">{calculatedData.pH.toFixed(1)}</div>
+            </div>
+            <div className="bg-purple-50 p-2 rounded border">
+              <div className="font-semibold text-gray-800 flex items-center gap-1">
+                <FlaskConical size={10} />
+                Volume
+              </div>
+              <div className="text-sm font-mono text-gray-900">{(solutionLevel * 250).toFixed(0)} mL</div>
+            </div>
+            <div className="bg-green-50 p-2 rounded border">
+              <div className="font-semibold text-gray-800 flex items-center gap-1">
+                <Timer size={10} />
+                Temps
+              </div>
+              <div className="text-sm font-mono text-gray-900">{elapsedTime.toFixed(1)}s</div>
+            </div>
+          </div>
+
+          {/* Barre de progression */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-gray-700">Progression de la réaction</span>
+              <span className="text-xs font-mono text-gray-800">{progressPercent.toFixed(0)}%</span>
+            </div>
+            <div className="bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(progressPercent, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Phase actuelle */}
+          <div
+            className={`p-2 rounded border text-xs ${phaseInfo.phase === "Terminé"
+                ? "bg-green-50 border-green-200 text-gray-800"
+                : phaseInfo.phase === "Réaction"
+                  ? "bg-orange-50 border-orange-200 text-gray-800"
+                  : phaseInfo.phase === "Incomplète"
+                    ? "bg-yellow-50 border-yellow-200 text-gray-800"
+                    : "bg-blue-50 border-blue-200 text-gray-800"
+              }`}
+          >
+            <div className="font-semibold">{phaseInfo.phase}</div>
+            <div className="text-gray-600">{phaseInfo.description}</div>
+          </div>
+
+          {/* Données de réaction */}
+          {reactionProgress > 0 && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-gray-50 p-2 rounded border">
+                <div className="font-semibold text-gray-700">Conversion</div>
+                <div className="font-mono text-gray-900">{(reactionProgress * 100).toFixed(1)}%</div>
+              </div>
+              <div className="bg-gray-50 p-2 rounded border">
+                <div className="font-semibold text-gray-700">Dépôt</div>
+                <div className="font-mono text-gray-900">{calculatedData.massDeposited.toFixed(3)}g</div>
+              </div>
+              <div className="bg-gray-50 p-2 rounded border">
+                <div className="font-semibold text-gray-700">Efficacité</div>
+                <div className="font-mono text-gray-900">{(calculatedData.efficiency * 100).toFixed(0)}%</div>
+              </div>
+              <div className="bg-gray-50 p-2 rounded border">
+                <div className="font-semibold text-gray-700">Concentration</div>
+                <div className="font-mono text-gray-900">{calculatedData.concentration.toFixed(3)}M</div>
+              </div>
+            </div>
+          )}
+
+          {/* Boutons de contrôle */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleReset}
+              className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium text-sm transition-colors flex items-center justify-center gap-1"
+            >
+              <RotateCcw size={14} />
+              Reset
+            </button>
+            <button
+              onClick={resetCamera}
+              className="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+            >
+              <Camera className="w-4 h-4" />
+              Caméra
+            </button>
+          </div>
+
+          {(currentStep === "complete" || currentStep === "incomplete") && (
+            <button
+              onClick={() => setShowResult(true)}
+              className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              <Calculator size={16} />
+              Analyser résultats
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Équation Chimique - BAS GAUCHE */}
+      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl max-w-md">
+        <h4 className="text-gray-800 font-semibold mb-2 flex items-center">
+          <BookOpen className="mr-2 text-indigo-600" size={16} />
+          Équation Chimique
+        </h4>
+        <div className="bg-gray-50 p-3 rounded-md font-mono text-sm text-gray-800 border border-gray-200 mb-2">
+          {reactionType === "incomplete" ? selectedReactant.incompleteEquation : selectedReactant.equation}
+        </div>
+        <div className="text-xs text-gray-600">
+          <div className="font-medium mb-1">Type de réaction:</div>
+          <div>{selectedReactant.canReact ? "Réaction redox possible" : "Aucune réaction prévue"}</div>
+        </div>
+      </div>
+
+      {/* Instructions et Guide - BAS DROITE */}
+      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
+        <div className="flex items-center mb-2">
+          <Info className="mr-2 text-indigo-600" size={14} />
+          <span className="font-medium text-gray-700 text-sm">Guide d'Utilisation</span>
+        </div>
+        <div className="text-xs text-gray-600 space-y-1">
+          <p>
+            <strong>🖱️ Navigation:</strong> Glissez pour tourner, molette pour zoomer
+          </p>
+          <p>
+            <strong>🧪 Étapes:</strong> 1) Robinet → 2) Barre de fer → 3) Observer
+          </p>
+          <p>
+            <strong>📊 Analyse:</strong> Bouton "Analyser résultats" après réaction
+          </p>
+          <p>
+            <strong>🔄 Reset:</strong> Recommencer une nouvelle expérience
+          </p>
+        </div>
+        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+          <div className="text-xs text-blue-800 font-medium">{getStatusMessage()}</div>
+        </div>
+      </div>
+
+      {/* Rapport d'Analyse Détaillé */}
+      {showResult && currentExperiment && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white/98 backdrop-blur-sm rounded-2xl p-6 max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                <Award className="mr-2 text-yellow-500" size={24} />
+                Rapport d'Analyse - Réaction Redox
+              </h2>
+              <button
+                onClick={() => setShowResult(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Section 1: Données expérimentales */}
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
+                  <FlaskConical className="mr-2" size={18} />
+                  Données Expérimentales
+                </h3>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded border">
+                      <div className="font-semibold text-gray-700 text-sm">Réactif:</div>
+                      <div className="text-gray-800 font-medium">{selectedReactant.name}</div>
+                      <div className="text-xs text-gray-600">{selectedReactant.formula}</div>
+                      <div className="text-xs text-gray-500">
+                        {selectedReactant.molarMass}g/mol • {selectedReactant.density}g/mL
+                      </div>
+                    </div>
+                    <div className="bg-white p-3 rounded border">
+                      <div className="font-semibold text-gray-700 text-sm">Métal:</div>
+                      <div className="text-gray-800 font-medium">Fer métallique</div>
+                      <div className="text-xs text-gray-600">Fe (s)</div>
+                      <div className="text-xs text-gray-500">55.8g/mol • E° = -0.44V</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 text-sm mb-2">Conditions initiales:</div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div>• Volume de solution: {EXPERIMENT_CONFIG.SOLUTION_VOLUME} mL</div>
+                      <div>• Concentration: {EXPERIMENT_CONFIG.INITIAL_CONCENTRATION} M</div>
+                      <div>• Température initiale: 22.5°C</div>
+                      <div>• pH initial: 7.0</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 text-sm mb-2">Conditions finales:</div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div>• Température finale: {currentExperiment.results.temperature.toFixed(1)}°C</div>
+                      <div>• pH final: {currentExperiment.results.pH.toFixed(1)}</div>
+                      <div>• Concentration finale: {currentExperiment.results.finalConcentration.toFixed(3)} M</div>
+                      <div>• Temps de réaction: {currentExperiment.results.reactionTime.toFixed(1)} s</div>
+                      <div>• Masse déposée: {currentExperiment.results.massDeposited.toFixed(3)} g</div>
+                      <div>• Conversion: {currentExperiment.results.conversion.toFixed(1)}%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Résultats de la réaction */}
+              <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
+                  <Calculator className="mr-2" size={18} />
+                  Résultats de la Réaction
+                </h3>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-white p-2 rounded border">
+                      <div className="font-semibold text-gray-700">Type de réaction:</div>
+                      <div className="text-lg font-medium text-gray-900 capitalize">
+                        {currentExperiment.reactionType === "none" ? "Aucune" : currentExperiment.reactionType}
+                      </div>
+                    </div>
+                    <div className="bg-white p-2 rounded border">
+                      <div className="font-semibold text-gray-700">Conversion:</div>
+                      <div className="text-lg font-mono text-gray-900">
+                        {currentExperiment.results.conversion.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="bg-white p-2 rounded border">
+                      <div className="font-semibold text-gray-700">Masse déposée:</div>
+                      <div className="text-lg font-mono text-gray-900">
+                        {currentExperiment.results.massDeposited.toFixed(3)} g
+                      </div>
+                    </div>
+                    <div className="bg-white p-2 rounded border">
+                      <div className="font-semibold text-gray-700">Efficacité:</div>
+                      <div className="text-lg font-mono text-gray-900">
+                        {currentExperiment.results.efficiency.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Évaluation de la réaction:</div>
+                    <div className="flex items-center gap-2">
+                      {currentExperiment.reactionType === "complete" ? (
+                        <>
+                          <CheckCircle className="text-green-600" size={16} />
+                          <span className="text-gray-800 font-medium">
+                            Réaction complète ({currentExperiment.results.conversion.toFixed(1)}%)
+                          </span>
+                        </>
+                      ) : currentExperiment.reactionType === "incomplete" ? (
+                        <>
+                          <AlertTriangle className="text-orange-600" size={16} />
+                          <span className="text-gray-800 font-medium">
+                            Réaction incomplète ({currentExperiment.results.conversion.toFixed(1)}%)
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="text-red-600" size={16} />
+                          <span className="text-gray-800 font-medium">Aucune réaction observée</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-1000 ${currentExperiment.reactionType === "complete"
+                            ? "bg-green-600"
+                            : currentExperiment.reactionType === "incomplete"
+                              ? "bg-orange-600"
+                              : "bg-red-600"
+                          }`}
+                        style={{ width: `${Math.max(5, currentExperiment.results.efficiency)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Performance globale:</div>
+                    <div className="text-2xl font-bold text-gray-800">
+                      {currentExperiment.results.efficiency.toFixed(1)}%
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 mt-2">
+                      <div
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-1000"
+                        style={{ width: `${currentExperiment.results.efficiency}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Analyse théorique */}
+              <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
+                  <BookOpen className="mr-2" size={18} />
+                  Analyse Théorique
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Équation de la réaction:</div>
+                    <div className="bg-yellow-100 p-2 rounded font-mono text-sm text-gray-800">
+                      {currentExperiment.reactionType === "incomplete"
+                        ? selectedReactant.incompleteEquation
+                        : selectedReactant.equation}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Mécanisme redox:</div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      {selectedReactant.canReact ? (
+                        <>
+                          <div>• Oxydation: Fe(s) → Fe²⁺ + 2e⁻</div>
+                          <div>
+                            • Réduction:{" "}
+                            {reactantType === "CuSO4"
+                              ? "Cu²⁺ + 2e⁻ → Cu(s)"
+                              : reactantType === "AgNO3"
+                                ? "Ag⁺ + e⁻ → Ag(s)"
+                                : "Zn²⁺ + 2e⁻ → Zn(s)"}
+                          </div>
+                          <div>• Transfert d'électrons du fer vers les ions métalliques</div>
+                        </>
+                      ) : (
+                        <>
+                          <div>• Le fer ne peut pas réduire les ions Zn²⁺</div>
+                          <div>• E°(Zn²⁺/Zn) = -0.76V &lt; E°(Fe²⁺/Fe) = -0.44V</div>
+                          <div>• Réaction thermodynamiquement défavorable</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Série électrochimique:</div>
+                    <div className="text-xs text-gray-600">
+                      {reactantType === "ZnSO4"
+                        ? "Zn < Fe < Cu < Ag : Le fer ne peut pas réduire le zinc (plus réactif)"
+                        : reactantType === "CuSO4"
+                          ? "Zn < Fe < Cu < Ag : Le fer peut réduire le cuivre (moins réactif)"
+                          : "Zn < Fe < Cu < Ag : Le fer peut réduire l'argent (moins réactif)"}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Facteurs influençant la réaction:</div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div>• Surface de contact métal/solution</div>
+                      <div>• Concentration des ions métalliques</div>
+                      <div>• Température du milieu réactionnel</div>
+                      <div>• Agitation et homogénéisation</div>
+                      <div>• Présence d'impuretés ou d'inhibiteurs</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Recommandations et Améliorations */}
+              <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
+                  <TrendingUp className="mr-2" size={18} />
+                  Recommandations et Améliorations
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Qualité de l'expérience:</div>
+                    <div className="space-y-2">
+                      {currentExperiment.results.efficiency > 80 ? (
+                        <div className="flex items-center gap-2 text-green-700">
+                          <CheckCircle size={14} />
+                          <span>Excellente efficacité obtenue</span>
+                        </div>
+                      ) : currentExperiment.results.efficiency > 50 ? (
+                        <div className="flex items-center gap-2 text-orange-700">
+                          <AlertTriangle size={14} />
+                          <span>Efficacité modérée</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-red-700">
+                          <XCircle size={14} />
+                          <span>Efficacité faible ou nulle</span>
+                        </div>
+                      )}
+
+                      {currentExperiment.results.conversion > 90 ? (
+                        <div className="flex items-center gap-2 text-green-700">
+                          <CheckCircle size={14} />
+                          <span>Conversion excellente ({currentExperiment.results.conversion.toFixed(1)}%)</span>
+                        </div>
+                      ) : currentExperiment.results.conversion > 50 ? (
+                        <div className="flex items-center gap-2 text-orange-700">
+                          <AlertTriangle size={14} />
+                          <span>Conversion partielle ({currentExperiment.results.conversion.toFixed(1)}%)</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-red-700">
+                          <XCircle size={14} />
+                          <span>Conversion faible ({currentExperiment.results.conversion.toFixed(1)}%)</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Suggestions d'amélioration:</div>
+                    <div className="text-gray-600 text-xs space-y-1">
+                      {currentExperiment.reactionType === "incomplete" && (
+                        <>
+                          <div>• Augmenter la surface de contact (décapage, agitation)</div>
+                          <div>• Optimiser la concentration de la solution</div>
+                          <div>• Contrôler la température du milieu</div>
+                        </>
+                      )}
+                      {currentExperiment.reactionType === "none" && (
+                        <>
+                          <div>• Choisir un métal plus réactif (zinc, magnésium)</div>
+                          <div>• Utiliser un oxydant plus fort</div>
+                          <div>• Vérifier la série électrochimique</div>
+                        </>
+                      )}
+                      <div>• Effectuer plusieurs essais pour la reproductibilité</div>
+                      <div>• Mesurer précisément les masses et volumes</div>
+                      <div>• Analyser quantitativement les produits formés</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Analyse comparative:</div>
+                    <div className="text-gray-600 text-xs">
+                      {experiments.length > 1 ? (
+                        <div>
+                          <div>Nombre d'expériences: {experiments.length}</div>
+                          <div>
+                            Efficacité moyenne:{" "}
+                            {(
+                              experiments.reduce((sum, exp) => sum + exp.results.efficiency, 0) / experiments.length
+                            ).toFixed(1)}
+                            %
+                          </div>
+                          <div>
+                            Conversion moyenne:{" "}
+                            {(
+                              experiments.reduce((sum, exp) => sum + exp.results.conversion, 0) / experiments.length
+                            ).toFixed(1)}
+                            %
+                          </div>
+                        </div>
+                      ) : (
+                        <div>Première expérience - Effectuez d'autres tests pour comparaison</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-gray-700 mb-2">Applications pratiques:</div>
+                    <div className="text-gray-600 text-xs space-y-1">
+                      <div>• Métallurgie extractive et purification</div>
+                      <div>• Galvanoplastie et protection cathodique</div>
+                      <div>• Recyclage des métaux précieux</div>
+                      <div>• Traitement des effluents industriels</div>
+                      <div>• Synthèse de nanomatériaux métalliques</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Historique compact */}
+              {experiments.length > 1 && (
+                <div className="lg:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
+                    <Info className="mr-2" size={18} />
+                    Historique des Expériences ({experiments.length} tests)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {experiments.slice(0, 6).map((exp, i) => (
+                      <div key={exp.id} className="bg-white p-2 rounded border text-xs">
+                        <div className="font-semibold text-gray-700 mb-1">#{experiments.length - i}</div>
+                        <div className="text-gray-600 space-y-1">
+                          <div className="font-mono">Fe + {REACTANTS[exp.reactant].formula}</div>
+                          <div>Type: {exp.reactionType === "none" ? "Aucune" : exp.reactionType}</div>
+                          <div>Conversion: {exp.results.conversion.toFixed(1)}%</div>
+                          <div>Efficacité: {exp.results.efficiency.toFixed(1)}%</div>
+                          <div>Temps: {exp.results.reactionTime.toFixed(1)}s</div>
+                          <div className="text-gray-500">{exp.timestamp.toLocaleTimeString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                Rapport généré le {new Date().toLocaleString()} • Laboratoire de Réactions Redox Virtuel v2.0
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Canvas 3D/2D hybride */}
+      {/* Canvas 3D avec contrôles de caméra */}
       <Canvas
         camera={{
-          position: [0, 0, zoom],
+          position: [4, 4, 8],
           fov: 50,
           near: 0.1,
           far: 100,
@@ -1019,12 +1484,27 @@ export default function RedoxReaction() {
         style={{ background: "transparent" }}
         shadows
       >
-        <CameraController zoom={zoom} />
         <Scene
           experimentState={experimentState}
           onFaucetClick={handleFaucetClick}
           onIronClick={handleIronClick}
           reactantType={reactantType}
+        />
+        <OrbitControls
+          ref={controlsRef}
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={4}
+          maxDistance={15}
+          maxPolarAngle={Math.PI / 2.2}
+          minPolarAngle={Math.PI / 6}
+          enableDamping={true}
+          dampingFactor={0.05}
+          rotateSpeed={0.5}
+          zoomSpeed={0.8}
+          panSpeed={0.8}
+          target={[0, 0, 0]}
         />
       </Canvas>
     </div>
