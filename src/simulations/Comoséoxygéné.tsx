@@ -884,6 +884,7 @@ const useLabSimulation = () => {
   const [oxidantMenu, setOxidantMenu] = useState(false)
   const [experiments, setExperiments] = useState<ExperimentData[]>([])
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
+  const [autoHeatingComplete, setAutoHeatingComplete] = useState(false)
 
   // Reset automatique optimisé
   useEffect(() => {
@@ -897,6 +898,7 @@ const useLabSimulation = () => {
       setPouringLeft(false)
       setPouringRight(false)
       setCurrentExperiment(null)
+      setAutoHeatingComplete(false)
     }
     resetState()
   }, [selectedAlcohol.id, selectedOxidant.id])
@@ -920,6 +922,7 @@ const useLabSimulation = () => {
 
     const timer = setTimeout(() => {
       setHeating(false)
+      setAutoHeatingComplete(true) // Marquer que le chauffage automatique est terminé
       setShowFormula(true)
 
       // Créer l'expérience
@@ -979,6 +982,7 @@ const useLabSimulation = () => {
     setPouringLeft(false)
     setPouringRight(false)
     setCurrentExperiment(null)
+    setAutoHeatingComplete(false)
 
     // Fermer les menus ouverts
     setAlcoholMenu(false)
@@ -987,8 +991,8 @@ const useLabSimulation = () => {
 
   // CORRECTION DU CHAUFFAGE MANUEL
   const toggleHeating = useCallback(() => {
-    // Permettre le chauffage manuel seulement si les deux solutions sont ajoutées
-    if (alcoholAdded && oxidantAdded && !reactionComplete && !pouringLeft && !pouringRight) {
+    // Permettre le chauffage manuel seulement après que le chauffage automatique soit terminé
+    if (alcoholAdded && oxidantAdded && autoHeatingComplete && !pouringLeft && !pouringRight) {
       if (!heating) {
         // Démarrer le chauffage manuel
         setHeating(true)
@@ -997,7 +1001,7 @@ const useLabSimulation = () => {
         setHeating(false)
       }
     }
-  }, [alcoholAdded, oxidantAdded, heating, reactionComplete, pouringLeft, pouringRight])
+  }, [alcoholAdded, oxidantAdded, autoHeatingComplete, heating, pouringLeft, pouringRight])
 
   const getStatusMessage = useCallback(() => {
     if (pouringLeft || pouringRight) return "⏳ Versement en cours... Patientez."
@@ -1005,12 +1009,16 @@ const useLabSimulation = () => {
       return "🧪 Cliquez sur les béchers pour verser les solutions dans le tube à essai."
     if (alcoholAdded && !oxidantAdded) return "✅ Alcool ajouté. Ajoutez maintenant l'oxydant."
     if (!alcoholAdded && oxidantAdded) return "✅ Oxydant ajouté. Ajoutez maintenant l'alcool."
-    if (alcoholAdded && oxidantAdded && !heating && !reactionComplete)
+    if (alcoholAdded && oxidantAdded && !heating && !autoHeatingComplete)
       return "⏳ Solutions mélangées. Démarrage automatique du chauffage dans 1 seconde..."
-    if (heating) return "🔥 Chauffage en cours... Observez les changements de couleur."
+    if (heating && !autoHeatingComplete)
+      return "🔥 Chauffage automatique en cours... Observez les changements de couleur."
+    if (autoHeatingComplete && !heating && !reactionComplete)
+      return "✅ Chauffage automatique terminé. Vous pouvez maintenant utiliser le chauffage manuel."
+    if (heating && autoHeatingComplete) return "🔥 Chauffage manuel en cours... Contrôlez la réaction."
     if (reactionComplete) return "📊 Réaction terminée! Cliquez sur 'Analyser résultats' pour voir l'analyse détaillée."
     return ""
-  }, [alcoholAdded, oxidantAdded, heating, reactionComplete, pouringLeft, pouringRight])
+  }, [alcoholAdded, oxidantAdded, heating, autoHeatingComplete, reactionComplete, pouringLeft, pouringRight])
 
   const getChemicalEquation = useCallback(
     () => ChemistryCalculator.getChemicalEquation(selectedAlcohol, selectedOxidant),
@@ -1055,6 +1063,7 @@ const useLabSimulation = () => {
     oxidantMenu,
     experiments,
     currentExperiment,
+    autoHeatingComplete,
     setSelectedAlcohol,
     setSelectedOxidant,
     setShowFormula,
@@ -1094,6 +1103,7 @@ const UIControls = ({
   showFormula,
   setShowResult,
   reactionComplete,
+  autoHeatingComplete,
 }: any) => (
   <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl">
     <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
@@ -1166,9 +1176,9 @@ const UIControls = ({
     <div className="space-y-2">
       <button
         onClick={toggleHeating}
-        disabled={!(alcoholAdded && oxidantAdded)}
+        disabled={!(alcoholAdded && oxidantAdded && autoHeatingComplete)}
         className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-          alcoholAdded && oxidantAdded
+          alcoholAdded && oxidantAdded && autoHeatingComplete
             ? heating
               ? "bg-red-500 hover:bg-red-600 text-white"
               : "bg-orange-500 hover:bg-orange-600 text-white"
@@ -1598,6 +1608,7 @@ export default function ComposesOxygenes3D() {
     getChemicalEquation,
     getDetailedResult,
     setShowResult,
+    autoHeatingComplete,
   } = useLabSimulation()
 
   return (
@@ -1643,6 +1654,7 @@ export default function ComposesOxygenes3D() {
         showFormula={showFormula}
         setShowResult={setShowResult}
         reactionComplete={reactionComplete}
+        autoHeatingComplete={autoHeatingComplete}
       />
 
       <UIResults
