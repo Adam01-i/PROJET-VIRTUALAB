@@ -96,66 +96,66 @@ export const experienceData: Experience[] = [
       'Reproduction des résultats avec une marge d\'erreur acceptable'
     ]
   },
-  {
+{
   id: '4',
   classe_id: '',
   titre: 'Calorimétrie : mesure d\'énergie thermique',
-  description: 'Mesurez la quantité de chaleur échangée lors d\'une réaction chimique ou d\'un changement d\'état.',
+  description: 'Mesurez la quantité de chaleur échangée lors d\'une réaction acide-base exothermique en utilisant un calorimètre.',
   duree: '45 min',
   niveau: 'Première',
   image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
   simulationPath: 'Calorimétrie',
   objectifs: [
-    'Comprendre le principe de la calorimétrie',
-    'Utiliser un calorimètre pour mesurer une variation d\'énergie thermique',
-    'Calculer la quantité de chaleur échangée à l\'aide de la formule Q = mcΔT',
-    'Analyser les erreurs expérimentales potentielles'
+    'Comprendre le principe de la calorimétrie et les réactions exothermiques',
+    'Utiliser un calorimètre pour mesurer la variation de température',
+    'Calculer l\'enthalpie de réaction avec la formule ΔH = mcΔT/n',
+    'Analyser les résultats et comparer aux valeurs théoriques'
   ],
   materiel: [
-    'Calorimètre en plastique isolé',
-    'Thermomètre numérique',
-    'Bécher de 100 mL',
-    'Eau chaude et eau froide',
-    'Balance de précision',
-    'Agitateur',
-    'Chronomètre'
+    'Calorimètre isolé avec couvercle',
+    'Thermomètre numérique de précision',
+    'Solutions d\'acide chlorhydrique (HCl 1M)',
+    'Solutions d\'hydroxyde de sodium (NaOH 1M)',
+    'Béchers de 100 mL',
+    'Agitateur magnétique',
+    'Balance de précision'
   ],
   resultatsAttendus: [
-    'Changement mesurable de température après mélange',
-    'Calcul de la quantité de chaleur échangée (Q)',
-    'Validation expérimentale de la conservation de l\'énergie',
-    'Compréhension du rôle de la capacité thermique massique'
+    'Augmentation de température de 13-14°C pour HCl + NaOH',
+    'Calcul de ΔH ≈ -57 kJ/mol (neutralisation)',
+    'Formation de chlorure de sodium et d\'eau',
+    'Validation du caractère exothermique de la réaction'
   ]
 },
 {
   id: '5',
   classe_id: '',
   titre: 'Oxydation des composés oxygénés',
-  description: 'Étudiez l\'oxydation des alcools primaires et secondaires en laboratoire, et observez les produits formés.',
+  description: 'Étudiez l\'oxydation des alcools primaires et secondaires avec différents oxydants et observez les changements de couleur caractéristiques.',
   duree: '50 min',
   niveau: 'Première',
   image: 'https://images.unsplash.com/photo-1622489461232-e451cc7fcf3e?auto=format&fit=crop&w=800&q=80',
-  simulationPath: 'Comoséoxygéné',
+  simulationPath: 'ComposésOxygénés',
   objectifs: [
-    'Différencier un alcool primaire, secondaire et tertiaire',
-    'Identifier les produits d\'oxydation d\'un alcool',
-    'Utiliser un oxydant adapté (dichromate, liqueur de Fehling...)',
-    'Observer les changements de couleur ou de précipité'
+    'Différencier les alcools primaires, secondaires par leurs réactions d\'oxydation',
+    'Identifier les produits : aldéhydes, cétones, acides carboxyliques',
+    'Utiliser les oxydants : dichromate K₂Cr₂O₇, permanganate KMnO₄, Fehling, Tollens',
+    'Observer les changements de couleur spécifiques à chaque oxydant'
   ],
   materiel: [
-    'Alcool éthylique (éthanol)',
-    'Alcool secondaire (ex. propan-2-ol)',
-    'Réactif de Fehling ou liqueur de Tollens',
-    'Bec Bunsen ou plaque chauffante',
-    'Tube à essai, éprouvette',
-    'Support et pinces'
+    'Alcools : éthanol, méthanol, isopropanol, butanol',
+    'Oxydants : dichromate de potassium, permanganate, réactif de Fehling, Tollens',
+    'Tube à essai avec support et pince',
+    'Bec Bunsen pour chauffage',
+    'Béchers pour les solutions',
+    'Pipettes et éprouvettes graduées'
   ],
   resultatsAttendus: [
-    'Changement de couleur du réactif oxydant',
-    'Apparition d\'un précipité (argent ou oxyde de cuivre)',
-    'Oxydation de l\'éthanol en acide éthanoïque',
-    'Oxydation d\'un alcool secondaire en cétone',
-    'Aucun changement avec un alcool tertiaire'
+    'Dichromate : orange → vert (Cr⁶⁺ → Cr³⁺)',
+    'Permanganate : violet → rose pâle/incolore',
+    'Fehling : bleu → précipité rouge brique (alcools primaires)',
+    'Tollens : formation de miroir d\'argent (alcools primaires)',
+    'Pas de réaction avec les alcools tertiaires'
   ]
 }
 ];

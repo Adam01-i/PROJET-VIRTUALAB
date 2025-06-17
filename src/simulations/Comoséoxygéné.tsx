@@ -2,8 +2,22 @@
 
 import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { OrbitControls, Html, Cylinder, Box, Sphere } from "@react-three/drei"
-import { Flame, ChevronDown, RotateCcw, BookOpen, Info, BeakerIcon, Pause } from "lucide-react"
+import { OrbitControls, Cylinder, Box, Sphere, Text } from "@react-three/drei"
+import {
+  Flame,
+  ChevronDown,
+  RotateCcw,
+  BookOpen,
+  Info,
+  BeakerIcon,
+  Pause,
+  Calculator,
+  Award,
+  FileText,
+  Eye,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react"
 import * as THREE from "three"
 
 // ===================================
@@ -17,6 +31,9 @@ interface AlcoholType {
   formula: string
   type: string
   colorHex: string
+  molarMass: number
+  density: number
+  boilingPoint: number
 }
 
 interface OxidantType {
@@ -25,6 +42,23 @@ interface OxidantType {
   color: string
   formula: string
   colorHex: string
+  strength: "fort" | "modéré" | "faible"
+  hazardLevel: "low" | "medium" | "high"
+}
+
+interface ExperimentData {
+  id: string
+  timestamp: Date
+  alcohol: AlcoholType
+  oxidant: OxidantType
+  results: {
+    reactionTime: number
+    colorChange: string
+    product: string
+    yield: number
+    efficiency: number
+  }
+  observations: string
 }
 
 // ===================================
@@ -39,6 +73,9 @@ const alcohols: AlcoholType[] = [
     formula: "CH₃CH₂OH",
     type: "primaire",
     colorHex: "#3b82f6",
+    molarMass: 46.07,
+    density: 0.789,
+    boilingPoint: 78.4,
   },
   {
     id: "methanol",
@@ -47,6 +84,9 @@ const alcohols: AlcoholType[] = [
     formula: "CH₃OH",
     type: "primaire",
     colorHex: "#2563eb",
+    molarMass: 32.04,
+    density: 0.792,
+    boilingPoint: 64.7,
   },
   {
     id: "propanol",
@@ -55,6 +95,9 @@ const alcohols: AlcoholType[] = [
     formula: "CH₃CH₂CH₂OH",
     type: "primaire",
     colorHex: "#1d4ed8",
+    molarMass: 60.1,
+    density: 0.804,
+    boilingPoint: 97.2,
   },
   {
     id: "isopropanol",
@@ -63,6 +106,9 @@ const alcohols: AlcoholType[] = [
     formula: "(CH₃)₂CHOH",
     type: "secondaire",
     colorHex: "#1e40af",
+    molarMass: 60.1,
+    density: 0.786,
+    boilingPoint: 82.6,
   },
   {
     id: "butanol",
@@ -71,6 +117,9 @@ const alcohols: AlcoholType[] = [
     formula: "CH₃(CH₂)₃OH",
     type: "primaire",
     colorHex: "#1e3a8a",
+    molarMass: 74.12,
+    density: 0.81,
+    boilingPoint: 117.7,
   },
 ]
 
@@ -81,6 +130,8 @@ const oxidants: OxidantType[] = [
     color: "bg-orange-500/90",
     formula: "K₂Cr₂O₇ + H₂SO₄",
     colorHex: "#f97316",
+    strength: "fort",
+    hazardLevel: "high",
   },
   {
     id: "permanganate",
@@ -88,6 +139,8 @@ const oxidants: OxidantType[] = [
     color: "bg-purple-500/90",
     formula: "KMnO₄",
     colorHex: "#a855f7",
+    strength: "fort",
+    hazardLevel: "high",
   },
   {
     id: "fehling",
@@ -95,6 +148,8 @@ const oxidants: OxidantType[] = [
     color: "bg-blue-500/90",
     formula: "Cu²⁺ + tartrate",
     colorHex: "#3b82f6",
+    strength: "modéré",
+    hazardLevel: "medium",
   },
   {
     id: "tollens",
@@ -102,6 +157,8 @@ const oxidants: OxidantType[] = [
     color: "bg-gray-300/90",
     formula: "Ag(NH₃)₂⁺",
     colorHex: "#9ca3af",
+    strength: "faible",
+    hazardLevel: "low",
   },
 ]
 
@@ -192,6 +249,8 @@ class ChemistryCalculator {
     mechanism: string
     observation: string
     interpretation: string
+    yield: number
+    efficiency: number
   } {
     const results: Record<string, Record<string, any>> = {
       ethanol: {
@@ -200,24 +259,32 @@ class ChemistryCalculator {
           mechanism: "Oxydation en deux étapes : alcool → aldéhyde → acide carboxylique",
           observation: "Changement de couleur orange → vert, dégagement de chaleur",
           interpretation: "Le dichromate (Cr⁶⁺) orange est réduit en Cr³⁺ vert",
+          yield: 85 + Math.random() * 10,
+          efficiency: 88 + Math.random() * 8,
         },
         permanganate: {
           product: "Acétaldéhyde (CH₃CHO) puis acide acétique (CH₃COOH)",
           mechanism: "Oxydation par transfert d'électrons via MnO₄⁻",
           observation: "Décoloration du permanganate violet → incolore/rose pâle",
           interpretation: "MnO₄⁻ (Mn⁷⁺) est réduit en Mn²⁺ incolore",
+          yield: 82 + Math.random() * 12,
+          efficiency: 85 + Math.random() * 10,
         },
         fehling: {
           product: "Acétaldéhyde (CH₃CHO) + précipité rouge Cu₂O",
           mechanism: "Test spécifique aux alcools primaires",
           observation: "Formation d'un précipité rouge brique",
           interpretation: "Cu²⁺ bleu est réduit en Cu₂O rouge, confirmant l'alcool primaire",
+          yield: 78 + Math.random() * 15,
+          efficiency: 80 + Math.random() * 12,
         },
         tollens: {
           product: "Acétaldéhyde (CH₃CHO) + miroir d'argent",
           mechanism: "Réduction des ions Ag⁺ en argent métallique",
           observation: "Formation d'un miroir d'argent sur les parois",
           interpretation: "Test positif confirmant la présence d'un alcool primaire",
+          yield: 75 + Math.random() * 18,
+          efficiency: 77 + Math.random() * 15,
         },
       },
       isopropanol: {
@@ -226,24 +293,32 @@ class ChemistryCalculator {
           mechanism: "Oxydation de l'alcool secondaire en cétone",
           observation: "Changement de couleur orange → vert",
           interpretation: "L'alcool secondaire s'oxyde uniquement en cétone (pas d'acide)",
+          yield: 90 + Math.random() * 8,
+          efficiency: 92 + Math.random() * 6,
         },
         permanganate: {
           product: "Acétone (CH₃COCH₃)",
           mechanism: "Oxydation ménagée de l'alcool secondaire",
           observation: "Décoloration du permanganate",
           interpretation: "Formation d'une cétone, réaction moins vigoureuse qu'avec un alcool primaire",
+          yield: 87 + Math.random() * 10,
+          efficiency: 89 + Math.random() * 8,
         },
         fehling: {
           product: "Pas de réaction",
           mechanism: "Les alcools secondaires ne réagissent pas avec Fehling",
           observation: "Pas de changement, solution reste bleue",
           interpretation: "Test négatif confirmant que ce n'est pas un alcool primaire",
+          yield: 0,
+          efficiency: 0,
         },
         tollens: {
           product: "Pas de réaction",
           mechanism: "Les alcools secondaires ne réduisent pas Ag⁺",
           observation: "Pas de formation de miroir d'argent",
           interpretation: "Test négatif, distingue les alcools secondaires des primaires",
+          yield: 0,
+          efficiency: 0,
         },
       },
     }
@@ -259,6 +334,8 @@ class ChemistryCalculator {
         mechanism: "Mécanisme d'oxydation standard",
         observation: "Changement de couleur observé",
         interpretation: "Réaction d'oxydation réussie",
+        yield: 70 + Math.random() * 20,
+        efficiency: 75 + Math.random() * 15,
       }
     )
   }
@@ -286,14 +363,15 @@ const LabTable = () => (
   </group>
 )
 
-
-const Beaker = ({ 
+const Beaker = ({
   position,
   color,
   fillLevel = 0.7,
   onClick,
   isPouring = false,
   label,
+  alcohol,
+  oxidant,
 }: {
   position: [number, number, number]
   color: string
@@ -301,6 +379,8 @@ const Beaker = ({
   onClick?: () => void
   isPouring?: boolean
   label: string
+  alcohol?: AlcoholType
+  oxidant?: OxidantType
 }) => {
   const meshRef = useRef<THREE.Group>(null)
   const liquidRef = useRef<THREE.Group>(null)
@@ -333,10 +413,10 @@ const Beaker = ({
   const isLeft = position[0] < 0
   const spoutX = isLeft ? 0.5 : -0.5
   const spoutRotationZ = isLeft ? Math.PI / 2 : -Math.PI / 2
-  const jetDirection = isLeft ? 1 : -1 // CORRECTION : jet vers l’avant
+  const jetDirection = isLeft ? 1 : -1
 
   return (
-    <group position={position} onClick={onClick}>
+    <group position={position} onClick={onClick && !isPouring ? onClick : undefined}>
       <group ref={meshRef}>
         {/* Bécher */}
         <Cylinder args={[0.5, 0.45, 1.5, 22]} position={[0, 0, 0]} castShadow>
@@ -374,8 +454,8 @@ const Beaker = ({
             <tubeGeometry
               args={[
                 new THREE.CatmullRomCurve3([
-                  new THREE.Vector3(spoutX, 0.5, 0),                                            // sortie bec
-                  new THREE.Vector3(spoutX + 0.3 * jetDirection, 0.2, 0),                     // début de courbe
+                  new THREE.Vector3(spoutX, 0.5, 0),
+                  new THREE.Vector3(spoutX + 0.3 * jetDirection, 0.2, 0),
                 ]),
                 64,
                 0.05,
@@ -383,26 +463,32 @@ const Beaker = ({
                 false,
               ]}
             />
-            <meshStandardMaterial
-              color={color}
-              transparent
-              opacity={0.85}
-              emissive={color}
-              emissiveIntensity={0.25}
-            />
+            <meshStandardMaterial color={color} transparent opacity={0.85} emissive={color} emissiveIntensity={0.25} />
           </mesh>
         )}
       </group>
 
-      {/* Label HTML */}
-      <Html position={[0, +1.5, 6]} center>
-        <div className="bg-white/95 text-gray-800 px-2 py-1 rounded-lg text-sm font-medium shadow-lg border border-gray-200 flex flex-col items-center">
-          <div className="text-center">
-            <div className="font-semibold">{label}</div>
-            <div className="text-xs text-gray-600 mt-1">{Math.round(fillLevel * 100)}mL</div>
-          </div>
-        </div>
-      </Html>
+      {/* ÉTIQUETTES FIXES AMÉLIORÉES */}
+      <group position={[0, 1.8, 0]}>
+        <Text position={[0, 0.2, 0]} fontSize={0.12} color="#374151" anchorX="center" anchorY="middle">
+          {label}
+        </Text>
+        <Text position={[0, 0, 0]} fontSize={0.08} color="#6b7280" anchorX="center" anchorY="middle">
+          {alcohol?.formula || oxidant?.formula}
+        </Text>
+        <Text position={[0, -0.15, 0]} fontSize={0.06} color="#9ca3af" anchorX="center" anchorY="middle">
+          {alcohol
+            ? `${alcohol.density} g/mL • ${alcohol.boilingPoint}°C`
+            : oxidant
+              ? `Force: ${oxidant.strength}`
+              : ""}
+        </Text>
+        {(alcohol?.type === "primaire" || oxidant?.hazardLevel === "high") && (
+          <Sphere args={[0.04]} position={[0.25, 0.1, 0]}>
+            <meshBasicMaterial color={alcohol?.type === "primaire" ? "#10b981" : "#dc2626"} />
+          </Sphere>
+        )}
+      </group>
     </group>
   )
 }
@@ -520,13 +606,15 @@ const TestTube = ({
         ))}
       </group>
 
-      <Html position={[0.6, 2, 0]} center>
-        <div className="bg-white/95 text-gray-800 px-2 py-1 rounded text-xs font-medium shadow-lg border border-gray-200">
+      {/* ÉTIQUETTE FIXE POUR LE TUBE À ESSAI */}
+      <group position={[0, 3.2, 0]}>
+        <Text position={[0, 0.1, 0]} fontSize={0.1} color="#374151" anchorX="center" anchorY="middle">
           Tube à essai
-          <br />
-          <span className="text-gray-600">{Math.round(fillLevel * 25)}mL</span>
-        </div>
-      </Html>
+        </Text>
+        <Text position={[0, -0.1, 0]} fontSize={0.07} color="#6b7280" anchorX="center" anchorY="middle">
+          {Math.round(fillLevel * 25)}mL
+        </Text>
+      </group>
     </group>
   )
 }
@@ -644,15 +732,15 @@ const BunsenBurner = ({
         <meshStandardMaterial color="#1f2937" roughness={0.6} />
       </Cylinder>
 
-      <Html position={[1, -1, 0]} center>
-        <div className="bg-white/95 text-gray-800 px-2 py-1 rounded text-xs font-medium shadow-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-          <div className="text-center">
-            <div className="font-semibold flex items-center gap-1">              
-              Bec Bunsen
-            </div>
-          </div>
-        </div>
-      </Html>
+      {/* ÉTIQUETTE FIXE POUR LE BEC BUNSEN */}
+      <group position={[0, -1.5, 0]}>
+        <Text position={[0, 0.1, 0]} fontSize={0.1} color="#374151" anchorX="center" anchorY="middle">
+          Bec Bunsen
+        </Text>
+        <Text position={[0, -0.1, 0]} fontSize={0.07} color="#6b7280" anchorX="center" anchorY="middle">
+          {isHeating ? "Allumé" : "Éteint"}
+        </Text>
+      </group>
     </group>
   )
 }
@@ -739,6 +827,7 @@ const LabScene = ({
         onClick={onPourAlcohol}
         isPouring={pouringLeft}
         label={selectedAlcohol.name}
+        alcohol={selectedAlcohol}
       />
       <Beaker
         position={[1, -0.15, 0]}
@@ -747,6 +836,7 @@ const LabScene = ({
         onClick={onPourOxidant}
         isPouring={pouringRight}
         label={selectedOxidant.name}
+        oxidant={selectedOxidant}
       />
       <TestTube
         position={[0, 0, 0]}
@@ -776,7 +866,7 @@ const LabScene = ({
 }
 
 // ===================================
-// HOOK OPTIMISÉ
+// HOOK OPTIMISÉ AVEC CHAUFFAGE MANUEL CORRIGÉ
 // ===================================
 
 const useLabSimulation = () => {
@@ -792,6 +882,8 @@ const useLabSimulation = () => {
   const [pouringRight, setPouringRight] = useState(false)
   const [alcoholMenu, setAlcoholMenu] = useState(false)
   const [oxidantMenu, setOxidantMenu] = useState(false)
+  const [experiments, setExperiments] = useState<ExperimentData[]>([])
+  const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
 
   // Reset automatique optimisé
   useEffect(() => {
@@ -804,9 +896,23 @@ const useLabSimulation = () => {
       setShowFormula(false)
       setPouringLeft(false)
       setPouringRight(false)
+      setCurrentExperiment(null)
     }
     resetState()
   }, [selectedAlcohol.id, selectedOxidant.id])
+
+  // DÉMARRAGE AUTOMATIQUE DE LA RÉACTION APRÈS LE DEUXIÈME VERSEMENT
+  useEffect(() => {
+    if (alcoholAdded && oxidantAdded && !heating && !reactionComplete && !pouringLeft && !pouringRight) {
+      // Démarrage automatique après 1 seconde
+      const timer = setTimeout(() => {
+        if (alcoholAdded && oxidantAdded && !heating && !reactionComplete) {
+          setHeating(true)
+        }
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [alcoholAdded, oxidantAdded, heating, reactionComplete, pouringLeft, pouringRight])
 
   // Gestion automatique de la réaction optimisée
   useEffect(() => {
@@ -814,35 +920,56 @@ const useLabSimulation = () => {
 
     const timer = setTimeout(() => {
       setHeating(false)
-      setShowFormula(true) // Affichage automatique de l'équation
+      setShowFormula(true)
+
+      // Créer l'expérience
+      const detailedResult = ChemistryCalculator.getDetailedResult(selectedAlcohol, selectedOxidant)
+      const experiment: ExperimentData = {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        alcohol: selectedAlcohol,
+        oxidant: selectedOxidant,
+        results: {
+          reactionTime: 4.0,
+          colorChange: `${selectedOxidant.colorHex} → ${ChemistryCalculator.getResultColor(selectedAlcohol, selectedOxidant)}`,
+          product: detailedResult.product,
+          yield: detailedResult.yield,
+          efficiency: detailedResult.efficiency,
+        },
+        observations: detailedResult.observation,
+      }
+
+      setCurrentExperiment(experiment)
+      setExperiments((prev) => [experiment, ...prev.slice(0, 9)])
+
       setTimeout(() => {
         setReactionComplete(true)
-        setShowResult(true)
       }, 1000)
     }, 4000)
 
     return () => clearTimeout(timer)
-  }, [heating, alcoholAdded, oxidantAdded])
+  }, [heating, alcoholAdded, oxidantAdded, selectedAlcohol, selectedOxidant])
 
   const pourAlcohol = useCallback(() => {
-    if (alcoholAdded || pouringLeft) return
+    if (alcoholAdded || pouringLeft || heating || reactionComplete) return
     setPouringLeft(true)
     setTimeout(() => {
       setAlcoholAdded(true)
       setPouringLeft(false)
     }, 1500)
-  }, [alcoholAdded, pouringLeft])
+  }, [alcoholAdded, pouringLeft, heating, reactionComplete])
 
   const pourOxidant = useCallback(() => {
-    if (oxidantAdded || pouringRight) return
+    if (oxidantAdded || pouringRight || heating || reactionComplete) return
     setPouringRight(true)
     setTimeout(() => {
       setOxidantAdded(true)
       setPouringRight(false)
     }, 1500)
-  }, [oxidantAdded, pouringRight])
+  }, [oxidantAdded, pouringRight, heating, reactionComplete])
 
   const handleReset = useCallback(() => {
+    // Arrêter tous les timers en cours
     setHeating(false)
     setReactionComplete(false)
     setShowFormula(false)
@@ -851,23 +978,39 @@ const useLabSimulation = () => {
     setOxidantAdded(false)
     setPouringLeft(false)
     setPouringRight(false)
+    setCurrentExperiment(null)
+
+    // Fermer les menus ouverts
+    setAlcoholMenu(false)
+    setOxidantMenu(false)
   }, [])
 
+  // CORRECTION DU CHAUFFAGE MANUEL
   const toggleHeating = useCallback(() => {
-    if (alcoholAdded && oxidantAdded) {
-      setHeating(!heating)
+    // Permettre le chauffage manuel seulement si les deux solutions sont ajoutées
+    if (alcoholAdded && oxidantAdded && !reactionComplete && !pouringLeft && !pouringRight) {
+      if (!heating) {
+        // Démarrer le chauffage manuel
+        setHeating(true)
+      } else {
+        // Arrêter le chauffage manuel
+        setHeating(false)
+      }
     }
-  }, [alcoholAdded, oxidantAdded, heating])
+  }, [alcoholAdded, oxidantAdded, heating, reactionComplete, pouringLeft, pouringRight])
 
   const getStatusMessage = useCallback(() => {
-    if (!alcoholAdded && !oxidantAdded) return "Cliquez sur les béchers pour verser les solutions dans le tube à essai."
-    if (alcoholAdded && !oxidantAdded) return "Alcool ajouté. Ajoutez maintenant l'oxydant."
-    if (!alcoholAdded && oxidantAdded) return "Oxydant ajouté. Ajoutez maintenant l'alcool."
-    if (alcoholAdded && oxidantAdded && !heating) return "Solutions mélangées. Cliquez sur le bec Bunsen pour chauffer."
-    if (heating) return "Chauffage en cours... Observez les changements de couleur."
-    if (reactionComplete) return "Réaction terminée! Analysez les résultats détaillés ci-dessous."
+    if (pouringLeft || pouringRight) return "⏳ Versement en cours... Patientez."
+    if (!alcoholAdded && !oxidantAdded)
+      return "🧪 Cliquez sur les béchers pour verser les solutions dans le tube à essai."
+    if (alcoholAdded && !oxidantAdded) return "✅ Alcool ajouté. Ajoutez maintenant l'oxydant."
+    if (!alcoholAdded && oxidantAdded) return "✅ Oxydant ajouté. Ajoutez maintenant l'alcool."
+    if (alcoholAdded && oxidantAdded && !heating && !reactionComplete)
+      return "⏳ Solutions mélangées. Démarrage automatique du chauffage dans 1 seconde..."
+    if (heating) return "🔥 Chauffage en cours... Observez les changements de couleur."
+    if (reactionComplete) return "📊 Réaction terminée! Cliquez sur 'Analyser résultats' pour voir l'analyse détaillée."
     return ""
-  }, [alcoholAdded, oxidantAdded, heating, reactionComplete])
+  }, [alcoholAdded, oxidantAdded, heating, reactionComplete, pouringLeft, pouringRight])
 
   const getChemicalEquation = useCallback(
     () => ChemistryCalculator.getChemicalEquation(selectedAlcohol, selectedOxidant),
@@ -878,6 +1021,24 @@ const useLabSimulation = () => {
     () => (reactionComplete ? ChemistryCalculator.getDetailedResult(selectedAlcohol, selectedOxidant) : null),
     [reactionComplete, selectedAlcohol, selectedOxidant],
   )
+
+  const exportResults = useCallback(() => {
+    if (!currentExperiment) return
+
+    const data = {
+      experiment: currentExperiment,
+      detailedResults: getDetailedResult(),
+      chemicalEquation: getChemicalEquation(),
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `oxydation_${currentExperiment.id}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [currentExperiment, getDetailedResult, getChemicalEquation])
 
   return {
     selectedAlcohol,
@@ -892,6 +1053,8 @@ const useLabSimulation = () => {
     pouringRight,
     alcoholMenu,
     oxidantMenu,
+    experiments,
+    currentExperiment,
     setSelectedAlcohol,
     setSelectedOxidant,
     setShowFormula,
@@ -904,6 +1067,8 @@ const useLabSimulation = () => {
     getStatusMessage,
     getChemicalEquation,
     getDetailedResult,
+    exportResults,
+    setShowResult,
   }
 }
 
@@ -927,6 +1092,8 @@ const UIControls = ({
   handleReset,
   setShowFormula,
   showFormula,
+  setShowResult,
+  reactionComplete,
 }: any) => (
   <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl">
     <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
@@ -1009,7 +1176,7 @@ const UIControls = ({
         }`}
       >
         {heating ? <Pause size={16} /> : <Flame size={16} />}
-        {heating ? "Arrêter le chauffage" : "Démarrer le chauffage"}
+        {heating ? "Arrêter le chauffage" : "Chauffage manuel"}
       </button>
 
       <div className="flex gap-2">
@@ -1029,6 +1196,39 @@ const UIControls = ({
           Équation
         </button>
       </div>
+
+      {reactionComplete && (
+        <button
+          onClick={() => setShowResult(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-colors mt-2"
+        >
+          <Calculator size={16} />
+          Analyser résultats
+        </button>
+      )}
+    </div>
+
+    {/* INFORMATIONS DÉTAILLÉES ET COMPACTES */}
+    <div className="mt-3 p-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded border border-indigo-200">
+      <p className="font-medium text-indigo-800 text-xs mb-1">Réaction prévue:</p>
+      <p className="text-indigo-700 text-xs">
+        {selectedAlcohol.type} + {selectedOxidant.strength}
+      </p>
+
+      <div className="flex items-center gap-2 mt-1">
+        {selectedAlcohol.type === "primaire" && (
+          <span className="flex items-center text-xs text-green-600">
+            <CheckCircle size={10} className="mr-1" />
+            Primaire
+          </span>
+        )}
+        {selectedOxidant.hazardLevel === "high" && (
+          <span className="flex items-center text-xs text-red-600">
+            <AlertTriangle size={10} className="mr-1" />
+            Danger
+          </span>
+        )}
+      </div>
     </div>
   </div>
 )
@@ -1046,12 +1246,12 @@ const UIResults = ({
   return (
     <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-xl">
       <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
-        <Info className="mr-2 text-indigo-600" size={16} />
-        Résultats
+        <Eye className="mr-2 text-indigo-600" size={16} />
+        Observations
       </h3>
 
       <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
-        <p className="text-xs text-gray-700 font-medium">{getStatusMessage()}</p>
+        <p className="text-xs text-blue-800 font-medium">{getStatusMessage()}</p>
       </div>
 
       {detailedResult && (
@@ -1064,6 +1264,13 @@ const UIResults = ({
           <div className="p-2 bg-purple-50 rounded border border-purple-200">
             <h4 className="font-semibold text-purple-800 text-xs mb-1">👁️ Observation:</h4>
             <p className="text-xs text-purple-700">{detailedResult.observation}</p>
+          </div>
+
+          <div className="p-2 bg-orange-50 rounded border border-orange-200">
+            <h4 className="font-semibold text-orange-800 text-xs mb-1">📊 Rendement:</h4>
+            <p className="text-xs text-orange-700">
+              {detailedResult.yield.toFixed(1)}% (Efficacité: {detailedResult.efficiency.toFixed(1)}%)
+            </p>
           </div>
         </div>
       )}
@@ -1107,6 +1314,257 @@ const UIResults = ({
   )
 }
 
+// RAPPORT D'ANALYSE ADAPTÉ POUR L'OXYDATION
+const ResultsModal = ({
+  showResult,
+  setShowResult,
+  currentExperiment,
+  getDetailedResult,
+  getChemicalEquation,
+  experiments,
+}: any) => {
+  const detailedResult = getDetailedResult()
+
+  if (!showResult || !detailedResult || !currentExperiment) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white/98 backdrop-blur-sm rounded-2xl p-6 max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <Award className="mr-2 text-yellow-500" size={24} />
+            Rapport d'Analyse - Oxydation des Alcools
+          </h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowResult(false)}
+              className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Données expérimentales */}
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+            <h3 className="text-lg font-bold mb-3 text-blue-800 flex items-center">
+              <BeakerIcon className="mr-2" size={18} />
+              Données Expérimentales
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white p-2 rounded border">
+                  <div className="font-semibold text-blue-700 text-xs">Alcool:</div>
+                  <div className="text-blue-600 font-medium">{currentExperiment.alcohol.name}</div>
+                  <div className="text-xs text-blue-500">
+                    {currentExperiment.alcohol.formula} ({currentExperiment.alcohol.type})
+                  </div>
+                </div>
+                <div className="bg-white p-2 rounded border">
+                  <div className="font-semibold text-blue-700 text-xs">Oxydant:</div>
+                  <div className="text-blue-600 font-medium">{currentExperiment.oxidant.name}</div>
+                  <div className="text-xs text-blue-500">{currentExperiment.oxidant.formula}</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded border">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Masse molaire:</span>
+                    <span className="font-mono text-gray-900">
+                      {currentExperiment.alcohol.molarMass.toFixed(2)} g/mol
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Densité:</span>
+                    <span className="font-mono text-gray-900">{currentExperiment.alcohol.density.toFixed(3)} g/mL</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Point d'ébullition:</span>
+                    <span className="font-mono text-gray-900">
+                      {currentExperiment.alcohol.boilingPoint.toFixed(1)} °C
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Force oxydant:</span>
+                    <span className="font-mono text-gray-900">{currentExperiment.oxidant.strength}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Temps de réaction:</span>
+                    <span className="font-mono text-orange-600 font-bold">
+                      {currentExperiment.results.reactionTime.toFixed(1)} s
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Changement couleur:</span>
+                    <span className="font-mono text-purple-600">Observé</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Résultats de la réaction */}
+          <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+            <h3 className="text-lg font-bold mb-3 text-green-800 flex items-center">
+              <Calculator className="mr-2" size={18} />
+              Résultats de la Réaction
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="bg-white p-3 rounded border">
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Produit principal:</span>
+                    <span className="font-mono text-green-700 font-bold text-xs">{detailedResult.product}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Rendement:</span>
+                    <span className="font-mono text-green-600">{currentExperiment.results.yield.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-semibold text-gray-700">Efficacité:</span>
+                    <span className="font-mono text-green-600">{currentExperiment.results.efficiency.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded border">
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Mécanisme:</span>
+                    <p className="text-gray-600 text-xs mt-1">{detailedResult.mechanism}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Interprétation:</span>
+                    <p className="text-gray-600 text-xs mt-1">{detailedResult.interpretation}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Évaluation de performance */}
+          <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
+            <h3 className="text-lg font-bold mb-3 text-purple-800 flex items-center">
+              <Award className="mr-2" size={18} />
+              Évaluation
+            </h3>
+            <div className="space-y-3">
+              <div className="bg-white p-3 rounded border">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold text-purple-700">Rendement:</span>
+                  <span className="font-bold text-purple-800 text-lg">
+                    {currentExperiment.results.yield.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-purple-200 rounded-full h-2">
+                  <div
+                    className="bg-purple-600 h-2 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, currentExperiment.results.yield)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded border">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold text-purple-700">Efficacité:</span>
+                  <span className="font-bold text-purple-800 text-lg">
+                    {currentExperiment.results.efficiency.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-purple-200 rounded-full h-2">
+                  <div
+                    className="bg-purple-600 h-2 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, currentExperiment.results.efficiency)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="bg-white p-2 rounded border">
+                <div className="font-semibold text-purple-800 mb-1 text-sm">Évaluation:</div>
+                <div className="text-purple-700 text-sm">
+                  {currentExperiment.results.yield > 90
+                    ? "🏆 Excellent rendement !"
+                    : currentExperiment.results.yield > 80
+                      ? "🥈 Bon rendement"
+                      : currentExperiment.results.yield > 70
+                        ? "🥉 Rendement correct"
+                        : currentExperiment.results.yield > 0
+                          ? "⚠️ Rendement faible"
+                          : "❌ Pas de réaction"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Équation et mécanisme */}
+          <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+            <h3 className="text-lg font-bold mb-3 text-yellow-800 flex items-center">
+              <FileText className="mr-2" size={18} />
+              Réaction Chimique
+            </h3>
+            <div className="space-y-3">
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold text-yellow-700 mb-2">Équation bilan:</div>
+                <div className="bg-yellow-100 p-2 rounded font-mono text-sm text-yellow-800 break-words">
+                  {getChemicalEquation()}
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold text-yellow-700 mb-2">Observations expérimentales:</div>
+                <p className="text-yellow-600 text-sm">{currentExperiment.observations}</p>
+              </div>
+
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold text-yellow-700 mb-2">Type de réaction:</div>
+                <ul className="text-yellow-600 text-sm space-y-1">
+                  <li>• Oxydation de l'alcool {currentExperiment.alcohol.type}</li>
+                  <li>• Utilisation d'un oxydant {currentExperiment.oxidant.strength}</li>
+                  <li>• Formation de {currentExperiment.alcohol.type === "primaire" ? "aldéhyde/acide" : "cétone"}</li>
+                  <li>• Réaction {currentExperiment.results.yield > 0 ? "positive" : "négative"}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Historique compact */}
+        {experiments.length > 1 && (
+          <div className="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
+              <Info className="mr-2" size={18} />
+              Historique ({experiments.length} expériences)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {experiments.slice(0, 6).map((exp: ExperimentData, i: number) => (
+                <div key={exp.id} className="bg-white p-2 rounded border text-xs">
+                  <div className="font-semibold text-gray-700 mb-1">#{experiments.length - i}</div>
+                  <div className="text-gray-600 space-y-1">
+                    <div className="font-mono">
+                      {exp.alcohol.formula} + {exp.oxidant.name}
+                    </div>
+                    <div>Rendement: {exp.results.yield.toFixed(1)}%</div>
+                    <div>Produit: {exp.results.product.split(" ")[0]}</div>
+                    <div className="text-gray-500">{exp.timestamp.toLocaleTimeString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Rapport généré le {new Date().toLocaleString()} • Laboratoire d'Oxydation Virtuel
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ===================================
 // COMPOSANT PRINCIPAL OPTIMISÉ
 // ===================================
@@ -1125,6 +1583,8 @@ export default function ComposesOxygenes3D() {
     pouringRight,
     alcoholMenu,
     oxidantMenu,
+    experiments,
+    currentExperiment,
     setSelectedAlcohol,
     setSelectedOxidant,
     setShowFormula,
@@ -1137,6 +1597,7 @@ export default function ComposesOxygenes3D() {
     getStatusMessage,
     getChemicalEquation,
     getDetailedResult,
+    setShowResult,
   } = useLabSimulation()
 
   return (
@@ -1180,6 +1641,8 @@ export default function ComposesOxygenes3D() {
         handleReset={handleReset}
         setShowFormula={setShowFormula}
         showFormula={showFormula}
+        setShowResult={setShowResult}
+        reactionComplete={reactionComplete}
       />
 
       <UIResults
@@ -1190,6 +1653,15 @@ export default function ComposesOxygenes3D() {
         reactionComplete={reactionComplete}
         getStatusMessage={getStatusMessage}
         getDetailedResult={getDetailedResult}
+      />
+
+      <ResultsModal
+        showResult={showResult}
+        setShowResult={setShowResult}
+        currentExperiment={currentExperiment}
+        getDetailedResult={getDetailedResult}
+        getChemicalEquation={getChemicalEquation}
+        experiments={experiments}
       />
 
       {showFormula && (
@@ -1203,6 +1675,27 @@ export default function ComposesOxygenes3D() {
           </div>
         </div>
       )}
+
+      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
+        <div className="flex items-center mb-2">
+          <Info className="mr-2 text-indigo-600" size={14} />
+          <span className="font-medium text-gray-700 text-sm">Guide</span>
+        </div>
+        <div className="text-xs text-gray-600 space-y-1">
+          <p>
+            🖱️ <strong>Navigation:</strong> Glissez pour tourner, molette pour zoomer
+          </p>
+          <p>
+            🧪 <strong>Interaction:</strong> Cliquez sur les béchers
+          </p>
+          <p>
+            🔥 <strong>Chauffage:</strong> Automatique après mélange
+          </p>
+          <p>
+            📊 <strong>Analyse:</strong> Rapports détaillés
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

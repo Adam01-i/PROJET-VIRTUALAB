@@ -41,6 +41,477 @@ const INDICATEURS = [
     { value: "Phénolphtaléine", label: "Phénolphtaléine", color: "#ec4899", range: "pH 8.2-10" },
     { value: "Bleu de bromothymol", label: "Bleu de Bromothymol", color: "#3b82f6", range: "pH 6.0-7.6" },
 ]
+// Scène 3D améliorée
+function TitrageScene({
+    titrageState,
+    setTitrageState,
+    currentTitrant,
+    currentTitré,
+    currentIndicateur,
+    getIndicatorColor,
+}: {
+    titrageState: TitrageState
+    setTitrageState: React.Dispatch<React.SetStateAction<TitrageState>>
+    currentTitrant: any
+    currentTitré: any
+    currentIndicateur: any
+    getIndicatorColor: (pH: number, indicator: string) => string
+}) {
+    const goutteRef = useRef<THREE.Mesh>(null)
+    const stirBarRef = useRef<THREE.Mesh>(null)
+
+    // Calcul précis du pH pour un titrage acide fort - base forte
+    const calculatePH = (
+        volumeEcoule: number,
+        initialVolumeErlenmeyer: number,
+        concentrationErlenmeyer: number,
+        concentrationBurette: number,
+        titrant: string,
+        titré: string,
+    ) => {
+        const V_base = initialVolumeErlenmeyer / 1000 // Volume initial de base en L
+        const C_base = concentrationErlenmeyer // Concentration de la base
+        const C_acid = concentrationBurette // Concentration de l'acide
+        const V_acid = volumeEcoule / 1000 // Volume d'acide ajouté en L
+
+        // Moles initiales de base
+        const n_base_initial = C_base * V_base
+        // Moles d'acide ajoutées
+        const n_acid_added = C_acid * V_acid
+        // Volume total
+        const V_total = V_base + V_acid
+
+        let pH: number
+
+        if (V_acid === 0) {
+            // pH initial de la base
+            if (titré.includes("NaOH")) {
+                // Base forte
+                const pOH = -Math.log10(C_base)
+                pH = 14 - pOH
+            } else {
+                // Base faible (NH4OH)
+                const Kb = 1.8e-5 // Constante de basicité de NH4OH
+                const OH_concentration = Math.sqrt(Kb * C_base)
+                const pOH = -Math.log10(OH_concentration)
+                pH = 14 - pOH
+            }
+        } else if (n_acid_added < n_base_initial) {
+            // Avant l'équivalence - excès de base
+            const n_base_remaining = n_base_initial - n_acid_added
+            const C_base_remaining = n_base_remaining / V_total
+
+            if (titré.includes("NaOH")) {
+                // Base forte
+                const pOH = -Math.log10(C_base_remaining)
+                pH = 14 - pOH
+            } else {
+                // Base faible
+                const Kb = 1.8e-5
+                const OH_concentration = Math.sqrt(Kb * C_base_remaining)
+                const pOH = -Math.log10(OH_concentration)
+                pH = 14 - pOH
+            }
+        } else if (Math.abs(n_acid_added - n_base_initial) < 1e-10) {
+            // À l'équivalence
+            if (titrant.includes("HCl") && titré.includes("NaOH")) {
+                // Acide fort + Base forte = pH neutre
+                pH = 7.0
+            } else {
+                // Avec base faible, pH légèrement acide à l'équivalence
+                pH = 5.5
+            }
+        } else {
+            // Après l'équivalence - excès d'acide
+            const n_acid_excess = n_acid_added - n_base_initial
+            const C_acid_excess = n_acid_excess / V_total
+
+            if (titrant.includes("HCl")) {
+                // Acide fort
+                pH = -Math.log10(C_acid_excess)
+            } else {
+                // Acide faible
+                const Ka = 1.8e-5 // Constante d'acidité de CH3COOH
+                const H_concentration = Math.sqrt(Ka * C_acid_excess)
+                pH = -Math.log10(H_concentration)
+            }
+        }
+
+        return Math.max(0.5, Math.min(14, pH))
+    }
+
+    useFrame((state, delta) => {
+        if (titrageState.isRunning && !titrageState.equivalenceAtteinte) {
+            setTitrageState((prev) => {
+                const newVolume = prev.volumeEcoule + prev.debit * delta
+
+                const currentPH = calculatePH(
+                    newVolume,
+                    prev.initialVolumeErlenmeyer,
+                    prev.concentrationErlenmeyer,
+                    prev.concentrationBurette,
+                    prev.titrant,
+                    prev.titré,
+                )
+
+                const newCouleur = getIndicatorColor(currentPH, prev.indicateur)
+                const equivalenceAtteinte = newVolume >= prev.volumeEquivalence
+
+                return {
+                    ...prev,
+                    volumeEcoule: newVolume,
+                    pH: currentPH,
+                    couleurSolution: newCouleur,
+                    equivalenceAtteinte,
+                    isRunning: !equivalenceAtteinte && prev.isRunning,
+                }
+            })
+        }
+
+        // Animation de la goutte
+        if (titrageState.isRunning && goutteRef.current) {
+            goutteRef.current.position.y = Math.sin(state.clock.elapsedTime * 10) * 0.1 - 1.5
+            goutteRef.current.visible = true
+        } else if (goutteRef.current) {
+            goutteRef.current.visible = false
+        }
+
+        // Animation du barreau agitateur
+        if (stirBarRef.current) {
+            stirBarRef.current.rotation.y += 0.15
+        }
+    })
+
+    return (
+        <group>
+            {/* Support coloré */}
+            <Support />
+
+            {/* Burette avec étiquette */}
+            <group position={[0, 2, 0]}>
+                <Burette
+                    volumeEcoule={titrageState.volumeEcoule}
+                    maxVolume={50}
+                    isRunning={titrageState.isRunning}
+                />
+
+                {/* Étiquette Burette avec nom du réactif */}
+                <Text position={[-0.5, 1.2, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
+                    BURETTE
+                </Text>
+                <Text position={[-0.5, 1.0, 0]} fontSize={0.08} color="#E0E0FF" anchorX="center" anchorY="middle">
+                    {currentTitrant.label}
+                </Text>
+                <Text position={[-0.5, 0.8, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
+                    {currentTitrant.formula}
+                </Text>
+
+                {/* Volume affiché en permanence */}
+                <Text
+                    position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
+                    fontSize={0.19}
+                    color="#f87171"
+                    anchorX="right"
+                    anchorY="middle"
+                    rotation={[0, Math.PI / 4, 0]}
+                >
+                    {(50 - titrageState.volumeEcoule).toFixed(1)} mL
+                </Text>
+
+                {/* Goutte animée */}
+                <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
+                    <sphereGeometry args={[0.03]} />
+                    <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
+                </mesh>
+            </group>
+
+            {/* Erlenmeyer avec étiquettes */}
+            <group position={[0, -1, 0]}>
+                <Erlenmeyer
+                    couleurSolution={titrageState.couleurSolution}
+                    niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
+                />
+
+                {/* Étiquette Erlenmeyer avec noms des réactifs */}
+                <Text position={[1.3, 0.6, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
+                    ERLENMEYER
+                </Text>
+                <Text position={[1.3, 0.4, 0]} fontSize={0.08} color="#E0FFE0" anchorX="center" anchorY="middle">
+                    {currentTitré.label}
+                </Text>
+                <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
+                    {currentTitré.formula}
+                </Text>
+                <Text
+                    position={[1.3, 0.0, 0]}
+                    fontSize={0.06}
+                    color="#FFD700"
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    + {currentIndicateur.label}
+                </Text>
+
+                <MagneticStirrer stirBarRef={stirBarRef} />
+            </group>
+
+            {/* Table de laboratoire descendue */}
+            <mesh position={[0, -2.5, 0]} receiveShadow>
+                <boxGeometry args={[8, 0.2, 5]} />
+                <meshStandardMaterial color="#8B4513" />
+            </mesh>
+
+            {/* Bordures de table */}
+            <mesh position={[0, -2.3, 2.4]} receiveShadow>
+                <boxGeometry args={[8, 0.1, 0.2]} />
+                <meshStandardMaterial color="#654321" />
+            </mesh>
+            <mesh position={[0, -2.3, -2.4]} receiveShadow>
+                <boxGeometry args={[8, 0.1, 0.2]} />
+                <meshStandardMaterial color="#654321" />
+            </mesh>
+
+            {/* Informations pH en 3D */}
+            <Text position={[0.5, 3.7, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
+                pH: {titrageState.pH.toFixed(2)}
+            </Text>
+        </group>
+    )
+
+}
+
+function Support() {
+    return (
+        <group>
+            {/* Base métallique */}
+            <mesh position={[0, -2.0, 0]} castShadow>
+                <cylinderGeometry args={[0.8, 0.8, 0.2]} />
+                <meshStandardMaterial color="#A0AEC0" metalness={0.9} roughness={0.15} />
+            </mesh>
+
+            {/* Tige verticale */}
+            <mesh position={[0, 0.5, 0]} castShadow>
+                <cylinderGeometry args={[0.025, 0.025, 4.5]} />
+                <meshStandardMaterial color="#CBD5E0" metalness={1.0} roughness={0.05} />
+            </mesh>
+
+            {/* Bras horizontal */}
+            <mesh position={[0, 2.5, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                <cylinderGeometry args={[0.02, 0.02, 1.5]} />
+                <meshStandardMaterial color="#CBD5E0" metalness={1.0} roughness={0.05} />
+            </mesh>
+
+            {/* Pince colorée */}
+            <mesh position={[0.7, 2.5, 0]} castShadow>
+                <boxGeometry args={[0.1, 0.3, 0.05]} />
+                <meshStandardMaterial color="#38BDF8" metalness={0.6} roughness={0.3} />
+            </mesh>
+
+            {/* Étiquette Support */}
+            <Text position={[0, -1.9, 0.9]} fontSize={0.08} color="#E2E8F0" anchorX="center" anchorY="middle">
+                PLATEAU MAGNETIQUE
+            </Text>
+        </group>
+    )
+}
+
+function Burette({
+    volumeEcoule,
+    maxVolume,
+    isRunning,
+}: {
+    volumeEcoule: number
+    maxVolume: number
+    isRunning: boolean
+}) {
+    const graduations = []
+    const buretteHeight = 3
+    const clampedVolumeEcoule = Math.min(volumeEcoule, maxVolume)
+    const liquidHeight = Math.max(0, buretteHeight * (1 - clampedVolumeEcoule / maxVolume))
+
+    // Graduations plus lisibles
+    for (let i = 0; i <= maxVolume; i += 5) {
+        graduations.push(
+            <group key={i} position={[0, 1.5 - (i / maxVolume) * buretteHeight, 0]}>
+                <mesh position={[0.12, 0, 0]}>
+                    <boxGeometry args={[0.03, 0.02, 0.02]} />
+                    <meshStandardMaterial color="#E5E7EB" /> {/* gris clair */}
+                </mesh>
+                <Text position={[0.25, 0, 0]} fontSize={0.06} color="#F9FAFB" anchorX="left" anchorY="middle">
+                    {i}
+                </Text>
+            </group>,
+        )
+    }
+
+    const stopcockRef = useRef<THREE.Mesh>(null)
+
+    useFrame(() => {
+        if (stopcockRef.current) {
+            stopcockRef.current.rotation.z = isRunning ? Math.PI / 4 : 0
+        }
+    })
+
+    return (
+        <group>
+            {/* Corps en verre */}
+            <mesh castShadow renderOrder={1}>
+                <cylinderGeometry args={[0.1, 0.1, buretteHeight]} />
+                <meshPhysicalMaterial
+                    color="#C7D2FE" // bleu très clair
+                    transparent
+                    opacity={4.35}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.9}
+                    ior={1.5}
+                />
+            </mesh>
+
+            {/* Solution visible */}
+            {liquidHeight > 0 && (
+                <mesh position={[0, 1.5 - (buretteHeight - liquidHeight) / 2, 0]} renderOrder={2}>
+                    <cylinderGeometry args={[0.09, 0.09, liquidHeight]} />
+                    <meshStandardMaterial color="#60A5FA" transparent opacity={0.9} />
+                </mesh>
+            )}
+
+            {/* Robinet rouge clair */}
+            <mesh ref={stopcockRef} position={[0, -1.6, 0]} castShadow>
+                <boxGeometry args={[0.06, 0.25, 0.06]} />
+                <meshStandardMaterial color="#F87171" metalness={0.6} roughness={0.4} />
+                <mesh position={[0, 0, 0.12]} rotation={[0, Math.PI / 2, 0]}>
+                    <cylinderGeometry args={[0.04, 0.04, 0.25]} />
+                    <meshStandardMaterial color="#F87171" metalness={0.6} roughness={0.4} />
+                </mesh>
+            </mesh>
+
+            {/* Graduations visibles */}
+            {graduations}
+
+            {/* Bec verseur transparent */}
+            <mesh position={[0, -1.7, 0]} renderOrder={1} castShadow>
+                <coneGeometry args={[0.025, 0.12]} />
+                <meshPhysicalMaterial
+                    color="#C7D2FE"
+                    transparent
+                    opacity={0.35}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.9}
+                    ior={1.5}
+                />
+            </mesh>
+        </group>
+    )
+}
+
+// Erlenmeyer coloré
+function Erlenmeyer({
+    couleurSolution,
+    niveauSolution,
+}: {
+    couleurSolution: string
+    niveauSolution: number
+}) {
+    // Niveau minimum pour éviter 0 (invisible), niveau maximum implicite dans le calcul
+    const adjustedNiveau = Math.max(0.05, niveauSolution)
+
+    // Hauteur réelle du liquide (limitée à 1.1)
+    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.8)
+
+    // Rayon haut proportionnel à la hauteur, pour épouser le profil du récipient
+    const rayonBas = 0.3
+    const rayonMaxHaut = 1.0
+    const rayonHaut = rayonBas + (rayonMaxHaut - rayonBas) * (solutionHeight / 1.6)
+
+    return (
+        <group>
+            {/* Corps en verre */}
+            <mesh castShadow renderOrder={2}>
+                <cylinderGeometry args={[1.0, 0.3, 1.6, 64]} />
+                <meshPhysicalMaterial
+                    color="#F0FDFA"
+                    transparent
+                    opacity={4.05}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.9}
+                    ior={1.5}
+                    depthWrite={false}
+                />
+            </mesh>
+
+            {/* Col en verre */}
+            <mesh position={[0, 0.8, 0]} castShadow renderOrder={1}>
+                <cylinderGeometry args={[0.15, 0.15, 0.8, 32]} />
+                <meshPhysicalMaterial
+                    color="#F0FDFA"
+                    transparent
+                    opacity={0.05}
+                    roughness={0.1}
+                    metalness={0.0}
+                    transmission={0.9}
+                    ior={1.5}
+                    depthWrite={false}
+                />
+            </mesh>
+
+            {/* Solution interne */}
+            <mesh
+                position={[0, -0.8 + solutionHeight / 2, 0]} // alignement avec le bas du récipient
+                renderOrder={3}
+                receiveShadow
+            >
+                <cylinderGeometry
+                    args={[rayonHaut, rayonBas, solutionHeight, 64]}
+                />
+                <meshStandardMaterial
+                    color={couleurSolution}
+                    transparent
+                    opacity={0.95}
+                    roughness={0.3}
+                    metalness={0.05}
+                />
+            </mesh>
+        </group>
+    )
+}
+
+function MagneticStirrer({ stirBarRef }: { stirBarRef: React.RefObject<THREE.Mesh> }) {
+    return (
+        <group>
+            {/* Base de l'agitateur – posée au sol (table virtuelle) */}
+            <mesh position={[0, -1.2, 0]} castShadow>
+                <boxGeometry args={[2.0, 0.3, 2.0]} />
+                <meshStandardMaterial color="#374151" metalness={0.6} roughness={0.4} />
+            </mesh>
+
+            {/* LED indicateur – verte vive, lumineuse */}
+            <mesh position={[0.35, -1.15, 0.35]} castShadow>
+                <sphereGeometry args={[0.03]} />
+                <meshStandardMaterial color="#34D399" emissive="#34D399" emissiveIntensity={2.0} />
+            </mesh>
+
+            {/* Barreau agitateur – blanc/gris clair pour bon contraste */}
+            <mesh ref={stirBarRef} position={[0, -0.65, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+                <cylinderGeometry args={[0.04, 0.04, 0.4]} />
+                <meshStandardMaterial color="#FDE68A" metalness={9} roughness={2.2} />
+            </mesh>
+
+            {/* Étiquette visible, claire */}
+            <Text
+                position={[0.5, -0.6, 0.25]}
+                fontSize={0.07}
+                color="#F9FAFB"
+                anchorX="center"
+                anchorY="middle"
+            >
+                AGITATEUR
+            </Text>
+        </group>
+    );
+}
 
 export default function TitrageAcidoBasique() {
     const initialConfig: TitrageConfig = {
@@ -381,7 +852,6 @@ export default function TitrageAcidoBasique() {
                 </button>
             </div>
 
-
             {/* Canvas 3D avec éclairage et ombres améliorés */}
             <Canvas
                 shadows
@@ -449,479 +919,3 @@ export default function TitrageAcidoBasique() {
     )
 }
 
-// Scène 3D améliorée
-function TitrageScene({
-    titrageState,
-    setTitrageState,
-    currentTitrant,
-    currentTitré,
-    currentIndicateur,
-    getIndicatorColor,
-}: {
-    titrageState: TitrageState
-    setTitrageState: React.Dispatch<React.SetStateAction<TitrageState>>
-    currentTitrant: any
-    currentTitré: any
-    currentIndicateur: any
-    getIndicatorColor: (pH: number, indicator: string) => string
-}) {
-    const goutteRef = useRef<THREE.Mesh>(null)
-    const stirBarRef = useRef<THREE.Mesh>(null)
-
-    // Calcul précis du pH pour un titrage acide fort - base forte
-    const calculatePH = (
-        volumeEcoule: number,
-        initialVolumeErlenmeyer: number,
-        concentrationErlenmeyer: number,
-        concentrationBurette: number,
-        titrant: string,
-        titré: string,
-    ) => {
-        const V_base = initialVolumeErlenmeyer / 1000 // Volume initial de base en L
-        const C_base = concentrationErlenmeyer // Concentration de la base
-        const C_acid = concentrationBurette // Concentration de l'acide
-        const V_acid = volumeEcoule / 1000 // Volume d'acide ajouté en L
-
-        // Moles initiales de base
-        const n_base_initial = C_base * V_base
-        // Moles d'acide ajoutées
-        const n_acid_added = C_acid * V_acid
-        // Volume total
-        const V_total = V_base + V_acid
-
-        let pH: number
-
-        if (V_acid === 0) {
-            // pH initial de la base
-            if (titré.includes("NaOH")) {
-                // Base forte
-                const pOH = -Math.log10(C_base)
-                pH = 14 - pOH
-            } else {
-                // Base faible (NH4OH)
-                const Kb = 1.8e-5 // Constante de basicité de NH4OH
-                const OH_concentration = Math.sqrt(Kb * C_base)
-                const pOH = -Math.log10(OH_concentration)
-                pH = 14 - pOH
-            }
-        } else if (n_acid_added < n_base_initial) {
-            // Avant l'équivalence - excès de base
-            const n_base_remaining = n_base_initial - n_acid_added
-            const C_base_remaining = n_base_remaining / V_total
-
-            if (titré.includes("NaOH")) {
-                // Base forte
-                const pOH = -Math.log10(C_base_remaining)
-                pH = 14 - pOH
-            } else {
-                // Base faible
-                const Kb = 1.8e-5
-                const OH_concentration = Math.sqrt(Kb * C_base_remaining)
-                const pOH = -Math.log10(OH_concentration)
-                pH = 14 - pOH
-            }
-        } else if (Math.abs(n_acid_added - n_base_initial) < 1e-10) {
-            // À l'équivalence
-            if (titrant.includes("HCl") && titré.includes("NaOH")) {
-                // Acide fort + Base forte = pH neutre
-                pH = 7.0
-            } else {
-                // Avec base faible, pH légèrement acide à l'équivalence
-                pH = 5.5
-            }
-        } else {
-            // Après l'équivalence - excès d'acide
-            const n_acid_excess = n_acid_added - n_base_initial
-            const C_acid_excess = n_acid_excess / V_total
-
-            if (titrant.includes("HCl")) {
-                // Acide fort
-                pH = -Math.log10(C_acid_excess)
-            } else {
-                // Acide faible
-                const Ka = 1.8e-5 // Constante d'acidité de CH3COOH
-                const H_concentration = Math.sqrt(Ka * C_acid_excess)
-                pH = -Math.log10(H_concentration)
-            }
-        }
-
-        return Math.max(0.5, Math.min(14, pH))
-    }
-
-    useFrame((state, delta) => {
-        if (titrageState.isRunning && !titrageState.equivalenceAtteinte) {
-            setTitrageState((prev) => {
-                const newVolume = prev.volumeEcoule + prev.debit * delta
-
-                const currentPH = calculatePH(
-                    newVolume,
-                    prev.initialVolumeErlenmeyer,
-                    prev.concentrationErlenmeyer,
-                    prev.concentrationBurette,
-                    prev.titrant,
-                    prev.titré,
-                )
-
-                const newCouleur = getIndicatorColor(currentPH, prev.indicateur)
-                const equivalenceAtteinte = newVolume >= prev.volumeEquivalence
-
-                return {
-                    ...prev,
-                    volumeEcoule: newVolume,
-                    pH: currentPH,
-                    couleurSolution: newCouleur,
-                    equivalenceAtteinte,
-                    isRunning: !equivalenceAtteinte && prev.isRunning,
-                }
-            })
-        }
-
-        // Animation de la goutte
-        if (titrageState.isRunning && goutteRef.current) {
-            goutteRef.current.position.y = Math.sin(state.clock.elapsedTime * 10) * 0.1 - 1.5
-            goutteRef.current.visible = true
-        } else if (goutteRef.current) {
-            goutteRef.current.visible = false
-        }
-
-        // Animation du barreau agitateur
-        if (stirBarRef.current) {
-            stirBarRef.current.rotation.y += 0.15
-        }
-    })
-
-    return (
-        <group>
-            {/* Support coloré */}
-            <Support />
-
-            {/* Burette avec étiquette */}
-            <group position={[0, 2, 0]}>
-                <Burette
-                    volumeEcoule={titrageState.volumeEcoule}
-                    maxVolume={50}
-                    isRunning={titrageState.isRunning}
-                />
-
-                {/* Étiquette Burette avec nom du réactif */}
-                <Text position={[-0.5, 1.2, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
-                    BURETTE
-                </Text>
-                <Text position={[-0.5, 1.0, 0]} fontSize={0.08} color="#E0E0FF" anchorX="center" anchorY="middle">
-                    {currentTitrant.label}
-                </Text>
-                <Text position={[-0.5, 0.8, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
-                    {currentTitrant.formula}
-                </Text>
-
-                {/* Volume affiché en permanence */}
-                <Text
-                    position={[-0.4, 1.5 - (titrageState.volumeEcoule / 50) * 3, 0]}
-                    fontSize={0.19}
-                    color="#f87171"
-                    anchorX="right"
-                    anchorY="middle"
-                    rotation={[0, Math.PI / 4, 0]}
-                >
-                    {(50 - titrageState.volumeEcoule).toFixed(1)} mL
-                </Text>
-
-                {/* Goutte animée */}
-                <mesh ref={goutteRef} position={[0, -1.5, 0]} renderOrder={2}>
-                    <sphereGeometry args={[0.03]} />
-                    <meshStandardMaterial color={currentTitrant.color} transparent opacity={0.8} />
-                </mesh>
-            </group>
-
-            {/* Erlenmeyer avec étiquettes */}
-            <group position={[0, -1, 0]}>
-                <Erlenmeyer
-                    couleurSolution={titrageState.couleurSolution}
-                    niveauSolution={Math.max(0.25, (titrageState.initialVolumeErlenmeyer + titrageState.volumeEcoule) / 120)}
-                />
-
-                {/* Étiquette Erlenmeyer avec noms des réactifs */}
-                <Text position={[1.3, 0.6, 0]} fontSize={0.1} color="#FFFFFF" anchorX="center" anchorY="middle">
-                    ERLENMEYER
-                </Text>
-                <Text position={[1.3, 0.4, 0]} fontSize={0.08} color="#E0FFE0" anchorX="center" anchorY="middle">
-                    {currentTitré.label}
-                </Text>
-                <Text position={[1.3, 0.2, 0]} fontSize={0.06} color="#BBBBBB" anchorX="center" anchorY="middle">
-                    {currentTitré.formula}
-                </Text>
-                <Text
-                    position={[1.3, 0.0, 0]}
-                    fontSize={0.06}
-                    color="#FFD700"
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    + {currentIndicateur.label}
-                </Text>
-
-                <MagneticStirrer stirBarRef={stirBarRef} />
-            </group>
-
-            {/* Table de laboratoire descendue */}
-            <mesh position={[0, -2.5, 0]} receiveShadow>
-                <boxGeometry args={[8, 0.2, 5]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-
-            {/* Bordures de table */}
-            <mesh position={[0, -2.3, 2.4]} receiveShadow>
-                <boxGeometry args={[8, 0.1, 0.2]} />
-                <meshStandardMaterial color="#654321" />
-            </mesh>
-            <mesh position={[0, -2.3, -2.4]} receiveShadow>
-                <boxGeometry args={[8, 0.1, 0.2]} />
-                <meshStandardMaterial color="#654321" />
-            </mesh>
-
-            {/* Informations pH en 3D */}
-            <Text position={[0.5, 3.7, 0]} fontSize={0.15} color="#f87171" anchorX="center" anchorY="middle">
-                pH: {titrageState.pH.toFixed(2)}
-            </Text>
-        </group>
-    )
-
-}
-
-function Support() {
-    return (
-        <group>
-            {/* Base métallique */}
-            <mesh position={[0, -2.0, 0]} castShadow>
-                <cylinderGeometry args={[0.8, 0.8, 0.2]} />
-                <meshStandardMaterial color="#A0AEC0" metalness={0.9} roughness={0.15} />
-            </mesh>
-
-            {/* Tige verticale */}
-            <mesh position={[0, 0.5, 0]} castShadow>
-                <cylinderGeometry args={[0.025, 0.025, 4.5]} />
-                <meshStandardMaterial color="#CBD5E0" metalness={1.0} roughness={0.05} />
-            </mesh>
-
-            {/* Bras horizontal */}
-            <mesh position={[0, 2.5, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-                <cylinderGeometry args={[0.02, 0.02, 1.5]} />
-                <meshStandardMaterial color="#CBD5E0" metalness={1.0} roughness={0.05} />
-            </mesh>
-
-            {/* Pince colorée */}
-            <mesh position={[0.7, 2.5, 0]} castShadow>
-                <boxGeometry args={[0.1, 0.3, 0.05]} />
-                <meshStandardMaterial color="#38BDF8" metalness={0.6} roughness={0.3} />
-            </mesh>
-
-            {/* Étiquette Support */}
-            <Text position={[0, -1.9, 0.9]} fontSize={0.08} color="#E2E8F0" anchorX="center" anchorY="middle">
-                PLATEAU MAGNETIQUE
-            </Text>
-        </group>
-    )
-}
-
-
-function Burette({
-    volumeEcoule,
-    maxVolume,
-    isRunning,
-}: {
-    volumeEcoule: number
-    maxVolume: number
-    isRunning: boolean
-}) {
-    const graduations = []
-    const buretteHeight = 3
-    const clampedVolumeEcoule = Math.min(volumeEcoule, maxVolume)
-    const liquidHeight = Math.max(0, buretteHeight * (1 - clampedVolumeEcoule / maxVolume))
-
-    // Graduations plus lisibles
-    for (let i = 0; i <= maxVolume; i += 5) {
-        graduations.push(
-            <group key={i} position={[0, 1.5 - (i / maxVolume) * buretteHeight, 0]}>
-                <mesh position={[0.12, 0, 0]}>
-                    <boxGeometry args={[0.03, 0.02, 0.02]} />
-                    <meshStandardMaterial color="#E5E7EB" /> {/* gris clair */}
-                </mesh>
-                <Text position={[0.25, 0, 0]} fontSize={0.06} color="#F9FAFB" anchorX="left" anchorY="middle">
-                    {i}
-                </Text>
-            </group>,
-        )
-    }
-
-    const stopcockRef = useRef<THREE.Mesh>(null)
-
-    useFrame(() => {
-        if (stopcockRef.current) {
-            stopcockRef.current.rotation.z = isRunning ? Math.PI / 4 : 0
-        }
-    })
-
-    return (
-        <group>
-            {/* Corps en verre */}
-            <mesh castShadow renderOrder={1}>
-                <cylinderGeometry args={[0.1, 0.1, buretteHeight]} />
-                <meshPhysicalMaterial
-                    color="#C7D2FE" // bleu très clair
-                    transparent
-                    opacity={4.35}
-                    roughness={0.1}
-                    metalness={0.0}
-                    transmission={0.9}
-                    ior={1.5}
-                />
-            </mesh>
-
-            {/* Solution visible */}
-            {liquidHeight > 0 && (
-                <mesh position={[0, 1.5 - (buretteHeight - liquidHeight) / 2, 0]} renderOrder={2}>
-                    <cylinderGeometry args={[0.09, 0.09, liquidHeight]} />
-                    <meshStandardMaterial color="#60A5FA" transparent opacity={0.9} />
-                </mesh>
-            )}
-
-            {/* Robinet rouge clair */}
-            <mesh ref={stopcockRef} position={[0, -1.6, 0]} castShadow>
-                <boxGeometry args={[0.06, 0.25, 0.06]} />
-                <meshStandardMaterial color="#F87171" metalness={0.6} roughness={0.4} />
-                <mesh position={[0, 0, 0.12]} rotation={[0, Math.PI / 2, 0]}>
-                    <cylinderGeometry args={[0.04, 0.04, 0.25]} />
-                    <meshStandardMaterial color="#F87171" metalness={0.6} roughness={0.4} />
-                </mesh>
-            </mesh>
-
-            {/* Graduations visibles */}
-            {graduations}
-
-            {/* Bec verseur transparent */}
-            <mesh position={[0, -1.7, 0]} renderOrder={1} castShadow>
-                <coneGeometry args={[0.025, 0.12]} />
-                <meshPhysicalMaterial
-                    color="#C7D2FE"
-                    transparent
-                    opacity={0.35}
-                    roughness={0.1}
-                    metalness={0.0}
-                    transmission={0.9}
-                    ior={1.5}
-                />
-            </mesh>
-        </group>
-    )
-}
-
-
-// Erlenmeyer coloré
-function Erlenmeyer({
-    couleurSolution,
-    niveauSolution,
-}: {
-    couleurSolution: string
-    niveauSolution: number
-}) {
-    // Niveau minimum pour éviter 0 (invisible), niveau maximum implicite dans le calcul
-    const adjustedNiveau = Math.max(0.05, niveauSolution)
-
-    // Hauteur réelle du liquide (limitée à 1.1)
-    const solutionHeight = Math.min(adjustedNiveau * 1.8, 1.8)
-
-    // Rayon haut proportionnel à la hauteur, pour épouser le profil du récipient
-    const rayonBas = 0.3
-    const rayonMaxHaut = 1.0
-    const rayonHaut = rayonBas + (rayonMaxHaut - rayonBas) * (solutionHeight / 1.6)
-
-    return (
-        <group>
-            {/* Corps en verre */}
-            <mesh castShadow renderOrder={2}>
-                <cylinderGeometry args={[1.0, 0.3, 1.6, 64]} />
-                <meshPhysicalMaterial
-                    color="#F0FDFA"
-                    transparent
-                    opacity={4.05}
-                    roughness={0.1}
-                    metalness={0.0}
-                    transmission={0.9}
-                    ior={1.5}
-                    depthWrite={false}
-                />
-            </mesh>
-
-            {/* Col en verre */}
-            <mesh position={[0, 0.8, 0]} castShadow renderOrder={1}>
-                <cylinderGeometry args={[0.15, 0.15, 0.8, 32]} />
-                <meshPhysicalMaterial
-                    color="#F0FDFA"
-                    transparent
-                    opacity={0.05}
-                    roughness={0.1}
-                    metalness={0.0}
-                    transmission={0.9}
-                    ior={1.5}
-                    depthWrite={false}
-                />
-            </mesh>
-
-            {/* Solution interne */}
-            <mesh
-                position={[0, -0.8 + solutionHeight / 2, 0]} // alignement avec le bas du récipient
-                renderOrder={3}
-                receiveShadow
-            >
-                <cylinderGeometry
-                    args={[rayonHaut, rayonBas, solutionHeight, 64]}
-                />
-                <meshStandardMaterial
-                    color={couleurSolution}
-                    transparent
-                    opacity={0.95}
-                    roughness={0.3}
-                    metalness={0.05}
-                />
-            </mesh>
-        </group>
-    )
-}
-
-
-
-
-function MagneticStirrer({ stirBarRef }: { stirBarRef: React.RefObject<THREE.Mesh> }) {
-    return (
-        <group>
-            {/* Base de l'agitateur – posée au sol (table virtuelle) */}
-            <mesh position={[0, -1.2, 0]} castShadow>
-                <boxGeometry args={[2.0, 0.3, 2.0]} />
-                <meshStandardMaterial color="#374151" metalness={0.6} roughness={0.4} />
-            </mesh>
-
-            {/* LED indicateur – verte vive, lumineuse */}
-            <mesh position={[0.35, -1.15, 0.35]} castShadow>
-                <sphereGeometry args={[0.03]} />
-                <meshStandardMaterial color="#34D399" emissive="#34D399" emissiveIntensity={2.0} />
-            </mesh>
-
-            {/* Barreau agitateur – blanc/gris clair pour bon contraste */}
-            <mesh ref={stirBarRef} position={[0, -0.65, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-                <cylinderGeometry args={[0.04, 0.04, 0.4]} />
-                <meshStandardMaterial color="#FDE68A" metalness={9} roughness={2.2} />
-            </mesh>
-
-            {/* Étiquette visible, claire */}
-            <Text
-                position={[0.5, -0.6, 0.25]}
-                fontSize={0.07}
-                color="#F9FAFB"
-                anchorX="center"
-                anchorY="middle"
-            >
-                AGITATEUR
-            </Text>
-        </group>
-    );
-}
