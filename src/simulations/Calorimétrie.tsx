@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { OrbitControls, Cylinder, Box, Sphere, Text } from "@react-three/drei"
+import { OrbitControls, Cylinder, Box, Sphere, Text, Html, Environment } from "@react-three/drei"
 import {
   RotateCcw,
   ClipboardList,
@@ -220,36 +220,227 @@ const REACTIONS: Record<string, ReactionType> = {
 // COMPOSANTS 3D OPTIMISÉS
 // ===================================
 
-const LabTable = () => (
-  <group>
-    <Box args={[10, 0.3, 6]} position={[0, -1, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color="#2563eb" roughness={0.1} metalness={0.3} />
-    </Box>
-    {[
-      [-4.5, -2.5, -2.5],
-      [4.5, -2.5, -2.5],
-      [-4.5, -2.5, 2.5],
-      [4.5, -2.5, 2.5],
-    ].map((pos, i) => (
-      <Cylinder key={i} args={[0.15, 0.12, 3]} position={pos as [number, number, number]} castShadow>
-        <meshStandardMaterial color="#1e40af" roughness={0.3} metalness={0.7} />
-      </Cylinder>
-    ))}
-    <Text
-      position={[-4, -0.7, 2.8]}
-      fontSize={0.1}
-      color="#ffffff"
-      anchorX="center"
-      anchorY="middle"
-      rotation={[-Math.PI / 2, 0, 0]}
-    >
-      LABORATOIRE DE CHIMIE
-    </Text>
-  </group>
-)
+// Environnement de laboratoire du premier fichier - VERSION ENRICHIE
+function LabEnvironment() {
+  return (
+    <group>
+      {/* Sol principal - plus sombre */}
+      <mesh position={[0, -3.5, 0]} receiveShadow>
+        <boxGeometry args={[25, 0.1, 20]} />
+        <meshStandardMaterial color="#2c3e50" roughness={0.8} />
+      </mesh>
 
-// Composant 3D du bécher professionnel
-// ... même déclaration et imports
+      {/* Mur arrière - plus sombre */}
+      <mesh position={[0, 0, -10]} receiveShadow>
+        <boxGeometry args={[25, 10, 0.2]} />
+        <meshStandardMaterial color="#34495e" roughness={0.9} />
+      </mesh>
+
+      {/* Murs latéraux - plus sombres */}
+      <mesh position={[-12.5, 0, 0]} receiveShadow>
+        <boxGeometry args={[0.2, 10, 20]} />
+        <meshStandardMaterial color="#34495e" roughness={0.9} />
+      </mesh>
+
+      <mesh position={[12.5, 0, 0]} receiveShadow>
+        <boxGeometry args={[0.2, 10, 20]} />
+        <meshStandardMaterial color="#34495e" roughness={0.9} />
+      </mesh>
+
+      {/* Plafond - plus sombre */}
+      <mesh position={[0, 5, 0]} receiveShadow>
+        <boxGeometry args={[25, 0.2, 20]} />
+        <meshStandardMaterial color="#2c3e50" roughness={0.8} />
+      </mesh>
+
+      {/* Armoires de laboratoire - Gauche */}
+      <group position={[-11, 0, -5]}>
+        <mesh position={[0, 0, 0]} castShadow>
+          <boxGeometry args={[2, 4, 1]} />
+          <meshStandardMaterial color="#2c3e50" roughness={0.3} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 2.2, 0.6]} castShadow>
+          <boxGeometry args={[1.8, 0.1, 0.8]} />
+          <meshStandardMaterial color="#34495e" roughness={0.2} />
+        </mesh>
+      </group>
+
+      {/* Armoires de laboratoire - Droite */}
+      <group position={[11, 0, -5]}>
+        <mesh position={[0, 0, 0]} castShadow>
+          <boxGeometry args={[2, 4, 1]} />
+          <meshStandardMaterial color="#2c3e50" roughness={0.3} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 2.2, 0.6]} castShadow>
+          <boxGeometry args={[1.8, 0.1, 0.8]} />
+          <meshStandardMaterial color="#34495e" roughness={0.2} />
+        </mesh>
+      </group>
+
+      {/* Étagères avec bouteilles */}
+      <group position={[-11.5, -1, -3]}>
+        {[0, 0.8, 1.6].map((y, i) => (
+          <mesh key={i} position={[0, y, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.05, 4]} />
+            <meshStandardMaterial color="#8B4513" roughness={0.8} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Bouteilles de solutions */}
+      {[
+        { pos: [-11.3, 0.8, -1], color: "#ff6b6b", label: "HCl" },
+        { pos: [-11.3, 0.8, -2], color: "#51cf66", label: "NaOH" },
+        { pos: [-11.3, 0.8, -3], color: "#ff8787", label: "H₂SO₄" },
+        { pos: [-11.3, 0.8, -4], color: "#339af0", label: "CuSO₄" },
+        { pos: [-11.3, 0.8, -5], color: "#ffd43b", label: "CH₃COOH" },
+        { pos: [-11.3, 1.6, -1], color: "#74c0fc", label: "NH₃" },
+        { pos: [-11.3, 1.6, -2], color: "#69db7c", label: "KOH" },
+        { pos: [-11.3, 1.6, -3], color: "#e9ecef", label: "NaCl" },
+      ].map((bottle, i) => (
+        <group key={i}>
+          <mesh position={bottle.pos as [number, number, number]} castShadow>
+            <cylinderGeometry args={[0.15, 0.15, 0.6, 8]} />
+            <meshStandardMaterial color="#ffffff" transparent opacity={0.8} />
+          </mesh>
+          <mesh position={[bottle.pos[0], bottle.pos[1] - 0.1, bottle.pos[2]]} castShadow>
+            <cylinderGeometry args={[0.13, 0.13, 0.4, 8]} />
+            <meshStandardMaterial color={bottle.color} transparent opacity={0.7} />
+          </mesh>
+          <Html position={[bottle.pos[0], bottle.pos[1] - 0.5, bottle.pos[2]]} transform scale={0.05}>
+            <div className="bg-white px-1 py-0.5 rounded text-xs font-bold border">{bottle.label}</div>
+          </Html>
+        </group>
+      ))}
+
+      {/* Équipements de laboratoire supplémentaires */}
+
+      {/* Balance de précision */}
+      <group position={[8, -3.3, -8]}>
+        <mesh castShadow>
+          <boxGeometry args={[1, 0.3, 0.8]} />
+          <meshStandardMaterial color="#2c3e50" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.2, 0]} castShadow>
+          <cylinderGeometry args={[0.3, 0.3, 0.05, 16]} />
+          <meshStandardMaterial color="#ecf0f1" roughness={0.1} />
+        </mesh>
+        <Html position={[0, 0.5, 0]} transform scale={0.08}>
+          <div className="bg-black text-green-400 px-2 py-1 rounded font-mono text-sm">Balance</div>
+        </Html>
+      </group>
+
+      {/* Microscope */}
+      <group position={[-8, -3.2, -8]}>
+        <mesh position={[0, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.2, 0.3, 0.8, 8]} />
+          <meshStandardMaterial color="#34495e" metalness={0.7} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 0.4, 8]} />
+          <meshStandardMaterial color="#2c3e50" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <Html position={[0, 1, 0]} transform scale={0.08}>
+          <div className="bg-white px-2 py-1 rounded text-xs font-bold border">Microscope</div>
+        </Html>
+      </group>
+
+      {/* Hotte aspirante */}
+      <group position={[0, 2, -9.5]}>
+        <mesh castShadow>
+          <boxGeometry args={[6, 3, 1]} />
+          <meshStandardMaterial color="#95a5a6" transparent opacity={0.3} />
+        </mesh>
+        <mesh position={[0, 1.6, 0]} castShadow>
+          <boxGeometry args={[6.2, 0.2, 1.2]} />
+          <meshStandardMaterial color="#34495e" metalness={0.6} roughness={0.4} />
+        </mesh>
+      </group>
+
+      {/* Éclairage de laboratoire */}
+      {[-4, 0, 4].map((x, i) => (
+        <group key={i} position={[x, 4.8, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[2, 0.1, 0.5]} />
+            <meshStandardMaterial color="#ecf0f1" emissive="#ffffff" emissiveIntensity={0.2} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Panneaux de sécurité */}
+      <group position={[10, 1, -9.8]}>
+        <mesh castShadow>
+          <boxGeometry args={[1, 1, 0.1]} />
+          <meshStandardMaterial color="#e74c3c" />
+        </mesh>
+        <Html position={[0, 0, 0.1]} transform scale={0.1}>
+          <div className="bg-red-600 text-white px-2 py-1 rounded font-bold text-center">
+            ⚠️
+            <br />
+            DANGER
+            <br />
+            ACIDES
+          </div>
+        </Html>
+      </group>
+
+      {/* Extincteur */}
+      <group position={[11.5, -2, -2]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.15, 0.15, 1.5, 8]} />
+          <meshStandardMaterial color="#e74c3c" metalness={0.3} roughness={0.7} />
+        </mesh>
+        <Html position={[0, 1, 0]} transform scale={0.08}>
+          <div className="bg-red-600 text-white px-1 py-0.5 rounded text-xs font-bold">🧯</div>
+        </Html>
+      </group>
+
+      {/* Lavabo de laboratoire */}
+      <group position={[-10, -3.2, 2]}>
+        <mesh castShadow>
+          <boxGeometry args={[1.5, 0.3, 1]} />
+          <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.2, 0]} castShadow>
+          <boxGeometry args={[1.3, 0.1, 0.8]} />
+          <meshStandardMaterial color="#ecf0f1" roughness={0.1} />
+        </mesh>
+      </group>
+
+      {/* Tableau périodique */}
+      <group position={[-6, 1, -9.8]}>
+        <mesh castShadow>
+          <boxGeometry args={[3, 2, 0.1]} />
+          <meshStandardMaterial color="#ffffff" />
+        </mesh>
+        <Html position={[0, 0, 0.1]} transform scale={0.15}>
+          <div className="bg-white border-2 border-gray-300 p-2 rounded">
+            <div className="text-center font-bold text-sm mb-1">TABLEAU PÉRIODIQUE</div>
+            <div className="grid grid-cols-6 gap-1 text-xs">
+              {["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg"].map((el, i) => (
+                <div key={i} className="border border-gray-400 p-1 text-center bg-blue-50">
+                  {el}
+                </div>
+              ))}
+            </div>
+          </div>
+        </Html>
+      </group>
+    </group>
+  )
+}
+
+// Table de laboratoire du premier fichier - SANS PIEDS
+function LabTable() {
+  return (
+    <group position={[0, -3.45, 0]}>
+      <mesh receiveShadow castShadow>
+        <boxGeometry args={[8, 0.15, 4]} />
+        <meshStandardMaterial color="#1a252f" roughness={0.3} metalness={0.1} />
+      </mesh>
+    </group>
+  )
+}
 
 const ProfessionalBeaker3D = ({
   position,
@@ -284,12 +475,11 @@ const ProfessionalBeaker3D = ({
 
     meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.03)
     meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.03)
-    // Z inchangé volontairement
 
     meshRef.current.rotation.set(
       THREE.MathUtils.lerp(meshRef.current.rotation.x, targetRotationX, 0.03),
       0,
-      THREE.MathUtils.lerp(meshRef.current.rotation.z, targetRotationZ, 0.03)
+      THREE.MathUtils.lerp(meshRef.current.rotation.z, targetRotationZ, 0.03),
     )
 
     if (hovered && !isPouring) {
@@ -390,7 +580,6 @@ const ProfessionalBeaker3D = ({
         )}
       </group>
 
-
       {hovered && (
         <Cylinder args={[0.7, 0.7, 0.05]} position={[0, -1.2, 0]}>
           <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
@@ -437,43 +626,47 @@ const AdvancedCalorimeter3D = ({
   })
 
   return (
-    <group position={position}>
-      {/* Calorimètre extérieur */}
+    <group position={[position[0], position[1] - 1.8, position[2]]}>
+      {/* Calorimètre extérieur - couleur plus claire */}
       <Cylinder args={[1.2, 1.2, 3.0, 32]} position={[0, 0, 0]} castShadow>
-        <meshStandardMaterial color="#4b5563" roughness={0.2} metalness={0.8} />
+        <meshStandardMaterial color="#7f8c8d" roughness={0.2} metalness={0.6} />
       </Cylinder>
 
-      {/* Isolation thermique */}
+      {/* Isolation thermique - plus claire */}
       <Cylinder args={[1.15, 1.15, 2.8, 32]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="#f3f4f6" roughness={0.8} metalness={0.1} />
+        <meshStandardMaterial color="#ecf0f1" roughness={0.6} metalness={0.1} />
       </Cylinder>
 
-      {/* Gobelet intérieur */}
+      {/* Gobelet intérieur - très transparent pour voir le contenu */}
       <Cylinder args={[0.8, 0.8, 2.5, 32]} position={[0, 0, 0]} castShadow>
         <meshPhysicalMaterial
-          color="#f8fafc"
+          color="#ffffff"
           transparent
-          opacity={0.2}
-          roughness={0.05}
-          transmission={0.95}
-          thickness={0.1}
+          opacity={0.15}
+          roughness={0.02}
+          transmission={0.98}
+          thickness={0.05}
         />
       </Cylinder>
 
-      {/* Couvercle */}
+      {/* Couvercle du premier fichier - couleur plus claire */}
       <group position={[0, 1.6, 0]}>
-        <Cylinder args={[1.25, 1.25, 0.15, 32]} castShadow>
-          <meshStandardMaterial color="#374151" roughness={0.3} metalness={0.7} />
-        </Cylinder>
-        <Cylinder args={[0.08, 0.08, 0.2]} position={[0.3, 0, 0]}>
-          <meshStandardMaterial color="#1f2937" />
-        </Cylinder>
-        <Cylinder args={[0.06, 0.06, 0.2]} position={[-0.3, 0, 0]}>
-          <meshStandardMaterial color="#1f2937" />
-        </Cylinder>
+        <mesh castShadow>
+          <cylinderGeometry args={[1.25, 1.25, 0.15, 32]} />
+          <meshStandardMaterial color="#95a5a6" roughness={0.3} metalness={0.7} />
+        </mesh>
+        {/* Trous pour thermomètre et agitateur */}
+        <mesh position={[0.3, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.08, 0.08, 0.2, 8]} />
+          <meshStandardMaterial color="#2c3e50" />
+        </mesh>
+        <mesh position={[-0.3, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.06, 0.06, 0.2, 8]} />
+          <meshStandardMaterial color="#2c3e50" />
+        </mesh>
       </group>
 
-      {/* Solution dans le calorimètre - SIMPLIFIÉE */}
+      {/* Solution dans le calorimètre - plus visible */}
       {fillLevel > 0 && (
         <group>
           <Cylinder args={[0.75, 0.7, fillLevel * 2.3]} position={[0, -1.25 + (fillLevel * 2.3) / 2, 0]}>
@@ -483,6 +676,8 @@ const AdvancedCalorimeter3D = ({
               opacity={1.0}
               roughness={0.1}
               metalness={0.05}
+              emissive={solutionColor}
+              emissiveIntensity={0.1}
             />
           </Cylinder>
           <Cylinder args={[0.75, 0.75, 0.03]} position={[0, -1.25 + fillLevel * 2.3, 0]}>
@@ -492,6 +687,8 @@ const AdvancedCalorimeter3D = ({
               opacity={1.0}
               roughness={0.0}
               metalness={0.2}
+              emissive={solutionColor}
+              emissiveIntensity={0.2}
             />
           </Cylinder>
         </group>
@@ -506,33 +703,38 @@ const AdvancedCalorimeter3D = ({
               args={[0.02 + Math.random() * 0.02]}
               position={[(Math.random() - 0.5) * 0.6, -1.2 + Math.random() * 0.8, (Math.random() - 0.5) * 0.6]}
             >
-              <meshStandardMaterial color="#ffffff" transparent opacity={0.8} />
+              <meshStandardMaterial
+                color="#ffffff"
+                transparent
+                opacity={0.8}
+                emissive="#ffffff"
+                emissiveIntensity={0.3}
+              />
             </Sphere>
           ))}
         </group>
       )}
 
-      {/* Agitateur */}
+      {/* Agitateur - couleur plus visible */}
       {fillLevel > 0 && (
         <group ref={stirrerRef} position={[0, -1.2, 0]}>
           <Box args={[0.3, 0.04, 0.04]}>
-            <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color="#e74c3c" metalness={0.8} roughness={0.2} />
           </Box>
           <Box args={[0.04, 0.04, 0.3]}>
-            <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color="#e74c3c" metalness={0.8} roughness={0.2} />
           </Box>
         </group>
       )}
 
-      {/* Étiquettes */}
-      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#e0e7ff" anchorX="center" anchorY="middle">
+      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#ffffff" anchorX="center" anchorY="middle">
         Calorimètre Professionnel
       </Text>
 
-      {/* Affichage digital */}
+      {/* Affichage digital - couleur plus contrastée */}
       <group position={[1.5, 0, 0]}>
         <Box args={[0.6, 0.4, 0.1]} castShadow>
-          <meshStandardMaterial color="#1f2937" />
+          <meshStandardMaterial color="#2c3e50" />
         </Box>
         <Text position={[0, 0.1, 0.06]} fontSize={0.08} color="#00ff00" anchorX="center" anchorY="middle">
           {temperature.toFixed(1)}°C
@@ -663,13 +865,15 @@ const CalorimetryScene = ({
       <pointLight position={[-6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
       <pointLight position={[6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
 
-      <color attach="background" args={["#312e81"]} />
-      <fog attach="fog" args={["#312e81", 20, 50]} />
+      <color attach="background" args={["#2c3e50"]} />
+      <fog attach="fog" args={["#2c3e50", 15, 35]} />
 
+      {/* Environnement et table du premier fichier */}
+      <LabEnvironment />
       <LabTable />
 
       <ProfessionalBeaker3D
-        position={[-1.5, 0.1, 0]}
+        position={[-1.5, -2.4, 0]}
         color={selectedSolution1.colorHex}
         fillLevel={beaker1FillLevel}
         onClick={onPourSolution1}
@@ -680,7 +884,7 @@ const CalorimetryScene = ({
       />
 
       <ProfessionalBeaker3D
-        position={[1.5, 0.1, 0]}
+        position={[1.5, -2.4, 0]}
         color={selectedSolution2.colorHex}
         fillLevel={beaker2FillLevel}
         onClick={onPourSolution2}
@@ -691,7 +895,7 @@ const CalorimetryScene = ({
       />
 
       <AdvancedCalorimeter3D
-        position={[0, 0.1, 0]}
+        position={[0, -0.7, 0]}
         solutionColor={solutionColor}
         fillLevel={fillLevel}
         temperature={readings.temperature}
@@ -700,8 +904,13 @@ const CalorimetryScene = ({
         readings={readings}
       />
 
-      <Thermometer position={[0.4, 1.5, 0]} readings={readings} isActive={isReacting} />
+      <Thermometer position={[0.4, -0.5, 0]} readings={readings} isActive={isReacting} />
 
+      <Text position={[0, 3.5, -6]} fontSize={0.4} color="#2c3e50" anchorX="center" anchorY="middle">
+        LABORATOIRE DE CHIMIE - CALORIMÉTRIE QUANTITATIVE
+      </Text>
+
+      <Environment preset="apartment" />
       <OrbitControls
         enablePan={true}
         enableZoom={true}
@@ -1083,7 +1292,6 @@ const useCalorimetrySimulation = () => {
     }
   }, [finalReadings, initialReadings, selectedSolution1, selectedSolution2, currentExperiment])
 
-
   useEffect(() => {
     return () => {
       if (animationRef.current) {
@@ -1209,10 +1417,11 @@ const UIControls = ({
       <button
         onClick={calculateResults}
         disabled={step !== 3}
-        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${step === 3
+        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${
+          step === 3
             ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
+        }`}
       >
         <Calculator size={14} />
         Analyser résultats
@@ -1355,8 +1564,9 @@ const UIReadings = ({
         ].map(({ label, value, icon }) => (
           <div
             key={label}
-            className={`text-center text-xs p-1 rounded border ${value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-              }`}
+            className={`text-center text-xs p-1 rounded border ${
+              value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+            }`}
           >
             <div className="text-xs">{icon}</div>
             <div className="text-xs font-bold">{value ? "✓" : "○"}</div>
@@ -1485,7 +1695,6 @@ const ResultsModal = ({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Données expérimentales - COMPACT ET VISIBLE */}
           <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
             <h3 className="text-lg font-bold mb-3 text-blue-800 flex items-center">
               <Beaker className="mr-2" size={18} />
@@ -1538,7 +1747,6 @@ const ResultsModal = ({
             </div>
           </div>
 
-          {/* Calculs thermodynamiques - COMPACT ET VISIBLE */}
           <div className="bg-green-50 p-4 rounded-xl border border-green-200">
             <h3 className="text-lg font-bold mb-3 text-green-800 flex items-center">
               <Calculator className="mr-2" size={18} />
@@ -1593,7 +1801,6 @@ const ResultsModal = ({
             </div>
           </div>
 
-          {/* Évaluation de performance - COMPACT */}
           <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
             <h3 className="text-lg font-bold mb-3 text-purple-800 flex items-center">
               <Award className="mr-2" size={18} />
@@ -1641,7 +1848,6 @@ const ResultsModal = ({
             </div>
           </div>
 
-          {/* Équation et mécanisme - COMPACT */}
           <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
             <h3 className="text-lg font-bold mb-3 text-yellow-800 flex items-center">
               <FileText className="mr-2" size={18} />
@@ -1668,7 +1874,6 @@ const ResultsModal = ({
           </div>
         </div>
 
-        {/* Historique compact */}
         {experiments.length > 1 && (
           <div className="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
             <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
@@ -1744,11 +1949,11 @@ export default function CalorimetrieSimulationAvancee() {
   } = useCalorimetrySimulation()
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-indigo-650 via-indigo-600 to-purple-900 relative overflow-hidden">
+    <div className="w-full h-full relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-purple-900/10 to-transparent" />
 
       <Canvas
-        camera={{ position: [8, 6, 10], fov: 55, near: 0.1, far: 100 }}
+        camera={{ position: [0, 2, 8], fov: 75, near: 0.1, far: 100 }}
         shadows
         className="w-full h-full"
         gl={{ antialias: true, alpha: true }}
