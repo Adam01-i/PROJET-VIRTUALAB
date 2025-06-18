@@ -38,7 +38,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   └── moleculs/                   # Modèles 3D .glb pour les molécules
 ├── src/
 │   ├── components/
-│   │   └── layouts/                # Layouts utilisateur (élève / professeur)
+│   │   └── layouts/                # Layouts utilisateur (élève / professeur / admin)
 │   │   └── ui/                     # Composants d'interface utilisateur
 │   │   └── views/                 # Vues principales par rôle
 │   ├── data/                       # Données statiques (expériences, quiz)
@@ -57,3 +57,11 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 ts-node src/script/insert-experiences.ts
 ts-node src/script/insert-quizzes.ts
 ts-node src/scripts/insertLabItems.ts
+
+
+# Frontend
+npm install ai @ai-sdk/openai clsx tailwind-merge
+
+# Backend
+cd backend
+npm install ai @ai-sdk/openai
