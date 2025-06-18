@@ -1473,7 +1473,7 @@ export default function CalorimetrySimulation() {
   }, [selectedBeaker])*/
 
   return (
-    <div className="w-full h-screen relative">
+    <div className="w-full h-full relative">
       <ControlPanel
         leftSolution={leftSolution}
         rightSolution={rightSolution}
