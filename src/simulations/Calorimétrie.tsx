@@ -589,6 +589,11 @@ const ProfessionalBeaker3D = ({
   )
 }
 
+
+
+
+
+
 const AdvancedCalorimeter3D = ({
   position,
   solutionColor,
