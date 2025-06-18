@@ -190,4 +190,35 @@ export const experienceData: Experience[] = [
       "Temps de réaction : 3-8 secondes selon l'oxydant et l'alcool",
     ],
   },
+  {
+    id: "6",
+    classe_id: "",
+    titre: "Calorimétrie : capacité thermique massique de l'eau",
+    description: "Déterminez la capacité thermique massique de l'eau en mesurant l'énergie nécessaire pour élever sa température. Cette expérience met en pratique les principes fondamentaux de la thermochimie.",
+    duree: "40 min",
+    niveau: "Première",
+    image: "https://images.unsplash.com/photo-1581092918360-5d28c1ea1b72?auto=format&fit=crop&w=800&q=80",
+    simulationPath: "ChaleurEau",
+    objectifs: [
+      "Comprendre la notion de capacité thermique massique",
+      "Utiliser un calorimètre pour mesurer un transfert d'énergie thermique",
+      "Calculer l'énergie absorbée par l'eau à l'aide de la formule Q = mcΔT",
+      "Comparer la valeur expérimentale avec la valeur théorique (4,18 J/g·°C)"
+    ],
+    materiel: [
+      "Calorimètre simple avec couvercle",
+      "Thermomètre numérique ou sonde de température",
+      "Chauffe-eau ou plaque chauffante contrôlée",
+      "Eau distillée (100 mL)",
+      "Balance électronique de précision",
+      "Chronomètre",
+      "Agitateur manuel ou magnétique"
+    ],
+    resultatsAttendus: [
+      "Augmentation progressive de température de l'eau",
+      "Calcul de Q en joules à partir des mesures prises",
+      "Obtention d'une valeur proche de 4,18 J/g·°C",
+      "Analyse des sources d'erreurs : pertes thermiques, mesure de masse, précision de température"
+    ]
+  }  
 ];
