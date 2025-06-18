@@ -11,7 +11,6 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 - **Tailwind CSS** – Styling rapide, responsive et moderne.
 - **React Router** – Navigation entre les différentes vues.
 - **React Three Fiber** – Affichage d’objets 3D (matériel de laboratoire, molécules).
-- **3Dmol.js** – Visualisation de structures moléculaires à partir de fichiers `.pdb`.
 - **Framer Motion** – Animations fluides et dynamiques.
 - **Lucide Icons** – Icônes vectorielles modernes.
 - **GLTFLoader** – Chargement de modèles `.glb` dans la scène 3D.
@@ -58,7 +57,3 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 ts-node src/script/insert-experiences.ts
 ts-node src/script/insert-quizzes.ts
 ts-node src/scripts/insertLabItems.ts
-
-
-
-
