@@ -580,6 +580,7 @@ const ProfessionalBeaker3D = ({
         )}
       </group>
 
+
       {hovered && (
         <Cylinder args={[0.7, 0.7, 0.05]} position={[0, -1.2, 0]}>
           <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
@@ -588,11 +589,6 @@ const ProfessionalBeaker3D = ({
     </group>
   )
 }
-
-
-
-
-
 
 const AdvancedCalorimeter3D = ({
   position,
@@ -732,7 +728,8 @@ const AdvancedCalorimeter3D = ({
         </group>
       )}
 
-      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#ffffff" anchorX="center" anchorY="middle">
+      {/* Étiquettes */}
+      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#374151" anchorX="center" anchorY="middle">
         Calorimètre Professionnel
       </Text>
 
@@ -870,8 +867,8 @@ const CalorimetryScene = ({
       <pointLight position={[-6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
       <pointLight position={[6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
 
-      <color attach="background" args={["#2c3e50"]} />
-      <fog attach="fog" args={["#2c3e50", 15, 35]} />
+      <color attach="background" args={["#1e1b4b"]} />
+      <fog attach="fog" args={["#312e81", 20, 50]} />
 
       {/* Environnement et table du premier fichier */}
       <LabEnvironment />
@@ -1422,11 +1419,10 @@ const UIControls = ({
       <button
         onClick={calculateResults}
         disabled={step !== 3}
-        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${
-          step === 3
+        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${step === 3
             ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
-        }`}
+          }`}
       >
         <Calculator size={14} />
         Analyser résultats
@@ -1569,9 +1565,8 @@ const UIReadings = ({
         ].map(({ label, value, icon }) => (
           <div
             key={label}
-            className={`text-center text-xs p-1 rounded border ${
-              value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-            }`}
+            className={`text-center text-xs p-1 rounded border ${value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+              }`}
           >
             <div className="text-xs">{icon}</div>
             <div className="text-xs font-bold">{value ? "✓" : "○"}</div>
@@ -1954,7 +1949,7 @@ export default function CalorimetrieSimulationAvancee() {
   } = useCalorimetrySimulation()
 
   return (
-    <div className="w-full h-full relative overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-900 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-purple-900/10 to-transparent" />
 
       <Canvas
