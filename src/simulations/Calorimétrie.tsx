@@ -580,7 +580,6 @@ const ProfessionalBeaker3D = ({
         )}
       </group>
 
-
       {hovered && (
         <Cylinder args={[0.7, 0.7, 0.05]} position={[0, -1.2, 0]}>
           <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
@@ -1419,10 +1418,11 @@ const UIControls = ({
       <button
         onClick={calculateResults}
         disabled={step !== 3}
-        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${step === 3
+        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${
+          step === 3
             ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
+        }`}
       >
         <Calculator size={14} />
         Analyser résultats
@@ -1565,8 +1565,9 @@ const UIReadings = ({
         ].map(({ label, value, icon }) => (
           <div
             key={label}
-            className={`text-center text-xs p-1 rounded border ${value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-              }`}
+            className={`text-center text-xs p-1 rounded border ${
+              value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+            }`}
           >
             <div className="text-xs">{icon}</div>
             <div className="text-xs font-bold">{value ? "✓" : "○"}</div>
