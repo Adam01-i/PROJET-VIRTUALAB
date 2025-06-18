@@ -530,10 +530,10 @@ function AlignedFaucet3D({
       </mesh>
 
       {/* Bec verseur - Position corrigée pour verser dans le bécher */}
-      <mesh position={[0, -0.25, 0.25]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+      {/* <mesh position={[0, -0.25, 0.25]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <cylinderGeometry args={[0.04, 0.06, 0.3, 16]} />
         <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
-      </mesh>
+      </mesh> */}
 
       {/* Poignée rotative */}
       <animated.group rotation-y={rotation}>
@@ -604,13 +604,17 @@ const ImprovedBeaker3D = React.memo(
         <mesh castShadow receiveShadow>
           <cylinderGeometry args={[1, 0.8, 2, 32]} />
           <meshPhysicalMaterial
-            color="#ffffff"
+            color="#ffffaa"
+            emissive="#fffac2"
+            emissiveIntensity={0.5}
             transparent
-            opacity={2}
-            roughness={0.02}
-            transmission={0.95}
-            thickness={0.05}
+            opacity={0.5}
+            roughness={0.05}
+            transmission={0.9}
+            thickness={0.12}
           />
+
+
         </mesh>
 
         {/* Bec verseur */}
@@ -650,7 +654,7 @@ const ImprovedBeaker3D = React.memo(
           <group key={index}>
             <mesh position={[1.1, -1 + height * 1.8, 0]}>
               <boxGeometry args={[0.08, 0.02, 0.02]} />
-              <meshStandardMaterial color="#2c3e50" />
+              <meshStandardMaterial color="#4c3e50" />
             </mesh>
             <Text
               position={[1.3, -1 + height * 1.8, 0]}
@@ -784,7 +788,7 @@ function LiquidStream3D({ active, reactantColor }: { active: boolean; reactantCo
   if (!active) return null
 
   return (
-    <mesh ref={streamRef} position={[0, -1.8, 0.4]} rotation={[0, 0, 0]}>
+    <mesh ref={streamRef} position={[0, -1.8, 0]} rotation={[0, 0, 0]}>
       <cylinderGeometry args={[0.015, 0.025, 1.2, 8]} />
       <meshStandardMaterial
         color={reactantColor}
@@ -1273,9 +1277,8 @@ export default function RedoxReaction() {
 
           {/* Prédiction théorique */}
           <div
-            className={`p-3 rounded-lg border ${
-              selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-            }`}
+            className={`p-3 rounded-lg border ${selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+              }`}
           >
             <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
               {selectedReactant.canReact ? (
@@ -1372,15 +1375,14 @@ export default function RedoxReaction() {
 
           {/* Phase actuelle */}
           <div
-            className={`p-2 rounded border text-xs ${
-              phaseInfo.phase === "Terminé"
+            className={`p-2 rounded border text-xs ${phaseInfo.phase === "Terminé"
                 ? "bg-green-50 border-green-200 text-gray-800"
                 : phaseInfo.phase === "Réaction"
                   ? "bg-orange-50 border-orange-200 text-gray-800"
                   : phaseInfo.phase === "Incomplète"
                     ? "bg-yellow-50 border-yellow-200 text-gray-800"
                     : "bg-blue-50 border-blue-200 text-gray-800"
-            }`}
+              }`}
           >
             <div className="font-semibold">{phaseInfo.phase}</div>
             <div className="text-gray-600">{phaseInfo.description}</div>
@@ -1649,13 +1651,12 @@ export default function RedoxReaction() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-1000 ${
-                          currentExperiment.reactionType === "complete"
+                        className={`h-2 rounded-full transition-all duration-1000 ${currentExperiment.reactionType === "complete"
                             ? "bg-green-600"
                             : currentExperiment.reactionType === "incomplete"
                               ? "bg-orange-600"
                               : "bg-red-600"
-                        }`}
+                          }`}
                         style={{ width: `${Math.max(5, currentExperiment.results.efficiency)}%` }}
                       />
                     </div>
@@ -1889,7 +1890,7 @@ export default function RedoxReaction() {
       {/* Canvas 3D avec contrôles de caméra - Position de caméra corrigée */}
       <Canvas
         camera={{
-          position: [2, 0, 4], // Position plus basse et plus proche
+          position: [0, -1, 6], // Position plus basse et plus proche
           fov: 65,
           near: 0.1,
           far: 100,
@@ -1923,7 +1924,7 @@ export default function RedoxReaction() {
           rotateSpeed={0.5}
           zoomSpeed={0.8}
           panSpeed={0.8}
-          target={[0, -1, 0]} // Cible ajustée vers le bas
+          target={[0, -1.1, 0]} // Cible ajustée vers le bas
         />
       </Canvas>
     </div>
