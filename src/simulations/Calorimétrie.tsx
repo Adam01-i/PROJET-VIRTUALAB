@@ -373,22 +373,23 @@ const ProfessionalBeaker3D = ({
         )}
       </group>
 
-      <group position={[0, 1.5, 0]}>
-        <Text position={[0, 0.2, 0]} fontSize={0.14} color="#374151" anchorX="center" anchorY="middle">
+      <group position={[0, 2.5, 0]}>
+        <Text position={[0, 0.2, 0]} fontSize={0.14} color="#e0e7ff" anchorX="center" anchorY="middle">
           {label}
         </Text>
-        <Text position={[0, 0, 0]} fontSize={0.1} color="#6b7280" anchorX="center" anchorY="middle">
+        <Text position={[0, 0, 0]} fontSize={0.1} color="#c7d2fe" anchorX="center" anchorY="middle">
           {formula}
         </Text>
-        <Text position={[0, -0.15, 0]} fontSize={0.08} color="#9ca3af" anchorX="center" anchorY="middle">
+        <Text position={[0, -0.15, 0]} fontSize={0.08} color="#a5b4fc" anchorX="center" anchorY="middle">
           {solution.concentration}M • pH {solution.pH}
         </Text>
         {solution.hazardLevel === "high" && (
           <Sphere args={[0.05]} position={[0.3, 0.1, 0]}>
-            <meshBasicMaterial color="#dc2626" />
+            <meshBasicMaterial color="#f87171" />
           </Sphere>
         )}
       </group>
+
 
       {hovered && (
         <Cylinder args={[0.7, 0.7, 0.05]} position={[0, -1.2, 0]}>
@@ -398,11 +399,6 @@ const ProfessionalBeaker3D = ({
     </group>
   )
 }
-
-
-
-
-
 
 const AdvancedCalorimeter3D = ({
   position,
@@ -529,7 +525,7 @@ const AdvancedCalorimeter3D = ({
       )}
 
       {/* Étiquettes */}
-      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#374151" anchorX="center" anchorY="middle">
+      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#e0e7ff" anchorX="center" anchorY="middle">
         Calorimètre Professionnel
       </Text>
 
@@ -667,7 +663,7 @@ const CalorimetryScene = ({
       <pointLight position={[-6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
       <pointLight position={[6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
 
-      <color attach="background" args={["#1e1b4b"]} />
+      <color attach="background" args={["#312e81"]} />
       <fog attach="fog" args={["#312e81", 20, 50]} />
 
       <LabTable />
@@ -1213,11 +1209,10 @@ const UIControls = ({
       <button
         onClick={calculateResults}
         disabled={step !== 3}
-        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${
-          step === 3
+        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium transition-all ${step === 3
             ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
-        }`}
+          }`}
       >
         <Calculator size={14} />
         Analyser résultats
@@ -1360,9 +1355,8 @@ const UIReadings = ({
         ].map(({ label, value, icon }) => (
           <div
             key={label}
-            className={`text-center text-xs p-1 rounded border ${
-              value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-            }`}
+            className={`text-center text-xs p-1 rounded border ${value ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+              }`}
           >
             <div className="text-xs">{icon}</div>
             <div className="text-xs font-bold">{value ? "✓" : "○"}</div>
@@ -1480,7 +1474,7 @@ const ResultsModal = ({
             <Award className="mr-2 text-yellow-500" size={24} />
             Rapport d'Analyse Calorimétrique
           </h2>
-          <div className="flex gap-2">            
+          <div className="flex gap-2">
             <button
               onClick={() => setShowResults(false)}
               className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
@@ -1750,7 +1744,7 @@ export default function CalorimetrieSimulationAvancee() {
   } = useCalorimetrySimulation()
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-900 relative overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-br from-indigo-650 via-indigo-600 to-purple-900 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-purple-900/10 to-transparent" />
 
       <Canvas
