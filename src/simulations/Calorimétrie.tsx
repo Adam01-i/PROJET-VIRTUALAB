@@ -248,6 +248,9 @@ const LabTable = () => (
   </group>
 )
 
+// Composant 3D du bécher professionnel
+// ... même déclaration et imports
+
 const ProfessionalBeaker3D = ({
   position,
   color,
@@ -273,29 +276,31 @@ const ProfessionalBeaker3D = ({
   useFrame(() => {
     if (!meshRef.current) return
 
-    if (isPouring) {
-      const targetY = 1.8
-      const targetRotation = 0.6
-      // CORRECTION DU MOUVEMENT
-      const targetX = position[0] < 0 ? 1.5 : -1.5
+    const isLeft = position[0] < 0
+    const targetX = isPouring ? (isLeft ? +0.3 : -0.3) : position[0]
+    const targetY = isPouring ? 2.8 : 0
+    const targetRotationZ = isPouring ? (isLeft ? -Math.PI / 2 : Math.PI / 2) : 0
+    const targetRotationX = isPouring ? -0.6 : 0
 
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.03)
-      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.03)
-      meshRef.current.rotation.z = THREE.MathUtils.lerp(
-        meshRef.current.rotation.z,
-        position[0] < 0 ? targetRotation : -targetRotation,
-        0.03,
-      )
-    } else {
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.02)
-      meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, 0, 0.02)
-      meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.02)
-    }
+    meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.03)
+    meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.03)
+    // Z inchangé volontairement
+
+    meshRef.current.rotation.set(
+      THREE.MathUtils.lerp(meshRef.current.rotation.x, targetRotationX, 0.03),
+      0,
+      THREE.MathUtils.lerp(meshRef.current.rotation.z, targetRotationZ, 0.03)
+    )
 
     if (hovered && !isPouring) {
       meshRef.current.position.y += Math.sin(Date.now() * 0.003) * 0.02
     }
   })
+
+  const isLeft = position[0] < 0
+  const spoutX = isLeft ? 0.6 : -0.6
+  const spoutRotationZ = isLeft ? Math.PI / 2 : -Math.PI / 2
+  const jetDirection = isLeft ? 1 : -1
 
   return (
     <group
@@ -305,7 +310,6 @@ const ProfessionalBeaker3D = ({
       onPointerLeave={() => setHovered(false)}
     >
       <group ref={meshRef}>
-        {/* Corps du bécher */}
         <Cylinder args={[0.6, 0.55, 1.8, 32]} position={[0, 0, 0]} castShadow>
           <meshPhysicalMaterial
             color="#f8fafc"
@@ -318,32 +322,25 @@ const ProfessionalBeaker3D = ({
           />
         </Cylinder>
 
-        {/* Rebord */}
         <Cylinder args={[0.62, 0.6, 0.12, 32]} position={[0, 0.84, 0]} castShadow>
           <meshStandardMaterial color="#e2e8f0" roughness={0.2} metalness={0.3} />
         </Cylinder>
 
-        {/* Bec verseur */}
-        <Box args={[0.15, 0.08, 0.05]} position={[0.6, 0.8, 0]} castShadow>
-          <meshStandardMaterial color="#e2e8f0" roughness={0.2} metalness={0.3} />
-        </Box>
+        <Cylinder args={[0.1, 0.15, 0.3, 16]} position={[spoutX, 0.7, 0]} rotation={[0, 0, spoutRotationZ]}>
+          <meshStandardMaterial color="#e2e8f0" transparent opacity={0.3} roughness={0.1} />
+        </Cylinder>
 
-        {/* LIQUIDE VISIBLE - APPROCHE SIMPLIFIÉE COMME DANS L'ORIGINAL */}
         {fillLevel > 0 && (
           <group>
-            {/* Corps du liquide - cylindre simple */}
             <Cylinder args={[0.55, 0.5, fillLevel * 1.6]} position={[0, -0.9 + (fillLevel * 1.6) / 2, 0]}>
-              <meshStandardMaterial color={color} transparent={false} opacity={1.0} roughness={0.1} metalness={0.1} />
+              <meshStandardMaterial color={color} roughness={0.1} metalness={0.1} />
             </Cylinder>
-
-            {/* Surface du liquide brillante */}
             <Cylinder args={[0.55, 0.55, 0.02]} position={[0, -0.9 + fillLevel * 1.6, 0]}>
-              <meshStandardMaterial color={color} transparent={false} opacity={1.0} roughness={0.0} metalness={0.3} />
+              <meshStandardMaterial color={color} roughness={0.0} metalness={0.3} />
             </Cylinder>
           </group>
         )}
 
-        {/* Graduations */}
         {Array.from({ length: 5 }, (_, i) => (
           <Text
             key={i}
@@ -357,22 +354,25 @@ const ProfessionalBeaker3D = ({
           </Text>
         ))}
 
-        {/* Jet de liquide simplifié */}
         {isPouring && fillLevel > 0.1 && (
-          <group>
-            <Cylinder args={[0.02, 0.04, 2.5]} position={[0.8, 0.2, 0]} rotation={[0, 0, Math.PI / 3]}>
-              <meshStandardMaterial color={color} />
-            </Cylinder>
-            {Array.from({ length: 6 }, (_, i) => (
-              <Sphere key={i} args={[0.015]} position={[0.8 + i * 0.3, 0.2 - i * 0.25, 0]}>
-                <meshStandardMaterial color={color} />
-              </Sphere>
-            ))}
-          </group>
+          <mesh>
+            <tubeGeometry
+              args={[
+                new THREE.CatmullRomCurve3([
+                  new THREE.Vector3(spoutX, 0.9, 0),
+                  new THREE.Vector3(spoutX + 0.2 * jetDirection, 0.8, 0),
+                ]),
+                64,
+                0.05,
+                8,
+                false,
+              ]}
+            />
+            <meshStandardMaterial color={color} transparent opacity={0.85} emissive={color} emissiveIntensity={0.25} />
+          </mesh>
         )}
       </group>
 
-      {/* Étiquettes */}
       <group position={[0, 1.5, 0]}>
         <Text position={[0, 0.2, 0]} fontSize={0.14} color="#374151" anchorX="center" anchorY="middle">
           {label}
@@ -390,7 +390,6 @@ const ProfessionalBeaker3D = ({
         )}
       </group>
 
-      {/* Effet de survol */}
       {hovered && (
         <Cylinder args={[0.7, 0.7, 0.05]} position={[0, -1.2, 0]}>
           <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
@@ -399,6 +398,11 @@ const ProfessionalBeaker3D = ({
     </group>
   )
 }
+
+
+
+
+
 
 const AdvancedCalorimeter3D = ({
   position,
@@ -669,7 +673,7 @@ const CalorimetryScene = ({
       <LabTable />
 
       <ProfessionalBeaker3D
-        position={[-3.0, 0.1, 0]}
+        position={[-1.5, 0.1, 0]}
         color={selectedSolution1.colorHex}
         fillLevel={beaker1FillLevel}
         onClick={onPourSolution1}
@@ -680,7 +684,7 @@ const CalorimetryScene = ({
       />
 
       <ProfessionalBeaker3D
-        position={[3.0, 0.1, 0]}
+        position={[1.5, 0.1, 0]}
         color={selectedSolution2.colorHex}
         fillLevel={beaker2FillLevel}
         onClick={onPourSolution2}
