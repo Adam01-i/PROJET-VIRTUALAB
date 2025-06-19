@@ -26,7 +26,7 @@ type Profile = {
 };
 
 export default function ActivityByEleve({ eleves }: { eleves: Profile[] }) {
-  const [filters, setFilters] = useState({ eleveId: 'tous', dateRange: '7j' });
+  const [filters, setFilters] = useState({ eleveId: 'tous', dateRange: 'tous' });
   const [activityByEleve, setActivityByEleve] = useState<ActivityLog[]>([]);
 
   useEffect(() => {
