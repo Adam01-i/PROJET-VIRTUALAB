@@ -11,7 +11,6 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 - **Tailwind CSS** – Styling rapide, responsive et moderne.
 - **React Router** – Navigation entre les différentes vues.
 - **React Three Fiber** – Affichage d’objets 3D (matériel de laboratoire, molécules).
-- **3Dmol.js** – Visualisation de structures moléculaires à partir de fichiers `.pdb`.
 - **Framer Motion** – Animations fluides et dynamiques.
 - **Lucide Icons** – Icônes vectorielles modernes.
 - **GLTFLoader** – Chargement de modèles `.glb` dans la scène 3D.
@@ -39,7 +38,7 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 │   └── moleculs/                   # Modèles 3D .glb pour les molécules
 ├── src/
 │   ├── components/
-│   │   └── layouts/                # Layouts utilisateur (élève / professeur)
+│   │   └── layouts/                # Layouts utilisateur (élève / professeur / admin)
 │   │   └── ui/                     # Composants d'interface utilisateur
 │   │   └── views/                 # Vues principales par rôle
 │   ├── data/                       # Données statiques (expériences, quiz)
@@ -60,5 +59,9 @@ ts-node src/script/insert-quizzes.ts
 ts-node src/scripts/insertLabItems.ts
 
 
+# Frontend
+npm install ai @ai-sdk/openai clsx tailwind-merge
 
-
+# Backend
+cd backend
+npm install ai @ai-sdk/openai

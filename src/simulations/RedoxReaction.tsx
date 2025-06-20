@@ -22,7 +22,6 @@ import {
   Award,
   Info,
   TrendingUp,
-  Camera,
 } from "lucide-react"
 
 // Types optimisés
@@ -124,30 +123,344 @@ const EXPERIMENT_CONFIG = {
   INCOMPLETE_THRESHOLD: 0.6,
 } as const
 
-// Composant Table 3D
-const LabTable = React.memo(() => {
+// ===================================
+// ENVIRONNEMENT DE LABORATOIRE REDOX - Plus clair
+// ===================================
+
+function RedoxLabEnvironment() {
   return (
     <group>
-      <mesh position={[0, -2, 0]} receiveShadow>
-        <boxGeometry args={[6, 0.2, 3]} />
-        <meshStandardMaterial color="#4f46e5" roughness={0.6} metalness={0.1} />
+      {/* Sol principal - indigo foncé */}
+      <mesh position={[0, -4, 0]} receiveShadow>
+        <boxGeometry args={[20, 0.1, 16]} />
+        <meshStandardMaterial color="#4c51bf" roughness={0.4} />
       </mesh>
-      {[
-        [-2.5, -3, -1],
-        [2.5, -3, -1],
-        [-2.5, -3, 1],
-        [2.5, -3, 1],
-      ].map((pos, index) => (
-        <mesh key={index} position={pos as [number, number, number]} castShadow>
-          <cylinderGeometry args={[0.08, 0.08, 2, 16]} />
-          <meshStandardMaterial color="#3730a3" />
+
+      {/* Mur arrière - indigo moyen */}
+      <mesh position={[0, 0, -8]} receiveShadow>
+        <boxGeometry args={[20, 10, 0.2]} />
+        <meshStandardMaterial color="#5a67d8" roughness={0.5} />
+      </mesh>
+
+      {/* Murs latéraux - indigo moyen */}
+      <mesh position={[-10, 0, 0]} receiveShadow>
+        <boxGeometry args={[0.2, 10, 16]} />
+        <meshStandardMaterial color="#5a67d8" roughness={0.5} />
+      </mesh>
+
+      <mesh position={[10, 0, 0]} receiveShadow>
+        <boxGeometry args={[0.2, 10, 16]} />
+        <meshStandardMaterial color="#5a67d8" roughness={0.5} />
+      </mesh>
+
+      {/* Plafond - indigo clair */}
+      <mesh position={[0, 5, 0]} receiveShadow>
+        <boxGeometry args={[20, 0.2, 16]} />
+        <meshStandardMaterial color="#667eea" roughness={0.4} />
+      </mesh>
+
+      {/* Hotte de laboratoire pour réactions chimiques */}
+      <group position={[0, 2.5, -7.5]}>
+        <mesh castShadow>
+          <boxGeometry args={[8, 4, 1.5]} />
+          <meshStandardMaterial color="#ffffff" transparent opacity={0.2} />
         </mesh>
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <boxGeometry args={[8.2, 0.3, 1.7]} />
+          <meshStandardMaterial color="#bdc3c7" metalness={0.6} roughness={0.4} />
+        </mesh>
+        {/* Système d'extraction */}
+        <mesh position={[0, 2.5, 0.8]} castShadow>
+          <cylinderGeometry args={[0.3, 0.3, 0.5, 8]} />
+          <meshStandardMaterial color="#95a5a6" metalness={0.8} roughness={0.2} />
+        </mesh>
+      </group>
+
+      {/* Armoires de stockage des réactifs - Gauche - indigo */}
+      <group position={[-8.5, 0, -4]}>
+        <mesh position={[0, 0, 0]} castShadow>
+          <boxGeometry args={[2.5, 4, 1.2]} />
+          <meshStandardMaterial color="#6366f1" roughness={0.3} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 2.2, 0.7]} castShadow>
+          <boxGeometry args={[2.3, 0.1, 1]} />
+          <meshStandardMaterial color="#4f46e5" roughness={0.2} />
+        </mesh>
+        {/* Étiquette de sécurité */}
+        <mesh position={[0, 1, 0.7]} castShadow>
+          <boxGeometry args={[1.5, 0.8, 0.05]} />
+          <meshStandardMaterial color="#e74c3c" />
+        </mesh>
+      </group>
+
+      {/* Armoires de stockage des réactifs - Droite - plus claires */}
+      <group position={[8.5, 0, -4]}>
+        <mesh position={[0, 0, 0]} castShadow>
+          <boxGeometry args={[2.5, 4, 1.2]} />
+          <meshStandardMaterial color="#ecf0f1" roughness={0.3} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 2.2, 0.7]} castShadow>
+          <boxGeometry args={[2.3, 0.1, 1]} />
+          <meshStandardMaterial color="#d5dbdb" roughness={0.2} />
+        </mesh>
+      </group>
+
+      {/* Étagères avec bouteilles de réactifs redox */}
+      <group position={[-9, -1, -2.5]}>
+        {[0, 0.8, 1.6].map((y, i) => (
+          <mesh key={i} position={[0, y, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.05, 3]} />
+            <meshStandardMaterial color="#d4a574" roughness={0.6} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Bouteilles de solutions redox */}
+      {[
+        { pos: [-8.8, 0.8, -1], color: "#3b82f6", label: "CuSO₄" },
+        { pos: [-8.8, 0.8, -2], color: "#8b5cf6", label: "AgNO₃" },
+        { pos: [-8.8, 0.8, -3], color: "#06b6d4", label: "ZnSO₄" },
+        { pos: [-8.8, 0.8, -4], color: "#ef4444", label: "FeSO₄" },
+        { pos: [-8.8, 1.6, -1], color: "#10b981", label: "NiSO₄" },
+        { pos: [-8.8, 1.6, -2], color: "#f59e0b", label: "PbNO₃" },
+        { pos: [-8.8, 1.6, -3], color: "#8b5cf6", label: "MnSO₄" },
+        { pos: [-8.8, 1.6, -4], color: "#06b6d4", label: "CoSO₄" },
+      ].map((bottle, i) => (
+        <group key={i}>
+          <mesh position={bottle.pos as [number, number, number]} castShadow>
+            <cylinderGeometry args={[0.12, 0.12, 0.5, 8]} />
+            <meshStandardMaterial color="#ffffff" transparent opacity={0.8} />
+          </mesh>
+          <mesh position={[bottle.pos[0], bottle.pos[1] - 0.08, bottle.pos[2]]} castShadow>
+            <cylinderGeometry args={[0.1, 0.1, 0.35, 8]} />
+            <meshStandardMaterial color={bottle.color} transparent opacity={0.7} />
+          </mesh>
+          <Text
+            position={[bottle.pos[0] + 0.3, bottle.pos[1], bottle.pos[2]]}
+            fontSize={0.04}
+            color="#2c3e50"
+            anchorX="left"
+            anchorY="middle"
+          >
+            {bottle.label}
+          </Text>
+        </group>
       ))}
+
+      {/* Station de pesée et mesure */}
+      <group position={[7, -3.8, -6]}>
+        <mesh castShadow>
+          <boxGeometry args={[1.5, 0.4, 1]} />
+          <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.25, 0]} castShadow>
+          <cylinderGeometry args={[0.4, 0.4, 0.08, 16]} />
+          <meshStandardMaterial color="#ecf0f1" roughness={0.1} />
+        </mesh>
+        <Text position={[0, 0.6, 0]} fontSize={0.06} color="#2c3e50" anchorX="center" anchorY="middle">
+          Balance Analytique
+        </Text>
+      </group>
+
+      {/* pH-mètre et conductimètre */}
+      <group position={[-7, -3.7, -6]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.8, 0.5, 0.6]} />
+          <meshStandardMaterial color="#95a5a6" metalness={0.7} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.3, 0.35]} castShadow>
+          <boxGeometry args={[0.6, 0.3, 0.05]} />
+          <meshStandardMaterial color="#2c3e50" />
+        </mesh>
+        <Text position={[0, 0.6, 0]} fontSize={0.05} color="#2c3e50" anchorX="center" anchorY="middle">
+          pH-mètre
+        </Text>
+      </group>
+
+      {/* Système d'agitation magnétique - Position corrigée sous la table */}
+      <group position={[0, -4.2, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.8, 0.8, 0.2, 16]} />
+          <meshStandardMaterial color="#667eea" metalness={0.6} roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.15, 0]} castShadow>
+          <cylinderGeometry args={[0.6, 0.6, 0.05, 16]} />
+          <meshStandardMaterial color="#a5b4fc" roughness={0.1} />
+        </mesh>
+        <Text position={[0, 0.4, 0]} fontSize={0.05} color="#ffffff" anchorX="center" anchorY="middle">
+          Agitateur Magnétique
+        </Text>
+      </group>
+
+      {/* Éclairage de laboratoire spécialisé - plus lumineux */}
+      {[-3, 0, 3].map((x, i) => (
+        <group key={i} position={[x, 4.5, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[1.5, 0.1, 0.4]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} />
+          </mesh>
+          <mesh position={[0, -0.1, 0]} castShadow>
+            <boxGeometry args={[1.6, 0.05, 0.45]} />
+            <meshStandardMaterial color="#ecf0f1" metalness={0.8} roughness={0.2} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Panneaux de sécurité redox */}
+      <group position={[8, 1.5, -7.8]}>
+        <mesh castShadow>
+          <boxGeometry args={[1.2, 1.2, 0.1]} />
+          <meshStandardMaterial color="#e74c3c" />
+        </mesh>
+        <Text position={[0, 0.3, 0.1]} fontSize={0.08} color="#ffffff" anchorX="center" anchorY="middle">
+          ⚠️
+        </Text>
+        <Text position={[0, 0, 0.1]} fontSize={0.06} color="#ffffff" anchorX="center" anchorY="middle">
+          DANGER
+        </Text>
+        <Text position={[0, -0.3, 0.1]} fontSize={0.05} color="#ffffff" anchorX="center" anchorY="middle">
+          RÉACTIFS
+        </Text>
+      </group>
+
+      {/* Douche de sécurité */}
+      <group position={[9, -1.5, -2]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3, 8]} />
+          <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1.8, 0]} castShadow>
+          <sphereGeometry args={[0.2, 8, 8]} />
+          <meshStandardMaterial color="#3498db" metalness={0.6} roughness={0.3} />
+        </mesh>
+        <Text position={[0, 2.2, 0]} fontSize={0.04} color="#2c3e50" anchorX="center" anchorY="middle">
+          Douche de Sécurité
+        </Text>
+      </group>
+
+      {/* Lave-œil d'urgence */}
+      <group position={[-9, -3.5, 1]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.8, 0.4, 0.6]} />
+          <meshStandardMaterial color="#3498db" metalness={0.7} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.3, 0.4]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 0.2, 8]} />
+          <meshStandardMaterial color="#ecf0f1" />
+        </mesh>
+        <Text position={[0, 0.6, 0]} fontSize={0.04} color="#2c3e50" anchorX="center" anchorY="middle">
+          Lave-œil
+        </Text>
+      </group>
+
+      {/* Tableau de série électrochimique */}
+      <group position={[-5, 1.5, -7.8]}>
+        <mesh castShadow>
+          <boxGeometry args={[3, 2, 0.1]} />
+          <meshStandardMaterial color="#ffffff" />
+        </mesh>
+        <Text position={[0, 0.8, 0.1]} fontSize={0.08} color="#2c3e50" anchorX="center" anchorY="middle">
+          SÉRIE ÉLECTROCHIMIQUE
+        </Text>
+        <Text position={[0, 0.4, 0.1]} fontSize={0.05} color="#2c3e50" anchorX="center" anchorY="middle">
+          Zn²⁺/Zn (-0.76V)
+        </Text>
+        <Text position={[0, 0.2, 0.1]} fontSize={0.05} color="#2c3e50" anchorX="center" anchorY="middle">
+          Fe²⁺/Fe (-0.44V)
+        </Text>
+        <Text position={[0, 0, 0.1]} fontSize={0.05} color="#2c3e50" anchorX="center" anchorY="middle">
+          Cu²⁺/Cu (+0.34V)
+        </Text>
+        <Text position={[0, -0.2, 0.1]} fontSize={0.05} color="#2c3e50" anchorX="center" anchorY="middle">
+          Ag⁺/Ag (+0.80V)
+        </Text>
+        <Text position={[0, -0.5, 0.1]} fontSize={0.04} color="#e74c3c" anchorX="center" anchorY="middle">
+          Plus réactif → Moins réactif
+        </Text>
+      </group>
+
+      {/* Ventilation et extraction */}
+      <group position={[0, 4.8, 4]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.6, 0.6, 0.3, 8]} />
+          <meshStandardMaterial color="#95a5a6" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.2, 0]} castShadow>
+          <cylinderGeometry args={[0.5, 0.5, 0.1, 8]} />
+          <meshStandardMaterial color="#7f8c8d" />
+        </mesh>
+      </group>
+
+      {/* Poubelles de tri pour déchets chimiques */}
+      <group position={[8.5, -3.5, 2]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.3, 0.25, 0.8, 8]} />
+          <meshStandardMaterial color="#e74c3c" />
+        </mesh>
+        <Text position={[0, 0.6, 0]} fontSize={0.04} color="#ffffff" anchorX="center" anchorY="middle">
+          Déchets Métaux
+        </Text>
+      </group>
+
+      <group position={[7.5, -3.5, 2]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.3, 0.25, 0.8, 8]} />
+          <meshStandardMaterial color="#f39c12" />
+        </mesh>
+        <Text position={[0, 0.6, 0]} fontSize={0.04} color="#ffffff" anchorX="center" anchorY="middle">
+          Solutions Acides
+        </Text>
+      </group>
+    </group>
+  )
+}
+
+// Composant Table 3D amélioré pour redox
+const RedoxLabTable = React.memo(() => {
+  return (
+    <group position={[0, -3.9, 0]}>
+      {/* Plateau principal - indigo foncé */}
+      <mesh receiveShadow castShadow>
+        <boxGeometry args={[6, 0.2, 3]} />
+        <meshStandardMaterial color="#3730a3" roughness={0.4} metalness={0.2} />
+      </mesh>
+
+      {/* Bordure métallique */}
+      <mesh position={[0, 0.12, 0]} castShadow>
+        <boxGeometry args={[6.1, 0.04, 3.1]} />
+        <meshStandardMaterial color="#4338ca" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Pieds de table - design industriel */}
+      {[
+        [-2.5, -1, -1],
+        [2.5, -1, -1],
+        [-2.5, -1, 1],
+        [2.5, -1, 1],
+      ].map((pos, index) => (
+        <group key={index}>
+          <mesh position={pos as [number, number, number]} castShadow>
+            <cylinderGeometry args={[0.08, 0.08, 2, 16]} />
+            <meshStandardMaterial color="#7f8c8d" metalness={0.7} roughness={0.3} />
+          </mesh>
+          {/* Base élargie */}
+          <mesh position={[pos[0], pos[1] - 0.9, pos[2]]} castShadow>
+            <cylinderGeometry args={[0.15, 0.15, 0.2, 16]} />
+            <meshStandardMaterial color="#95a5a6" metalness={0.6} roughness={0.4} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Supports pour équipements */}
+      <mesh position={[2, 0.2, 0]} castShadow>
+        <cylinderGeometry args={[0.05, 0.05, 0.3, 8]} />
+        <meshStandardMaterial color="#95a5a6" metalness={0.8} roughness={0.2} />
+      </mesh>
     </group>
   )
 })
 
-// Composant Robinet 3D amélioré
+// Composant Robinet 3D amélioré - Position corrigée
 function AlignedFaucet3D({
   position,
   isOpen,
@@ -180,29 +493,47 @@ function AlignedFaucet3D({
 
   return (
     <group position={position}>
+      {/* Support mural */}
+      <mesh position={[0, 0.8, -0.3]} castShadow>
+        <boxGeometry args={[0.6, 0.4, 0.2]} />
+        <meshStandardMaterial color="#7f8c8d" metalness={0.7} roughness={0.3} />
+      </mesh>
+
       {/* Tige verticale */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <cylinderGeometry args={[0.05, 0.05, 1, 16]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
       </mesh>
 
       {/* Réservoir avec solution colorée */}
       <mesh position={[0, 1.2, 0]}>
         <cylinderGeometry args={[0.28, 0.28, 0.55, 16]} />
-        <meshStandardMaterial color={reactant.color} transparent opacity={0.8} />
+        <meshStandardMaterial
+          color={reactant.color}
+          transparent
+          opacity={0.8}
+          emissive={reactant.color}
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+
+      {/* Étiquette du réservoir */}
+      <mesh position={[0, 1.2, 0.3]} castShadow>
+        <boxGeometry args={[0.4, 0.15, 0.02]} />
+        <meshStandardMaterial color="#ffffff" />
       </mesh>
 
       {/* Corps du robinet */}
       <mesh position={[0, 0, 0]} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 0.4, 16]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      {/* Bec verseur */}
-      <mesh position={[0, -0.15, 0.25]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+      {/* Bec verseur - Position corrigée pour verser dans le bécher */}
+      {/* <mesh position={[0, -0.25, 0.25]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <cylinderGeometry args={[0.04, 0.06, 0.3, 16]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
-      </mesh>
+        <meshStandardMaterial color="#bdc3c7" metalness={0.8} roughness={0.2} />
+      </mesh> */}
 
       {/* Poignée rotative */}
       <animated.group rotation-y={rotation}>
@@ -214,25 +545,31 @@ function AlignedFaucet3D({
           castShadow
         >
           <boxGeometry args={[0.25, 0.05, 0.05]} />
-          <meshStandardMaterial color={disabled ? "#999999" : "#ef4444"} metalness={0.6} roughness={0.3} />
+          <meshStandardMaterial
+            color={disabled ? "#95a5a6" : "#e74c3c"}
+            metalness={0.6}
+            roughness={0.3}
+            emissive={disabled ? "#000000" : "#e74c3c"}
+            emissiveIntensity={disabled ? 0 : 0.1}
+          />
         </mesh>
       </animated.group>
 
-      {/* Étiquettes */}
-      <Text position={[0, 1.6, 0]} fontSize={0.08} color="#374151" anchorX="center" anchorY="middle">
+      {/* Étiquettes avec meilleur contraste */}
+      <Text position={[0, 1.6, 0]} fontSize={0.08} color="#2c3e50" anchorX="center" anchorY="middle">
         {reactant.name}
       </Text>
-      <Text position={[0, 1.45, 0]} fontSize={0.06} color="#6b7280" anchorX="center" anchorY="middle">
+      <Text position={[0, 1.45, 0]} fontSize={0.06} color="#34495e" anchorX="center" anchorY="middle">
         {reactant.formula}
       </Text>
-      <Text position={[0, 1.3, 0]} fontSize={0.05} color="#9ca3af" anchorX="center" anchorY="middle">
+      <Text position={[0, 1.3, 0]} fontSize={0.05} color="#7f8c8d" anchorX="center" anchorY="middle">
         {reactant.molarMass}g/mol • {reactant.density}g/mL
       </Text>
 
       <Text
         position={[0, 0.5, 0]}
         fontSize={0.06}
-        color={disabled ? "#999999" : isOpen ? "#10b981" : "#ef4444"}
+        color={disabled ? "#95a5a6" : isOpen ? "#27ae60" : "#e74c3c"}
         anchorX="center"
         anchorY="middle"
       >
@@ -242,7 +579,7 @@ function AlignedFaucet3D({
   )
 }
 
-// Composant Bécher 3D amélioré
+// Composant Bécher 3D amélioré - Position corrigée
 const ImprovedBeaker3D = React.memo(
   ({
     position,
@@ -267,13 +604,17 @@ const ImprovedBeaker3D = React.memo(
         <mesh castShadow receiveShadow>
           <cylinderGeometry args={[1, 0.8, 2, 32]} />
           <meshPhysicalMaterial
-            color="#ffffff"
+            color="#ffffaa"
+            emissive="#fffac2"
+            emissiveIntensity={0.5}
             transparent
-            opacity={0.3}
+            opacity={0.5}
             roughness={0.05}
-            transmission={0.85}
-            thickness={0.05}
+            transmission={0.9}
+            thickness={0.12}
           />
+
+
         </mesh>
 
         {/* Bec verseur */}
@@ -282,31 +623,43 @@ const ImprovedBeaker3D = React.memo(
           <meshPhysicalMaterial color="#ffffff" transparent opacity={0.12} transmission={0.85} />
         </mesh>
 
-        {/* Solution avec animation */}
+        {/* Solution avec animation et émissivité */}
         {solutionLevel > 0 && (
           <>
             <mesh position={[0, -1 + solutionLevel * 0.9, 0]}>
               <cylinderGeometry args={[0.8 + (1 - 0.8) * solutionLevel, 0.8, solutionLevel * 1.8, 32]} />
-              <meshStandardMaterial color={solutionColor} transparent opacity={0.8} />
+              <meshStandardMaterial
+                color={solutionColor}
+                transparent
+                opacity={0.8}
+                emissive={solutionColor}
+                emissiveIntensity={0.1}
+              />
             </mesh>
             <mesh ref={solutionRef} position={[0, -1 + solutionLevel * 0.9 + (solutionLevel * 1.8) / 2, 0]}>
               <cylinderGeometry args={[0.8 + (1 - 0.8) * solutionLevel, 0.8 + (1 - 0.8) * solutionLevel, 0.02, 32]} />
-              <meshStandardMaterial color={solutionColor} transparent opacity={0.9} />
+              <meshStandardMaterial
+                color={solutionColor}
+                transparent
+                opacity={0.9}
+                emissive={solutionColor}
+                emissiveIntensity={0.2}
+              />
             </mesh>
           </>
         )}
 
-        {/* Graduations */}
+        {/* Graduations avec meilleur contraste */}
         {[0.25, 0.5, 0.75, 1].map((height, index) => (
           <group key={index}>
             <mesh position={[1.1, -1 + height * 1.8, 0]}>
               <boxGeometry args={[0.08, 0.02, 0.02]} />
-              <meshStandardMaterial color="#374151" />
+              <meshStandardMaterial color="#4c3e50" />
             </mesh>
             <Text
               position={[1.3, -1 + height * 1.8, 0]}
               fontSize={0.06}
-              color="#374151"
+              color="#2c3e50"
               anchorX="left"
               anchorY="middle"
             >
@@ -315,7 +668,7 @@ const ImprovedBeaker3D = React.memo(
           </group>
         ))}
 
-        <Text position={[0, -1.3, 1.1]} fontSize={0.08} color="#374151" anchorX="center" anchorY="middle">
+        <Text position={[0, -1.3, 1.1]} fontSize={0.08} color="#2c3e50" anchorX="center" anchorY="middle">
           Bécher 250mL
         </Text>
       </group>
@@ -323,7 +676,7 @@ const ImprovedBeaker3D = React.memo(
   },
 )
 
-// Composant Barre de Fer amélioré
+// Composant Barre de Fer amélioré - Position corrigée
 function IronBar2D({
   position,
   copperDeposit,
@@ -352,7 +705,7 @@ function IronBar2D({
 
   const depositColor = useMemo(() => {
     if (reactionType === "incomplete") {
-      return THREE.Color.NAMES.orange
+      return "#f39c12"
     }
     return reactant.depositColor
   }, [reactionType, reactant.depositColor])
@@ -380,10 +733,10 @@ function IronBar2D({
       {/* Barre de fer principale */}
       <mesh>
         <planeGeometry args={[0.08, 1.5]} />
-        <meshStandardMaterial color="#4a5568" side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#4a5568" side={THREE.DoubleSide} metalness={0.8} roughness={0.3} />
       </mesh>
 
-      {/* Dépôt métallique */}
+      {/* Dépôt métallique avec émissivité */}
       {copperDeposit > 0 && (
         <mesh position={[0, 0, 0.001]}>
           <planeGeometry args={[0.1, 1.5 * copperDeposit]} />
@@ -392,26 +745,28 @@ function IronBar2D({
             side={THREE.DoubleSide}
             transparent={reactionType === "incomplete"}
             opacity={reactionType === "incomplete" ? 0.7 : 1}
+            emissive={depositColor}
+            emissiveIntensity={0.1}
           />
         </mesh>
       )}
 
-      {/* Étiquettes */}
-      <Text position={[0, 0.9, 0.01]} fontSize={0.1} color="#374151" anchorX="center" anchorY="middle">
+      {/* Étiquettes avec meilleur contraste */}
+      <Text position={[0, 0.9, 0.01]} fontSize={0.1} color="#2c3e50" anchorX="center" anchorY="middle">
         Barre de Fer
       </Text>
-      <Text position={[0, 0.7, 0.01]} fontSize={0.06} color="#6b7280" anchorX="center" anchorY="middle">
+      <Text position={[0, 0.7, 0.01]} fontSize={0.06} color="#34495e" anchorX="center" anchorY="middle">
         Fe (s) - 55.8 g/mol
       </Text>
 
       {!disabled && !isAnimating && (
-        <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#6366f1" anchorX="center" anchorY="middle">
+        <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#3498db" anchorX="center" anchorY="middle">
           Cliquez pour insérer !
         </Text>
       )}
 
       {isAnimating && (
-        <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#f59e0b" anchorX="center" anchorY="middle">
+        <Text position={[0, -0.9, 0.01]} fontSize={0.04} color="#f39c12" anchorX="center" anchorY="middle">
           Insertion en cours...
         </Text>
       )}
@@ -419,23 +774,29 @@ function IronBar2D({
   )
 }
 
-// Composant Flux de Liquide 3D
+// Composant Flux de Liquide 3D - Complètement corrigé
 function LiquidStream3D({ active, reactantColor }: { active: boolean; reactantColor: string }) {
   const streamRef = useRef<THREE.Mesh>(null)
 
   useFrame((state) => {
     if (streamRef.current && active) {
-      streamRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.05
-      streamRef.current.scale.x = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.1
+      streamRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.02
+      streamRef.current.scale.x = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.05
     }
   })
 
   if (!active) return null
 
   return (
-    <mesh ref={streamRef} position={[0, 0.5, 0]}>
-      <cylinderGeometry args={[0.02, 0.04, 1.5, 8]} />
-      <meshStandardMaterial color={reactantColor} transparent opacity={0.8} />
+    <mesh ref={streamRef} position={[0, -1.8, 0]} rotation={[0, 0, 0]}>
+      <cylinderGeometry args={[0.015, 0.025, 1.2, 8]} />
+      <meshStandardMaterial
+        color={reactantColor}
+        transparent
+        opacity={0.9}
+        emissive={reactantColor}
+        emissiveIntensity={0.3}
+      />
     </mesh>
   )
 }
@@ -467,14 +828,14 @@ function ReactionBubbles3D({ active, position }: { active: boolean; position: [n
           position={[(Math.random() - 0.5) * 1.5, Math.random() * 1 - 0.5, (Math.random() - 0.5) * 0.5]}
         >
           <sphereGeometry args={[0.01 + Math.random() * 0.02, 8, 8]} />
-          <meshStandardMaterial color="#ffffff" transparent opacity={0.7} />
+          <meshStandardMaterial color="#ffffff" transparent opacity={0.7} emissive="#ffffff" emissiveIntensity={0.3} />
         </mesh>
       ))}
     </group>
   )
 }
 
-// Composant Scène principale
+// Composant Scène principale - Positions corrigées
 function Scene({
   experimentState,
   onFaucetClick,
@@ -490,23 +851,36 @@ function Scene({
 
   return (
     <>
-      <ambientLight intensity={0.4} />
+      {/* Éclairage amélioré et plus lumineux */}
+      <ambientLight intensity={0.8} color="#ffffff" />
       <directionalLight
-        position={[5, 5, 5]}
-        intensity={1.2}
+        position={[8, 8, 6]}
+        intensity={2.5}
+        color="#ffffff"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
       />
-      <pointLight position={[-3, 3, 2]} intensity={0.6} color="#f0f8ff" />
-      <spotLight position={[0, 4, 3]} angle={Math.PI / 4} penumbra={0.3} intensity={1} castShadow />
+      <pointLight position={[0, 6, 0]} intensity={1.5} color="#ffffff" distance={15} decay={2} />
+      <pointLight position={[-4, 4, 3]} intensity={0.6} color="#f8f9fa" distance={12} decay={2} />
+      <pointLight position={[4, 4, 3]} intensity={0.6} color="#f8f9fa" distance={12} decay={2} />
+      <spotLight position={[0, 6, 4]} angle={Math.PI / 3} penumbra={0.3} intensity={1.5} castShadow color="#ffffff" />
 
-      <Environment preset="apartment" />
+      <color attach="background" args={["#4c51bf"]} />
+      <fog attach="fog" args={["#4c51bf", 12, 30]} />
 
-      <LabTable />
+      <Environment preset="city" />
+
+      <RedoxLabEnvironment />
+      <RedoxLabTable />
 
       <AlignedFaucet3D
-        position={[0, 1.5, 0]}
+        position={[0, -1, 0]} // Position corrigée - plus bas
         isOpen={experimentState.faucetOpen}
         onClick={onFaucetClick}
         reactantType={reactantType}
@@ -514,7 +888,7 @@ function Scene({
       />
 
       <ImprovedBeaker3D
-        position={[0, -0.8, 0]}
+        position={[0, -2.8, 0]} // Position corrigée - sur la table
         solutionLevel={experimentState.solutionLevel}
         solutionColor={experimentState.solutionColor}
       />
@@ -531,9 +905,14 @@ function Scene({
 
       <LiquidStream3D active={experimentState.isPouring} reactantColor={reactant.color} />
 
-      <ReactionBubbles3D active={experimentState.currentStep === "reacting"} position={[0, 0, 0]} />
+      <ReactionBubbles3D active={experimentState.currentStep === "reacting"} position={[0, -1.5, 0]} />
 
-      <ContactShadows position={[0, -2.1, 0]} opacity={0.3} scale={8} blur={1.5} far={4} />
+      <ContactShadows position={[0, -3.9, 0]} opacity={0.4} scale={10} blur={2} far={6} />
+
+      {/* Titre de l'expérience */}
+      <Text position={[0, 3.5, -6]} fontSize={0.3} color="#2c3e50" anchorX="center" anchorY="middle">
+        LABORATOIRE DE RÉACTIONS REDOX
+      </Text>
     </>
   )
 }
@@ -544,7 +923,7 @@ export default function RedoxReaction() {
   const [currentStep, setCurrentStep] = useState<ExperimentStep>("initial")
   const [solutionLevel, setSolutionLevel] = useState(0)
   const [solutionColor, setSolutionColor] = useState("#3b82f6")
-  const [ironPosition, setIronPosition] = useState<[number, number, number]>([2.5, 0, 0])
+  const [ironPosition, setIronPosition] = useState<[number, number, number]>([2.5, -1.5, 0]) // Position initiale corrigée
   const [copperDeposit, setCopperDeposit] = useState(0)
   const [reactionProgress, setReactionProgress] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
@@ -555,6 +934,7 @@ export default function RedoxReaction() {
   const [showResult, setShowResult] = useState(false)
   const [experiments, setExperiments] = useState<ExperimentData[]>([])
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
+  const [showEquation, setShowEquation] = useState(false)
 
   const controlsRef = useRef<any>(null)
 
@@ -612,7 +992,7 @@ export default function RedoxReaction() {
     setCurrentStep("initial")
     setSolutionLevel(0)
     setSolutionColor(selectedReactant.color)
-    setIronPosition([2.5, 0, 0])
+    setIronPosition([2.5, -1.5, 0]) // Position initiale corrigée
     setCopperDeposit(0)
     setReactionProgress(0)
     setElapsedTime(0)
@@ -666,9 +1046,9 @@ export default function RedoxReaction() {
     insertTimerRef.current = setInterval(() => {
       progress += 0.02
 
-      // Position interpolée vers le centre du bécher
-      const startPos: [number, number, number] = [2.5, 0, 0]
-      const endPos: [number, number, number] = [0, -0.5, 0]
+      // Position interpolée vers le centre du bécher - Position corrigée
+      const startPos: [number, number, number] = [2.5, -1.5, 0]
+      const endPos: [number, number, number] = [0, -2.3, 0] // Position finale dans le bécher
 
       const newPosition: [number, number, number] = [
         startPos[0] + (endPos[0] - startPos[0]) * progress,
@@ -786,11 +1166,6 @@ export default function RedoxReaction() {
     [handleReset],
   )
 
-  const resetCamera = useCallback(() => {
-    if (controlsRef.current) {
-      controlsRef.current.reset()
-    }
-  }, [])
 
   // État de l'expérience pour la scène
   const experimentState = useMemo(
@@ -852,12 +1227,12 @@ export default function RedoxReaction() {
   const phaseInfo = getPhaseInfo()
 
   return (
-    <div className="w-full h-full relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900">
-      {/* Configuration de l'Expérience - GAUCHE */}
-      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-xl w-80 border border-gray-200">
+    <div className="w-full h-full relative bg-gradient-to-br from-gray-100 via-white to-gray-50">
+      {/* Configuration de l'Expérience - GAUCHE - Largeur réduite */}
+      <div className="absolute top-4 left-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-xl w-64 border border-gray-200">
         <h2 className="text-gray-800 font-semibold mb-3 flex items-center gap-2">
           <Settings className="w-5 h-5 text-indigo-600" />
-          Configuration de l'Expérience
+          Configuration
         </h2>
 
         <div className="space-y-3">
@@ -865,7 +1240,7 @@ export default function RedoxReaction() {
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              Réactif en Solution
+              Réactif
             </h4>
             <div className="space-y-2">
               <select
@@ -879,10 +1254,10 @@ export default function RedoxReaction() {
                 <option value="ZnSO4">Sulfate de Zinc (ZnSO₄)</option>
               </select>
               <div className="text-xs text-gray-600 space-y-1">
-                <div>• Masse molaire: {selectedReactant.molarMass} g/mol</div>
+                <div>• M.M: {selectedReactant.molarMass} g/mol</div>
                 <div>• Densité: {selectedReactant.density} g/mL</div>
-                <div>• Concentration: {EXPERIMENT_CONFIG.INITIAL_CONCENTRATION} M</div>
-                <div>• Volume: {EXPERIMENT_CONFIG.SOLUTION_VOLUME} mL</div>
+                <div>• Conc.: {EXPERIMENT_CONFIG.INITIAL_CONCENTRATION} M</div>
+                <div>• Vol.: {EXPERIMENT_CONFIG.SOLUTION_VOLUME} mL</div>
               </div>
             </div>
           </div>
@@ -891,13 +1266,12 @@ export default function RedoxReaction() {
           <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
             <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-              Métal Réducteur
+              Métal
             </h4>
             <div className="text-xs text-gray-600 space-y-1">
               <div>• Fer métallique (Fe)</div>
-              <div>• Masse molaire: 55.8 g/mol</div>
-              <div>• Densité: 7.87 g/cm³</div>
-              <div>• Potentiel standard: -0.44 V</div>
+              <div>• M.M: 55.8 g/mol</div>
+              <div>• E°: -0.44 V</div>
             </div>
           </div>
 
@@ -912,22 +1286,22 @@ export default function RedoxReaction() {
               ) : (
                 <XCircle className="w-3 h-3 text-red-600" />
               )}
-              Prédiction Théorique
+              Prédiction
             </h4>
             <div className="text-xs text-gray-600">
               {selectedReactant.canReact
-                ? `Réaction possible (probabilité: ${(selectedReactant.reactionProbability * 100).toFixed(0)}%)`
-                : "Aucune réaction prévue selon la série électrochimique"}
+                ? `Réaction possible (${(selectedReactant.reactionProbability * 100).toFixed(0)}%)`
+                : "Aucune réaction prévue"}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Observations en Temps Réel - DROITE */}
-      <div className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-80 border border-gray-200 shadow-xl">
+      {/* Observations en Temps Réel - DROITE - Largeur réduite */}
+      <div className="absolute top-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-64 border border-gray-200 shadow-xl">
         <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
           <Eye className="mr-2 text-indigo-600" size={16} />
-          Observations en Temps Réel
+          Observations
         </h3>
 
         <div className="space-y-3">
@@ -958,7 +1332,7 @@ export default function RedoxReaction() {
             <div className="bg-red-50 p-2 rounded border">
               <div className="font-semibold text-gray-800 flex items-center gap-1">
                 <Thermometer size={10} />
-                Température
+                Temp.
               </div>
               <div className="text-lg font-mono text-gray-900">{calculatedData.temperature.toFixed(1)}°C</div>
             </div>
@@ -972,7 +1346,7 @@ export default function RedoxReaction() {
             <div className="bg-purple-50 p-2 rounded border">
               <div className="font-semibold text-gray-800 flex items-center gap-1">
                 <FlaskConical size={10} />
-                Volume
+                Vol.
               </div>
               <div className="text-sm font-mono text-gray-900">{(solutionLevel * 250).toFixed(0)} mL</div>
             </div>
@@ -988,7 +1362,7 @@ export default function RedoxReaction() {
           {/* Barre de progression */}
           <div className="space-y-1">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-medium text-gray-700">Progression de la réaction</span>
+              <span className="text-xs font-medium text-gray-700">Progression</span>
               <span className="text-xs font-mono text-gray-800">{progressPercent.toFixed(0)}%</span>
             </div>
             <div className="bg-gray-200 rounded-full h-2">
@@ -1018,7 +1392,7 @@ export default function RedoxReaction() {
           {reactionProgress > 0 && (
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-gray-50 p-2 rounded border">
-                <div className="font-semibold text-gray-700">Conversion</div>
+                <div className="font-semibold text-gray-700">Conv.</div>
                 <div className="font-mono text-gray-900">{(reactionProgress * 100).toFixed(1)}%</div>
               </div>
               <div className="bg-gray-50 p-2 rounded border">
@@ -1026,11 +1400,11 @@ export default function RedoxReaction() {
                 <div className="font-mono text-gray-900">{calculatedData.massDeposited.toFixed(3)}g</div>
               </div>
               <div className="bg-gray-50 p-2 rounded border">
-                <div className="font-semibold text-gray-700">Efficacité</div>
+                <div className="font-semibold text-gray-700">Effic.</div>
                 <div className="font-mono text-gray-900">{(calculatedData.efficiency * 100).toFixed(0)}%</div>
               </div>
               <div className="bg-gray-50 p-2 rounded border">
-                <div className="font-semibold text-gray-700">Concentration</div>
+                <div className="font-semibold text-gray-700">Conc.</div>
                 <div className="font-mono text-gray-900">{calculatedData.concentration.toFixed(3)}M</div>
               </div>
             </div>
@@ -1046,11 +1420,11 @@ export default function RedoxReaction() {
               Reset
             </button>
             <button
-              onClick={resetCamera}
-              className="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+              onClick={() => setShowEquation(!showEquation)}
+              className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
             >
-              <Camera className="w-4 h-4" />
-              Caméra
+              <BookOpen className="w-4 h-4" />
+              Équation
             </button>
           </div>
 
@@ -1066,23 +1440,68 @@ export default function RedoxReaction() {
         </div>
       </div>
 
-      {/* Équation Chimique - BAS GAUCHE */}
-      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl max-w-md">
-        <h4 className="text-gray-800 font-semibold mb-2 flex items-center">
-          <BookOpen className="mr-2 text-indigo-600" size={16} />
-          Équation Chimique
-        </h4>
-        <div className="bg-gray-50 p-3 rounded-md font-mono text-sm text-gray-800 border border-gray-200 mb-2">
-          {reactionType === "incomplete" ? selectedReactant.incompleteEquation : selectedReactant.equation}
-        </div>
-        <div className="text-xs text-gray-600">
-          <div className="font-medium mb-1">Type de réaction:</div>
-          <div>{selectedReactant.canReact ? "Réaction redox possible" : "Aucune réaction prévue"}</div>
-        </div>
-      </div>
+      {/* Équation Chimique - BAS GAUCHE - z-index élevé */}
+      {showEquation && (
+        <div className="absolute bottom-4 left-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl max-w-md">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+              <BookOpen className="mr-2 text-purple-600" size={20} />
+              Équation Chimique
+            </h3>
+            <button
+              onClick={() => setShowEquation(false)}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm transition-colors"
+            >
+              ×
+            </button>
+          </div>
 
-      {/* Instructions et Guide - BAS DROITE */}
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
+          <div className="space-y-3">
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div className="font-semibold text-gray-700 mb-2">Équation :</div>
+              <div className="bg-purple-100 p-2 rounded font-mono text-sm text-gray-800 border border-purple-200">
+                {reactionType === "incomplete" ? selectedReactant.incompleteEquation : selectedReactant.equation}
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="font-semibold text-gray-700 mb-2">Type :</div>
+              <div className="text-gray-600 text-sm">
+                {selectedReactant.canReact ? "Réaction redox possible" : "Aucune réaction prévue"}
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <div className="font-semibold text-gray-700 mb-2">Mécanisme :</div>
+              <div className="text-xs text-gray-600 space-y-1">
+                {selectedReactant.canReact ? (
+                  <>
+                    <div>• Oxydation: Fe(s) → Fe²⁺ + 2e⁻</div>
+                    <div>
+                      • Réduction:{" "}
+                      {reactantType === "CuSO4"
+                        ? "Cu²⁺ + 2e⁻ → Cu(s)"
+                        : reactantType === "AgNO3"
+                          ? "Ag⁺ + e⁻ → Ag(s)"
+                          : "Zn²⁺ + 2e⁻ → Zn(s)"}
+                    </div>
+                    <div>• Transfert d'électrons du fer vers les ions métalliques</div>
+                  </>
+                ) : (
+                  <>
+                    <div>• Le fer ne peut pas réduire les ions Zn²⁺</div>
+                    <div>• E°(Zn²⁺/Zn) = -0.76V &lt; E°(Fe²⁺/Fe) = -0.44V</div>
+                    <div>• Réaction thermodynamiquement défavorable</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instructions et Guide - BAS DROITE - z-index élevé */}
+      <div className="absolute bottom-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
         <div className="flex items-center mb-2">
           <Info className="mr-2 text-indigo-600" size={14} />
           <span className="font-medium text-gray-700 text-sm">Guide d'Utilisation</span>
@@ -1106,9 +1525,9 @@ export default function RedoxReaction() {
         </div>
       </div>
 
-      {/* Rapport d'Analyse Détaillé */}
+      {/* Rapport d'Analyse Détaillé - z-index très élevé */}
       {showResult && currentExperiment && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
           <div className="bg-white/98 backdrop-blur-sm rounded-2xl p-6 max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800 flex items-center">
@@ -1468,11 +1887,11 @@ export default function RedoxReaction() {
         </div>
       )}
 
-      {/* Canvas 3D avec contrôles de caméra */}
+      {/* Canvas 3D avec contrôles de caméra - Position de caméra corrigée */}
       <Canvas
         camera={{
-          position: [4, 4, 8],
-          fov: 50,
+          position: [0, -1, 6], // Position plus basse et plus proche
+          fov: 65,
           near: 0.1,
           far: 100,
         }}
@@ -1483,6 +1902,7 @@ export default function RedoxReaction() {
         }}
         style={{ background: "transparent" }}
         shadows
+        className="z-0"
       >
         <Scene
           experimentState={experimentState}
@@ -1495,16 +1915,16 @@ export default function RedoxReaction() {
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          minDistance={4}
-          maxDistance={15}
+          minDistance={3}
+          maxDistance={12}
           maxPolarAngle={Math.PI / 2.2}
-          minPolarAngle={Math.PI / 6}
+          minPolarAngle={Math.PI / 8}
           enableDamping={true}
           dampingFactor={0.05}
           rotateSpeed={0.5}
           zoomSpeed={0.8}
           panSpeed={0.8}
-          target={[0, 0, 0]}
+          target={[0, -1.1, 0]} // Cible ajustée vers le bas
         />
       </Canvas>
     </div>

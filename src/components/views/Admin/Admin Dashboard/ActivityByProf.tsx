@@ -26,7 +26,7 @@ type Profile = {
 };
 
 export default function ActivityByProf({ professeurs }: { professeurs: Profile[] }) {
-  const [filters, setFilters] = useState({ userId: 'tous', dateRange: '7j' });
+  const [filters, setFilters] = useState({ userId: 'tous', dateRange: 'tous' });
   const [activityByProf, setActivityByProf] = useState<ActivityLog[]>([]);
 
   useEffect(() => {

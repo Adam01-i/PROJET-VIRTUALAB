@@ -220,5 +220,41 @@ export const experienceData: Experience[] = [
     "Identification des composés insaturés à partir du changement de couleur",
     "Interprétation des résultats en lien avec la structure moléculaire"
   ]
+},
+{
+  id: "7",
+  classe_id: "",
+  titre: "Électrolyse de solutions ioniques",
+  description:
+    "Expérimentez le phénomène d’électrolyse en décomposant différentes solutions ioniques sous l’action d’un courant électrique. Observez les réactions aux électrodes, les dépôts ou dégagements gazeux, et comprenez le rôle des ions en solution.",
+  duree: "45 min",
+  niveau: "Première",
+  image: "https://images.unsplash.com/photo-1593642634367-d91a135587b5?auto=format&fit=crop&w=800&q=80",
+  simulationPath: "electrolyse-generale",
+  objectifs: [
+    "Comprendre le principe de l’électrolyse et le rôle des électrodes",
+    "Décomposer une solution ionique en ses constituants par courant continu",
+    "Établir les demi-équations d’oxydation et de réduction",
+    "Identifier les produits formés selon la nature des ions",
+    "Illustrer des cas concrets comme l’électrolyse de CuSO₄, NaCl ou H₂SO₄"
+  ],
+  materiel: [
+    "Solutions ioniques : CuSO₄, NaCl, H₂SO₄ (0,1 M)",
+    "Électrodes : cuivre, graphite ou platine",
+    "Cuve électrolytique ou béchers de 250 mL",
+    "Source de courant continu avec réglage de tension",
+    "Fils électriques avec pinces crocodile",
+    "Ampèremètre (optionnel) et voltmètre",
+    "Gants, lunettes, et blouse de protection"
+  ],
+  resultatsAttendus: [
+    "CuSO₄ : Dépôt de cuivre à la cathode, dissolution de l’anode en cuivre",
+    "NaCl : Dégagement de gaz (H₂) à la cathode, Cl₂ à l’anode (odeur piquante)",
+    "H₂SO₄ : Production de dihydrogène à la cathode et de dioxygène à l’anode",
+    "Couleurs et gaz visibles selon la solution utilisée",
+    "Demi-équations redox identifiées selon les espèces ioniques",
+    "Compréhension du sens des réactions et du rôle de l’énergie électrique"
+  ]
 }
+
 ];

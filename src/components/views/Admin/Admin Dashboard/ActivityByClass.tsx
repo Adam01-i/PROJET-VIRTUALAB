@@ -18,7 +18,7 @@ type ActivityLog = { classe: string; simulation: number; quiz: number; objet3d: 
 type Props = { classes: Classe[] };
 
 export default function ActivityByClass({ classes }: Props) {
-  const [dateRange, setDateRange] = useState<'7j' | '30j' | 'tout'>('7j');
+  const [dateRange, setDateRange] = useState<'7j' | '30j' | 'tout'>('tout');
   const [selectedClasseId, setSelectedClasseId] = useState<'toutes' | string>('toutes');
   const [activityByClasse, setActivityByClasse] = useState<ActivityLog[]>([]);
 
