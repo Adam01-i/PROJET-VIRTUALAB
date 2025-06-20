@@ -129,6 +129,22 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
       .filter((v): v is string => v !== null && v !== undefined)
   )];
 
+  const handleDelete = async(eleveId : string) => {
+    const confirmation = confirm("Êtes-vous sûr de vouloir supprimer cet élève ? Cette action est irréversible.");
+    if(!confirmation) return;
+
+    // Supprimer le profil en meme temps l'assignation de l'élève
+    const {error} = await supabase.rpc('delete_eleve_with_assignation', {p_eleve_id: eleveId });
+    
+    if(error){
+      console.error('RPC error:', error);
+      toast.error(`❌ Erreur lors de la suppression de l\'élève : ${error.message}`);
+    } else {
+      toast.success('✅ Élève supprimé avec succès');
+      await fetchAll(); //Raffraîchir la liste après suppression
+    }
+  };
+
   return (
     <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-10'}>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
@@ -194,7 +210,15 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
               <p className="text-xs text-gray-400">📘 {getClasseNom(eleve.id)}</p>
             </div>
           </div>
-          <EleveDialog eleve={eleve} />
+          <div className="flex gap-2">
+            <EleveDialog eleve={eleve} />
+            <button
+            onClick={() => handleDelete(eleve.id)}
+            className='bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm'
+            >
+              Supprimer
+            </button>
+          </div>
         </div>
       ))}
 

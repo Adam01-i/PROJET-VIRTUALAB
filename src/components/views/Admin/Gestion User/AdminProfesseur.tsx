@@ -18,6 +18,8 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
+  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
+
 
   React.useEffect(() => {
     fetchAll();
@@ -84,43 +86,51 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
     reader.readAsBinaryString(file);
   };
 
-  const handleImport = async () => {
-    if (parsedData.length === 0) {
-      toast.error("⚠️ Aucun professeur à importer.");
-      return;
+const handleImport = async () => {
+  if (parsedData.length === 0) {
+    toast.error("⚠️ Aucun professeur à importer.");
+    return;
+  }
+
+  setLoading(true);
+  let count = 0;
+
+  for (const row of parsedData) {
+    const name = (row.name || "").trim();
+    const surname = (row.surname || "").trim();
+    const email = (row.email || "").trim();
+    const role = (row.role || "professeur").trim();
+    const avatar_url = "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars//1747523215141.png";
+
+    if (!name || !surname || !email) {
+      toast.error(`⛔ Données manquantes pour : ${email || "ligne inconnue"}`);
+      continue;
     }
 
-    setLoading(true);
-    let count = 0;
+    try {
+      const res = await fetch("/api/import-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, surname, email, avatar_url, role }),
+      });
 
-    for (const row of parsedData) {
-      const { name, surname, email } = row;
-      const role = row.role || "professeur";
-      const avatar_url = "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars//1747523215141.png";
-
-      try {
-        const res = await fetch("/api/import-users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, surname, email, avatar_url, role }),
-        });
-
-        const result = await res.json();
-        if (!res.ok) {
-          toast.error(`❌ ${email} : ${result.error}`);
-        } else {
-          count++;
-          toast.success(`✅ ${email} ajouté`);
-        }
-      } catch (err) {
-        toast.error(`❌ Erreur réseau pour ${email}`);
+      const result = await res.json();
+      if (!res.ok) {
+        toast.error(`❌ ${email} : ${result.error}`);
+      } else {
+        count++;
+        toast.success(`✅ ${email} ajouté`);
       }
+    } catch (err) {
+      toast.error(`❌ Erreur réseau pour ${email}`);
     }
+  }
 
-    await fetchProfesseurs();
-    setLoading(false);
-    if (count > 0) toast.success(`${count} professeur(s) importé(s) avec succès`);
-  };
+  await fetchProfesseurs();
+  setLoading(false);
+  if (count > 0) toast.success(`${count} professeur(s) importé(s) avec succès`);
+};
+
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(professeurs);
@@ -134,24 +144,27 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
   );
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const handleDelete = async (professeur_id: string) => {
+    const confirmation = confirm("Êtes-vous sûr de vouloir supprimer ce professeur ?");
+    if (!confirmation) return;
+
+    const { error } = await supabase.rpc('delete_professeur_with_assignation', { p_professeur_id: professeur_id });
+    if (error) {
+      console.error('Erreur lors de la suppression du professeur:', error);
+      toast.error(`Erreur lors de la suppression du professeur: ${error.message || error.details || "Erreur inconnue"}`);
+    } else {
+      toast.success("Professeur supprimé avec succès");
+      await fetchProfesseurs();
+      await fetchAssignations();
+    }
+  }
+
   return (
     <div className={embedded ? "" : "min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-10"}>
       <div className="flex flex-col lg:flex-row justify-between gap-4 items-start lg:items-center mb-6">
         <h1 className="text-3xl font-bold text-indigo-700">Gestion des Professeurs</h1>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileUpload}
-            className="text-sm text-gray-700"
-          />
-          <button
-            onClick={handleImport}
-            disabled={loading || parsedData.length === 0}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm"
-          >
-            {loading ? "Import..." : "Importer"}
-          </button>
+
           <button
             onClick={handleExport}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
@@ -169,10 +182,58 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
           setSearch(e.target.value);
           setPage(1);
         }}
-        className="w-full md:w-1/2 border px-4 py-2 rounded text-sm mb-4"
+        className="w-full md:w-1/3 border px-4 py-2 rounded text-sm mb-4"
       />
 
+      <button
+        onClick={() => setAddDialogOpen(true)}
+        className="ml-4 mr-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 mb-4 text-sm"
+      >
+        Ajouter un Professeur
+      </button>
+
+
+      ou
+
+      <input
+        type="file"
+        accept=".xlsx,.xls"
+        onChange={handleFileUpload}
+        className="m-4 text-sm text-gray-700"
+      />
+      <button
+        onClick={handleImport}
+        disabled={loading || parsedData.length === 0}
+        className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm"
+      >
+        {loading ? "Import..." : "Importer un fichier Excel"}
+      </button>
+
       <div className="space-y-6">
+        {addDialogOpen && (
+          <ProfesseurDialog
+            prof={null}
+            allClasses={classes}
+            onAdd={(newProf) => {
+              setProfesseurs((prev) => [...prev, newProf]); // ➕ ajout instantané
+              setAddDialogOpen(false);                      // 🔒 fermeture du dialog
+            }}
+            onClose={() => setAddDialogOpen(false)}
+          />
+        )}{addDialogOpen && (
+          <ProfesseurDialog
+            prof={null}
+            allClasses={classes}
+            openExternally={addDialogOpen}
+            setOpenExternally={setAddDialogOpen}
+            onAdd={(newProf) => {
+              setProfesseurs((prev) => [...prev, newProf]);
+            }}
+          />
+        )}
+
+
+
         {paginated.map((prof) => {
           const classesProf = assignations
             .filter((a) => a.professeur_id === prof.id)
@@ -194,11 +255,20 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
                     <p className="text-sm text-gray-600">{prof.email}</p>
                   </div>
 
-                  <ProfesseurDialog
-                    prof={prof}
-                    allClasses={classes}
-                    refresh={fetchAssignations}
-                  />
+                  <div className="flex gap-2">
+                    <ProfesseurDialog
+                      prof={prof}
+                      allClasses={classes}
+                      refresh={fetchAssignations}
+                      onClose={() => setAddDialogOpen(false)}
+                    />
+                    <button
+                      onClick={() => handleDelete(prof.id)}
+                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
                 </div>
 
                 {classesProf.length > 0 && (
