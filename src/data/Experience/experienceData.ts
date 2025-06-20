@@ -191,34 +191,34 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-    id: "6",
-    classe_id: "",
-    titre: "Calorimétrie : capacité thermique massique de l'eau",
-    description: "Déterminez la capacité thermique massique de l'eau en mesurant l'énergie nécessaire pour élever sa température. Cette expérience met en pratique les principes fondamentaux de la thermochimie.",
-    duree: "40 min",
-    niveau: "Première",
-    image: "https://images.unsplash.com/photo-1581092918360-5d28c1ea1b72?auto=format&fit=crop&w=800&q=80",
-    simulationPath: "ChaleurEau",
-    objectifs: [
-      "Comprendre la notion de capacité thermique massique",
-      "Utiliser un calorimètre pour mesurer un transfert d'énergie thermique",
-      "Calculer l'énergie absorbée par l'eau à l'aide de la formule Q = mcΔT",
-      "Comparer la valeur expérimentale avec la valeur théorique (4,18 J/g·°C)"
-    ],
-    materiel: [
-      "Calorimètre simple avec couvercle",
-      "Thermomètre numérique ou sonde de température",
-      "Chauffe-eau ou plaque chauffante contrôlée",
-      "Eau distillée (100 mL)",
-      "Balance électronique de précision",
-      "Chronomètre",
-      "Agitateur manuel ou magnétique"
-    ],
-    resultatsAttendus: [
-      "Augmentation progressive de température de l'eau",
-      "Calcul de Q en joules à partir des mesures prises",
-      "Obtention d'une valeur proche de 4,18 J/g·°C",
-      "Analyse des sources d'erreurs : pertes thermiques, mesure de masse, précision de température"
-    ]
-  }  
+  id: "6",
+  classe_id: "",
+  titre: "Chaînes carbonées insaturées : test à l’eau de brome",
+  description: "Identifiez la présence de doubles liaisons dans les chaînes carbonées grâce à la décoloration de l’eau de brome. Cette expérience illustre la réactivité des alcènes et autres composés insaturés.",
+  duree: "30 min",
+  niveau: "Première",
+  image: "https://images.unsplash.com/photo-1581092918360-5d28c1ea1b72?auto=format&fit=crop&w=800&q=80",
+  simulationPath: "chaines-insaturees-3d",
+  objectifs: [
+    "Identifier les chaînes carbonées insaturées (alcènes, alcynes)",
+    "Observer la réactivité chimique des doubles liaisons",
+    "Mettre en évidence une insaturation par la décoloration de l’eau de brome",
+    "Comprendre les mécanismes d’addition électrophile"
+  ],
+  materiel: [
+    "Tube à essai",
+    "Eau de brome (solution orangée)",
+    "Composés organiques : cyclohexène (insaturé), cyclohexane (saturé)",
+    "Pipettes ou compte-gouttes",
+    "Agitateur en verre",
+    "Support pour tube à essai",
+    "Gants et lunettes de protection"
+  ],
+  resultatsAttendus: [
+    "Décoloration de l’eau de brome en présence d’un composé insaturé",
+    "Absence de décoloration avec les alcanes (composés saturés)",
+    "Identification des composés insaturés à partir du changement de couleur",
+    "Interprétation des résultats en lien avec la structure moléculaire"
+  ]
+}
 ];
