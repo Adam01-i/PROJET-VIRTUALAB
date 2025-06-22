@@ -345,10 +345,12 @@ class ChemistryCalculator {
 // COMPOSANTS 3D OPTIMISÉS
 // ===================================
 
-const LabTable = () => (
+// Remplacer le composant LabTable par ce nouvel environnement détaillé
+const LabEnvironment = () => (
   <group>
+    {/* Table principale */}
     <Box args={[8, 0.2, 4]} position={[0, -1, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color="#4f46e5" roughness={0.3} metalness={0.1} />
+      <meshStandardMaterial color="#4f46ee" roughness={0.3} metalness={0.1} />
     </Box>
     {[
       [-3.5, -2, -1.5],
@@ -360,6 +362,123 @@ const LabTable = () => (
         <meshStandardMaterial color="#374151" roughness={0.4} metalness={0.7} />
       </Cylinder>
     ))}
+
+    {/* Murs du laboratoire */}
+    <Box args={[20, 8, 0.2]} position={[0, 2, -8]} receiveShadow>
+      <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+    </Box>
+    <Box args={[0.2, 8, 16]} position={[-10, 2, 0]} receiveShadow>
+      <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+    </Box>
+    <Box args={[0.2, 8, 16]} position={[10, 2, 0]} receiveShadow>
+      <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+    </Box>
+
+    {/* Sol du laboratoire */}
+    <Box args={[20, 0.1, 16]} position={[0, -2.1, 0]} receiveShadow>
+      <meshStandardMaterial color="#e5e7eb" roughness={0.9} />
+    </Box>
+
+    {/* Étagères murales */}
+    {[-6, -2, 2, 6].map((x, i) => (
+      <group key={i} position={[x, 0, -7.8]}>
+        <Box args={[1.5, 0.05, 0.3]} position={[0, 2, 0]} castShadow>
+          <meshStandardMaterial color="#6b7280" roughness={0.4} metalness={0.2} />
+        </Box>
+        <Box args={[1.5, 0.05, 0.3]} position={[0, 3, 0]} castShadow>
+          <meshStandardMaterial color="#6b7280" roughness={0.4} metalness={0.2} />
+        </Box>
+        <Box args={[1.5, 0.05, 0.3]} position={[0, 4, 0]} castShadow>
+          <meshStandardMaterial color="#6b7280" roughness={0.4} metalness={0.2} />
+        </Box>
+      </group>
+    ))}
+
+    {/* Flacons et équipements sur les étagères */}
+    {[-6, -2, 2, 6].map((x, i) => (
+      <group key={`bottles-${i}`} position={[x, 0, -7.6]}>
+        <Cylinder args={[0.08, 0.08, 0.3]} position={[-0.4, 2.15, 0]} castShadow>
+          <meshStandardMaterial color="#dc2626" transparent opacity={0.8} />
+        </Cylinder>
+        <Cylinder args={[0.08, 0.08, 0.25]} position={[0, 2.125, 0]} castShadow>
+          <meshStandardMaterial color="#2563eb" transparent opacity={0.8} />
+        </Cylinder>
+        <Cylinder args={[0.08, 0.08, 0.35]} position={[0.4, 2.175, 0]} castShadow>
+          <meshStandardMaterial color="#16a34a" transparent opacity={0.8} />
+        </Cylinder>
+
+        <Box args={[0.2, 0.15, 0.15]} position={[-0.3, 3.075, 0]} castShadow>
+          <meshStandardMaterial color="#374151" roughness={0.3} metalness={0.8} />
+        </Box>
+        <Cylinder args={[0.06, 0.06, 0.2]} position={[0.3, 3.1, 0]} castShadow>
+          <meshStandardMaterial color="#6b7280" roughness={0.2} metalness={0.9} />
+        </Cylinder>
+      </group>
+    ))}
+
+    {/* Armoires de laboratoire */}
+    <Box args={[2, 4, 1]} position={[-8, 0, -7]} castShadow>
+      <meshStandardMaterial color="#374151" roughness={0.6} />
+    </Box>
+    <Box args={[2, 4, 1]} position={[8, 0, -7]} castShadow>
+      <meshStandardMaterial color="#374151" roughness={0.6} />
+    </Box>
+
+    {/* Poignées des armoires */}
+    <Cylinder args={[0.02, 0.02, 0.1]} position={[-7.3, 0.5, -6.45]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <meshStandardMaterial color="#9ca3af" roughness={0.2} metalness={0.9} />
+    </Cylinder>
+    <Cylinder args={[0.02, 0.02, 0.1]} position={[7.3, 0.5, -6.45]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <meshStandardMaterial color="#9ca3af" roughness={0.2} metalness={0.9} />
+    </Cylinder>
+
+    {/* Évier de laboratoire */}
+    <Box args={[1.5, 0.8, 0.8]} position={[-8, -1.2, 2]} castShadow>
+      <meshStandardMaterial color="#e5e7eb" roughness={0.3} />
+    </Box>
+    <Box args={[1.2, 0.2, 0.6]} position={[-8, -0.7, 2]} castShadow>
+      <meshStandardMaterial color="#f8fafc" roughness={0.1} />
+    </Box>
+
+    {/* Robinet */}
+    <Cylinder args={[0.03, 0.03, 0.2]} position={[-8, -0.5, 1.5]} castShadow>
+      <meshStandardMaterial color="#6b7280" roughness={0.2} metalness={0.9} />
+    </Cylinder>
+
+    {/* Hotte aspirante */}
+    <Box args={[3, 2, 1.5]} position={[8, 1, 2]} castShadow>
+      <meshStandardMaterial color="#f3f4f6" roughness={0.4} />
+    </Box>
+    <Box args={[2.8, 0.1, 1.3]} position={[8, 0.1, 2]} castShadow>
+      <meshStandardMaterial color="#374151" roughness={0.3} />
+    </Box>
+
+    {/* Fenêtres */}
+    <Box args={[2, 2, 0.05]} position={[-5, 3, -7.95]} castShadow>
+      <meshStandardMaterial color="#dbeafe" transparent opacity={0.7} />
+    </Box>
+    <Box args={[2, 2, 0.05]} position={[5, 3, -7.95]} castShadow>
+      <meshStandardMaterial color="#dbeafe" transparent opacity={0.7} />
+    </Box>
+
+    {/* Cadres de fenêtres */}
+    <Box args={[2.2, 2.2, 0.1]} position={[-5, 3, -7.9]} castShadow>
+      <meshStandardMaterial color="#374151" roughness={0.4} />
+    </Box>
+    <Box args={[2.2, 2.2, 0.1]} position={[5, 3, -7.9]} castShadow>
+      <meshStandardMaterial color="#374151" roughness={0.4} />
+    </Box>
+
+    {/* Éclairage de laboratoire */}
+    <Box args={[1, 0.1, 0.3]} position={[0, 5.5, 0]} castShadow>
+      <meshStandardMaterial color="#f8fafc" emissive="#ffffff" emissiveIntensity={0.2} />
+    </Box>
+    <Box args={[1, 0.1, 0.3]} position={[-4, 5.5, -2]} castShadow>
+      <meshStandardMaterial color="#f8fafc" emissive="#ffffff" emissiveIntensity={0.2} />
+    </Box>
+    <Box args={[1, 0.1, 0.3]} position={[4, 5.5, -2]} castShadow>
+      <meshStandardMaterial color="#f8fafc" emissive="#ffffff" emissiveIntensity={0.2} />
+    </Box>
   </group>
 )
 
@@ -747,24 +866,33 @@ const BunsenBurner = ({
 
 const LabLighting = () => (
   <>
-    <ambientLight intensity={0.4} color="#e0e7ff" />
+    <ambientLight intensity={0.6} color="#f8fafc" />
     <directionalLight
       position={[10, 10, 5]}
-      intensity={1.0}
+      intensity={1.2}
       color="#ffffff"
       castShadow
       shadow-mapSize-width={2048}
       shadow-mapSize-height={2048}
       shadow-camera-far={50}
-      shadow-camera-left={-10}
-      shadow-camera-right={10}
-      shadow-camera-top={10}
-      shadow-camera-bottom={-10}
+      shadow-camera-left={-15}
+      shadow-camera-right={15}
+      shadow-camera-top={15}
+      shadow-camera-bottom={-15}
     />
-    <directionalLight position={[-5, 5, -5]} intensity={0.3} color="#c7d2fe" />
-    <pointLight position={[0, 3, 0]} intensity={0.4} color="#ffffff" distance={8} decay={2} />
-    <pointLight position={[-3, 2, 2]} intensity={0.2} color="#a5b4fc" distance={6} decay={2} />
-    <pointLight position={[3, 2, 2]} intensity={0.2} color="#a5b4fc" distance={6} decay={2} />
+    <directionalLight position={[-5, 8, -5]} intensity={0.4} color="#e0e7ff" />
+    <pointLight position={[0, 5.5, 0]} intensity={0.8} color="#ffffff" distance={12} decay={2} />
+    <pointLight position={[-4, 5.5, -2]} intensity={0.6} color="#f8fafc" distance={10} decay={2} />
+    <pointLight position={[4, 5.5, -2]} intensity={0.6} color="#f8fafc" distance={10} decay={2} />
+    <spotLight
+      position={[0, 6, 2]}
+      angle={Math.PI / 6}
+      penumbra={0.3}
+      intensity={0.5}
+      color="#ffffff"
+      target-position={[0, -1, 0]}
+      castShadow
+    />
   </>
 )
 
@@ -817,9 +945,9 @@ const LabScene = ({
 
   return (
     <>
-      <color attach="background" args={["#312e81"]} />
+      <color attach="background" args={["#f1f5f9"]} />
       <LabLighting />
-      <LabTable />
+      <LabEnvironment />
       <Beaker
         position={[-1, -0.15, 0]}
         color={selectedAlcohol.colorHex}
@@ -850,8 +978,8 @@ const LabScene = ({
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
-        minDistance={4}
-        maxDistance={15}
+        minDistance={3}
+        maxDistance={12}
         maxPolarAngle={Math.PI / 2.2}
         minPolarAngle={Math.PI / 6}
         enableDamping={true}
@@ -859,7 +987,9 @@ const LabScene = ({
         rotateSpeed={0.5}
         zoomSpeed={0.8}
         panSpeed={0.8}
-        target={[0, 0, 0]}
+        target={[0, -1, 0]}
+        maxAzimuthAngle={Math.PI / 2}
+        minAzimuthAngle={-Math.PI / 2}
       />
     </>
   )
@@ -885,6 +1015,7 @@ const useLabSimulation = () => {
   const [experiments, setExperiments] = useState<ExperimentData[]>([])
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
   const [autoHeatingComplete, setAutoHeatingComplete] = useState(false)
+  const [sectionsHidden, setSectionsHidden] = useState(false)
 
   // Reset automatique optimisé
   useEffect(() => {
@@ -1048,6 +1179,10 @@ const useLabSimulation = () => {
     URL.revokeObjectURL(url)
   }, [currentExperiment, getDetailedResult, getChemicalEquation])
 
+  const toggleSections = useCallback(() => {
+    setSectionsHidden((prev) => !prev)
+  }, [])
+
   return {
     selectedAlcohol,
     selectedOxidant,
@@ -1078,6 +1213,8 @@ const useLabSimulation = () => {
     getDetailedResult,
     exportResults,
     setShowResult,
+    sectionsHidden,
+    toggleSections,
   }
 }
 
@@ -1104,6 +1241,8 @@ const UIControls = ({
   setShowResult,
   reactionComplete,
   autoHeatingComplete,
+  toggleSections,
+  sectionsHidden,
 }: any) => (
   <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl">
     <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
@@ -1216,6 +1355,13 @@ const UIControls = ({
           Analyser résultats
         </button>
       )}
+      <button
+        onClick={toggleSections}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gray-600 hover:bg-gray-700 text-white transition-colors"
+      >
+        <Eye size={16} />
+        {sectionsHidden ? "Afficher sections" : "Masquer sections"}
+      </button>
     </div>
 
     {/* INFORMATIONS DÉTAILLÉES ET COMPACTES */}
@@ -1609,6 +1755,8 @@ export default function ComposesOxygenes3D() {
     getDetailedResult,
     setShowResult,
     autoHeatingComplete,
+    sectionsHidden,
+    toggleSections,
   } = useLabSimulation()
 
   return (
@@ -1636,36 +1784,42 @@ export default function ComposesOxygenes3D() {
         </Suspense>
       </Canvas>
 
-      <UIControls
-        selectedAlcohol={selectedAlcohol}
-        selectedOxidant={selectedOxidant}
-        alcoholMenu={alcoholMenu}
-        oxidantMenu={oxidantMenu}
-        alcoholAdded={alcoholAdded}
-        oxidantAdded={oxidantAdded}
-        heating={heating}
-        setSelectedAlcohol={setSelectedAlcohol}
-        setSelectedOxidant={setSelectedOxidant}
-        setAlcoholMenu={setAlcoholMenu}
-        setOxidantMenu={setOxidantMenu}
-        toggleHeating={toggleHeating}
-        handleReset={handleReset}
-        setShowFormula={setShowFormula}
-        showFormula={showFormula}
-        setShowResult={setShowResult}
-        reactionComplete={reactionComplete}
-        autoHeatingComplete={autoHeatingComplete}
-      />
+      {!sectionsHidden && (
+        <>
+          <UIControls
+            selectedAlcohol={selectedAlcohol}
+            selectedOxidant={selectedOxidant}
+            alcoholMenu={alcoholMenu}
+            oxidantMenu={oxidantMenu}
+            alcoholAdded={alcoholAdded}
+            oxidantAdded={oxidantAdded}
+            heating={heating}
+            setSelectedAlcohol={setSelectedAlcohol}
+            setSelectedOxidant={setSelectedOxidant}
+            setAlcoholMenu={setAlcoholMenu}
+            setOxidantMenu={setOxidantMenu}
+            toggleHeating={toggleHeating}
+            handleReset={handleReset}
+            setShowFormula={setShowFormula}
+            showFormula={showFormula}
+            setShowResult={setShowResult}
+            reactionComplete={reactionComplete}
+            autoHeatingComplete={autoHeatingComplete}
+            toggleSections={toggleSections}
+            sectionsHidden={sectionsHidden}
+          />
 
-      <UIResults
-        showResult={showResult}
-        alcoholAdded={alcoholAdded}
-        oxidantAdded={oxidantAdded}
-        heating={heating}
-        reactionComplete={reactionComplete}
-        getStatusMessage={getStatusMessage}
-        getDetailedResult={getDetailedResult}
-      />
+          <UIResults
+            showResult={showResult}
+            alcoholAdded={alcoholAdded}
+            oxidantAdded={oxidantAdded}
+            heating={heating}
+            reactionComplete={reactionComplete}
+            getStatusMessage={getStatusMessage}
+            getDetailedResult={getDetailedResult}
+          />
+        </>
+      )}
 
       <ResultsModal
         showResult={showResult}
@@ -1708,6 +1862,15 @@ export default function ComposesOxygenes3D() {
           </p>
         </div>
       </div>
+      {sectionsHidden && (
+        <button
+          onClick={toggleSections}
+          className="absolute top-4 left-4 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-colors z-50"
+          title="Afficher les sections"
+        >
+          <Eye size={20} />
+        </button>
+      )}
     </div>
   )
 }
