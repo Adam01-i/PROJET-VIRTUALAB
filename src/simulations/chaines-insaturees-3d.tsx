@@ -663,7 +663,6 @@ const Beaker = ({
 }
 
 const TestTube = ({
-  position,
   solutionColor,
   fillLevel = 0,
   showBubbles = false,
@@ -1542,7 +1541,7 @@ export default function ChainesInsaturees3D() {
   } = useUnsaturatedLabSimulation()
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 relative overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 relative overflow-hidden">
       <Canvas
         camera={{ position: [4, 4, 8], fov: 50, near: 0.1, far: 100 }}
         shadows={{ enabled: true }}

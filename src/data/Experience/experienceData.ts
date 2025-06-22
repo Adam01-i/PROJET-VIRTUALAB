@@ -9,7 +9,7 @@ export const experienceData: Experience[] = [
       "Explorez les réactions redox en observant l'interaction entre le fer métallique et différents sels métalliques en solution. Découvrez la série électrochimique à travers des expériences interactives.",
     duree: "35 min",
     niveau: "Première",
-    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80", // ✅ Parfait
     simulationPath: "RedoxReaction",
     objectifs: [
       "Comprendre le principe des réactions d'oxydo-réduction",
@@ -46,35 +46,40 @@ export const experienceData: Experience[] = [
     ]
   },
   {
-    id: '2',
-    classe_id: '',
-    titre: 'Équilibre chimique et Le Chatelier',
-    description: 'Comprendre les réactions réversibles et le principe de Le Chatelier à travers une expérience visuelle.',
-    duree: '60 min',
-    niveau: 'Première',
-    image: 'https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?auto=format&fit=crop&w=800&q=80',
-    simulationPath: '',
-    objectifs: [
-      'Définir un équilibre chimique',
-      'Comprendre le principe de Le Chatelier',
-      'Étudier l\'influence de la concentration sur l\'équilibre',
-      'Observer les changements de couleur liés au déplacement d\'équilibre'
-    ],
-    materiel: [
-      'Solution de chlorure de fer (III) - 25mL',
-      'Solution de thiocyanate de potassium - 25mL',
-      'Eau distillée',
-      '3 tubes à essai',
-      'Support pour tubes à essai',
-      'Pipettes graduées'
-    ],
-    resultatsAttendus: [
-      'Formation du complexe rouge sang [Fe(SCN)]2+',
-      'Variation de l\'intensité de la couleur selon les concentrations',
-      'Déplacement de l\'équilibre visible par changement de couleur',
-      'Vérification expérimentale du principe de Le Chatelier'
-    ]
-  },
+  id: "2",
+  classe_id: "",
+  titre: "Électrolyse de solutions ioniques",
+  description:
+    "Expérimentez le phénomène d’électrolyse en décomposant différentes solutions ioniques sous l’action d’un courant électrique. Observez les réactions aux électrodes, les dépôts ou dégagements gazeux, et comprenez le rôle des ions en solution.",
+  duree: "45 min",
+  niveau: "Première",
+    image: "https://images.unsplash.com/photo-1581091012184-d77b3c5dc2b3?auto=format&fit=crop&w=800&q=80", // ✅ Remplacée
+  simulationPath: "electrolyse-generale",
+  objectifs: [
+    "Comprendre le principe de l’électrolyse et le rôle des électrodes",
+    "Décomposer une solution ionique en ses constituants par courant continu",
+    "Établir les demi-équations d’oxydation et de réduction",
+    "Identifier les produits formés selon la nature des ions",
+    "Illustrer des cas concrets comme l’électrolyse de CuSO₄, NaCl ou H₂SO₄"
+  ],
+  materiel: [
+    "Solutions ioniques : CuSO₄, NaCl, H₂SO₄ (0,1 M)",
+    "Électrodes : cuivre, graphite ou platine",
+    "Cuve électrolytique ou béchers de 250 mL",
+    "Source de courant continu avec réglage de tension",
+    "Fils électriques avec pinces crocodile",
+    "Ampèremètre (optionnel) et voltmètre",
+    "Gants, lunettes, et blouse de protection"
+  ],
+  resultatsAttendus: [
+    "CuSO₄ : Dépôt de cuivre à la cathode, dissolution de l’anode en cuivre",
+    "NaCl : Dégagement de gaz (H₂) à la cathode, Cl₂ à l’anode (odeur piquante)",
+    "H₂SO₄ : Production de dihydrogène à la cathode et de dioxygène à l’anode",
+    "Couleurs et gaz visibles selon la solution utilisée",
+    "Demi-équations redox identifiées selon les espèces ioniques",
+    "Compréhension du sens des réactions et du rôle de l’énergie électrique"
+  ]
+},
   {
     id: "3",
     classe_id: "",
@@ -197,7 +202,7 @@ export const experienceData: Experience[] = [
   description: "Identifiez la présence de doubles liaisons dans les chaînes carbonées grâce à la décoloration de l’eau de brome. Cette expérience illustre la réactivité des alcènes et autres composés insaturés.",
   duree: "30 min",
   niveau: "Première",
-  image: "https://images.unsplash.com/photo-1581092918360-5d28c1ea1b72?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1608500211311-217d83f9c4b8?auto=format&fit=crop&w=800&q=80", // ✅ Remplacée
   simulationPath: "chaines-insaturees-3d",
   objectifs: [
     "Identifier les chaînes carbonées insaturées (alcènes, alcynes)",
@@ -220,41 +225,5 @@ export const experienceData: Experience[] = [
     "Identification des composés insaturés à partir du changement de couleur",
     "Interprétation des résultats en lien avec la structure moléculaire"
   ]
-},
-{
-  id: "7",
-  classe_id: "",
-  titre: "Électrolyse de solutions ioniques",
-  description:
-    "Expérimentez le phénomène d’électrolyse en décomposant différentes solutions ioniques sous l’action d’un courant électrique. Observez les réactions aux électrodes, les dépôts ou dégagements gazeux, et comprenez le rôle des ions en solution.",
-  duree: "45 min",
-  niveau: "Première",
-  image: "https://images.unsplash.com/photo-1593642634367-d91a135587b5?auto=format&fit=crop&w=800&q=80",
-  simulationPath: "electrolyse-generale",
-  objectifs: [
-    "Comprendre le principe de l’électrolyse et le rôle des électrodes",
-    "Décomposer une solution ionique en ses constituants par courant continu",
-    "Établir les demi-équations d’oxydation et de réduction",
-    "Identifier les produits formés selon la nature des ions",
-    "Illustrer des cas concrets comme l’électrolyse de CuSO₄, NaCl ou H₂SO₄"
-  ],
-  materiel: [
-    "Solutions ioniques : CuSO₄, NaCl, H₂SO₄ (0,1 M)",
-    "Électrodes : cuivre, graphite ou platine",
-    "Cuve électrolytique ou béchers de 250 mL",
-    "Source de courant continu avec réglage de tension",
-    "Fils électriques avec pinces crocodile",
-    "Ampèremètre (optionnel) et voltmètre",
-    "Gants, lunettes, et blouse de protection"
-  ],
-  resultatsAttendus: [
-    "CuSO₄ : Dépôt de cuivre à la cathode, dissolution de l’anode en cuivre",
-    "NaCl : Dégagement de gaz (H₂) à la cathode, Cl₂ à l’anode (odeur piquante)",
-    "H₂SO₄ : Production de dihydrogène à la cathode et de dioxygène à l’anode",
-    "Couleurs et gaz visibles selon la solution utilisée",
-    "Demi-équations redox identifiées selon les espèces ioniques",
-    "Compréhension du sens des réactions et du rôle de l’énergie électrique"
-  ]
 }
-
 ];
