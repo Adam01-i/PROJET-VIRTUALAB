@@ -1,8 +1,9 @@
-import * as React from 'react';
-import * as XLSX from 'xlsx';
-import { toast } from 'sonner';
-import { supabase } from '../../../../lib/supabaseClient';
-import EleveDialog from './EleveDialog';
+import * as React from "react";
+import * as XLSX from "xlsx";
+import { toast } from "sonner";
+import { supabase } from "../../../../lib/supabaseClient";
+import UserDialog from "./UserDialog";
+import UserFormDialog from "./UserFormDialog";
 
 const PAGE_SIZE = 10;
 
@@ -15,15 +16,13 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
   const [eleves, setEleves] = React.useState<any[]>([]);
   const [classes, setClasses] = React.useState<any[]>([]);
   const [assignations, setAssignations] = React.useState<any[]>([]);
-  const [search, setSearch] = React.useState('');
-  const [classeFiltre, setClasseFiltre] = React.useState('');
+  const [search, setSearch] = React.useState("");
+  const [classeFiltre, setClasseFiltre] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
-  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
-  
-
-  const [sortField, setSortField] = React.useState<'name' | 'surname' | 'email' | null>(null);
-  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = React.useState<"name" | "surname" | "email" | null>(null);
+  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">("asc");
+  const [dialogOpenId, setDialogOpenId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     fetchAll();
@@ -31,143 +30,150 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
 
   const fetchAll = async () => {
     const { data: elevesData } = await supabase
-      .from('profiles')
-      .select('id, name, surname, email, avatar_url, role, created_at')
-      .eq('role', 'eleve')
-      .order('surname');
+      .from("profiles")
+      .select("id, name, surname, email, avatar_url, role")
+      .eq("role", "eleve")
+      .order("surname");
 
     const { data: classesData } = await supabase
-      .from('classes')
-      .select('id, niveau, lettre');
+      .from("classes")
+      .select("id, niveau, lettre");
 
     const { data: assignData } = await supabase
-      .from('eleves_classes')
-      .select('classe_id, eleve_id');
+      .from("eleves_classes")
+      .select("classe_id, eleve_id");
 
     setEleves(elevesData || []);
     setClasses(classesData || []);
     setAssignations(assignData || []);
   };
 
-  const handleSort = (field: 'name' | 'surname' | 'email') => {
+  const handleSort = (field: "name" | "surname" | "email") => {
     if (sortField === field) {
-      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
   const getClasseNom = (eleveId: string) => {
     const assignation = assignations.find((a) => a.eleve_id === eleveId);
     const classe = classes.find((c) => c.id === assignation?.classe_id);
-    return classe ? `${classe.niveau} ${classe.lettre}` : '—';
+    return classe ? `${classe.niveau} ${classe.lettre}` : "—";
   };
 
+  // Liste unique des classes disponibles dans les assignations
+  const classesOptions = React.useMemo(() => {
+    return [...new Set(
+      assignations
+        .map((a) => {
+          const c = classes.find((c) => c.id === a.classe_id);
+          return c ? `${c.niveau} ${c.lettre}` : null;
+        })
+        .filter((v): v is string => v !== null)
+    )];
+  }, [assignations, classes]);
+
+  // Clic sur l’en-tête Classe : cycle dans les options (null -> 1ère classe -> 2ème... -> null)
+  const toggleClasseFiltre = () => {
+    if (!classeFiltre) {
+      setClasseFiltre(classesOptions[0] || null);
+    } else {
+      const currentIndex = classesOptions.indexOf(classeFiltre);
+      if (currentIndex === -1 || currentIndex === classesOptions.length - 1) {
+        setClasseFiltre(null); // toutes
+      } else {
+        setClasseFiltre(classesOptions[currentIndex + 1]);
+      }
+    }
+    setPage(1);
+  };
+
+  // Filtrage + tri
   const filtered = eleves
     .filter((e) => {
       const fullText = `${e.name} ${e.surname} ${e.email}`.toLowerCase();
       const classeNom = getClasseNom(e.id).toLowerCase();
-      return (
-        fullText.includes(search.toLowerCase()) &&
-        (!classeFiltre || classeNom === classeFiltre.toLowerCase())
-      );
+      const searchMatch = fullText.includes(search.toLowerCase());
+      const classeMatch = !classeFiltre || classeNom === classeFiltre.toLowerCase();
+      return searchMatch && classeMatch;
     })
     .sort((a, b) => {
       if (!sortField) return 0;
       const valA = a[sortField]?.toLowerCase();
       const valB = b[sortField]?.toLowerCase();
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const classesOptions = [...new Set(
-    assignations
-      .map((a) => {
-        const c = classes.find((c) => c.id === a.classe_id);
-        return c ? `${c.niveau} ${c.lettre}` : null;
-      })
-      .filter((v): v is string => v !== null && v !== undefined)
-  )];
-
-  const handleDelete = async (eleveId: string) => {
-    const confirmation = confirm("Êtes-vous sûr de vouloir supprimer cet élève ?");
-    if (!confirmation) return;
-
-    const { error } = await supabase.rpc('delete_eleve_with_assignation', { p_eleve_id: eleveId });
-
+  const handleDelete = async (id: string) => {
+    if (!confirm("Confirmer la suppression de cet élève ?")) return;
+    setLoading(true);
+    const { error } = await supabase.from("profiles").delete().eq("id", id);
+    setLoading(false);
     if (error) {
-      toast.error(`❌ Erreur lors de la suppression de l'élève : ${error.message}`);
+      toast.error("Erreur lors de la suppression : " + error.message);
     } else {
-      toast.success('✅ Élève supprimé avec succès');
-      await fetchAll();
+      toast.success("Élève supprimé");
+      fetchAll();
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = async (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data as string, { type: 'binary' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      setParsedData(json as any[]);
+    reader.onload = (evt) => {
+      const bstr = evt.target?.result;
+      if (!bstr) return;
+      const wb = XLSX.read(bstr, { type: "binary" });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
+      setParsedData(data);
+      toast.success("Fichier chargé, prêt à importer.");
     };
     reader.readAsBinaryString(file);
   };
 
   const handleImport = async () => {
     if (parsedData.length === 0) {
-      toast.error("⚠️ Aucun élève à importer.");
+      toast.error("Aucune donnée à importer");
       return;
     }
-
     setLoading(true);
-    let count = 0;
-
-    for (const row of parsedData) {
-      const { name, surname, email } = row;
-      const role = row.role || 'eleve';
-      const avatar_url = 'https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747586536054.jpg';
-
-      try {
-        const response = await fetch('/api/import-users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, surname, email, avatar_url, role }),
-        });
-
-        const result = await response.json();
-        if (!response.ok) toast.error(`❌ ${email} : ${result.error}`);
-        else {
-          count++;
-          toast.success(`✅ ${email} ajouté`);
-        }
-      } catch {
-        toast.error(`❌ Erreur réseau pour ${email}`);
-      }
-    }
-
-    await fetchAll();
+    const { error } = await supabase
+      .rpc("import_users", { users: parsedData })
+      .select();
     setLoading(false);
-    if (count > 0) toast.success(`${count} élève(s) importé(s) avec succès`);
+    if (error) {
+      toast.error("Erreur import : " + error.message);
+    } else {
+      toast.success("Import réussi");
+      setParsedData([]);
+      fetchAll();
+    }
   };
 
   const handleExport = () => {
-    const worksheet = XLSX.utils.json_to_sheet(eleves);
+    const exportData = filtered.map((e) => ({
+      Nom: e.name,
+      Prénom: e.surname,
+      Email: e.email,
+      Classe: getClasseNom(e.id),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Élèves');
-    XLSX.writeFile(workbook, 'eleves.xlsx');
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Élèves");
+    XLSX.writeFile(workbook, "eleves_export.xlsx");
   };
 
   return (
-    <div className={embedded ? '' : 'min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-10'}>
+    <div className={embedded ? "" : "min-h-screen bg-gray-50 px-4 py-10"}>
       {/* BARRE D’ACTIONS */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -181,27 +187,9 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
             }}
             className="border px-3 py-1.5 rounded text-sm w-full sm:w-64"
           />
-          <select
-            className="border px-3 py-1.5 rounded text-sm w-full sm:w-48"
-            value={classeFiltre}
-            onChange={(e) => {
-              setClasseFiltre(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">Toutes les classes</option>
-            {classesOptions.map((nom) => (
-              <option key={nom} value={nom}>
-                {nom}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => setAddDialogOpen(true)}
-            className="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-700"
-          >
-            + Ajouter
-          </button>
+          {/* Filtre select supprimé */}
+
+          <UserFormDialog role="eleve" refresh={fetchAll} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -214,7 +202,7 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
             disabled={loading || parsedData.length === 0}
             className="bg-indigo-500 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-600 disabled:opacity-50"
           >
-            {loading ? 'Import...' : 'Valider Import'}
+            {loading ? "Import..." : "Valider Import"}
           </button>
           <button
             onClick={handleExport}
@@ -231,64 +219,103 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
           <thead className="bg-indigo-50 text-indigo-700">
             <tr>
               <th className="p-2">Avatar</th>
-              <th className="p-2 cursor-pointer select-none" onClick={() => handleSort("name")}>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort("name")}>
                 Nom {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
               </th>
-              <th className="p-2 cursor-pointer select-none" onClick={() => handleSort("surname")}>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort("surname")}>
                 Prénom {sortField === "surname" && (sortDirection === "asc" ? "↑" : "↓")}
               </th>
-              <th className="p-2 cursor-pointer select-none" onClick={() => handleSort("email")}>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort("email")}>
                 Email {sortField === "email" && (sortDirection === "asc" ? "↑" : "↓")}
               </th>
-              <th className="p-2">Classe</th>
-              <th className="p-2 text-center">Info</th>
-              <th className="p-2 text-center">Action</th>
+              <th
+                className="p-2 cursor-pointer select-none"
+                onClick={toggleClasseFiltre}
+                title="Cliquer pour filtrer par classe"
+              >
+                Classe{" "}
+                {classeFiltre ? (
+                  <span className="text-indigo-600 font-semibold">({classeFiltre})</span>
+                ) : (
+                  <span className="text-gray-400">(Toutes)</span>
+                )}
+              </th>
+              <th className="p-2 text-center">Infos</th>
+              <th className="p-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map((eleve) => (
               <tr key={eleve.id} className="hover:bg-gray-50 border-t">
                 <td className="p-2">
-                  <img src={eleve.avatar_url} alt="avatar" className="w-10 h-10 rounded-full object-cover border" />
+                  <img
+                    src={eleve.avatar_url || "/assets/avatars/default-avatar.png"}
+                    alt="avatar"
+                    className="w-10 h-10 rounded-full object-cover border"
+                  />
                 </td>
                 <td className="p-2">{eleve.name}</td>
                 <td className="p-2">{eleve.surname}</td>
                 <td className="p-2">{eleve.email}</td>
                 <td className="p-2">{getClasseNom(eleve.id)}</td>
                 <td className="p-2 text-center">
-                  <EleveDialog eleve={eleve} />
+                  <button
+                    onClick={() => setDialogOpenId(eleve.id)}
+                    className="bg-gray-200 px-2 py-1 rounded text-sm hover:bg-gray-300"
+                  >
+                    👁 Voir
+                  </button>
+                  <UserDialog
+                    user={eleve}
+                    role="eleve"
+                    allClasses={classes}
+                    refresh={fetchAll}
+                    openExternally={dialogOpenId === eleve.id}
+                    setOpenExternally={(v) => {
+                      if (!v) setDialogOpenId(null);
+                    }}
+                  />
                 </td>
                 <td className="p-2 text-center">
                   <button
+                    disabled={loading}
                     onClick={() => handleDelete(eleve.id)}
-                    className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                    className="bg-red-600 px-3 py-1 text-white rounded hover:bg-red-700 disabled:opacity-50"
                   >
                     Supprimer
                   </button>
                 </td>
               </tr>
             ))}
+
+            {paginated.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-4 text-center text-gray-500">
+                  Aucun élève trouvé.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
       {/* PAGINATION */}
-      <div className="flex justify-between items-center mt-6">
-        <span className="text-sm text-gray-600">
-          {filtered.length} élève{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
+      <div className="flex justify-between items-center mt-4 text-sm">
+        <span>
+          Page {page} / {Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))}
         </span>
         <div className="space-x-2">
           <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
             disabled={page === 1}
-            className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="border px-3 py-1 rounded disabled:opacity-50"
           >
             Précédent
           </button>
           <button
-            onClick={() => setPage((p) => (p * PAGE_SIZE < filtered.length ? p + 1 : p))}
-            disabled={page * PAGE_SIZE >= filtered.length}
-            className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50"
+            disabled={page >= Math.ceil(filtered.length / PAGE_SIZE)}
+            onClick={() => setPage((p) => p + 1)}
+            className="border px-3 py-1 rounded disabled:opacity-50"
           >
             Suivant
           </button>

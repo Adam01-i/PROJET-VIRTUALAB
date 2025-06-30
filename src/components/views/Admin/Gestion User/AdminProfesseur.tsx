@@ -2,7 +2,8 @@ import * as React from "react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { supabase } from "../../../../lib/supabaseClient";
-import ProfesseurDialog from "./ProfesseurDialog";
+import UserDialog from "./UserDialog";
+import UserFormDialog from "./UserFormDialog";
 
 const PAGE_SIZE = 10;
 
@@ -10,57 +11,57 @@ type AdminProfesseurProps = {
   embedded?: boolean;
 };
 
-export default function AdminProfesseur({ embedded = false }: AdminProfesseurProps) {
+type Classe = {
+  id: string;
+  niveau: string;
+  lettre: string;
+};
+
+export default function AdminProfesseur({ embedded = true }: AdminProfesseurProps) {
   const [professeurs, setProfesseurs] = React.useState<any[]>([]);
-  const [classes, setClasses] = React.useState<any[]>([]);
+  const [classes, setClasses] = React.useState<Classe[]>([]);
   const [assignations, setAssignations] = React.useState<any[]>([]);
   const [parsedData, setParsedData] = React.useState<any[]>([]);
   const [search, setSearch] = React.useState("");
-  const [selectedClasse, setSelectedClasse] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
-  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
-
   const [sortField, setSortField] = React.useState<"name" | "surname" | "email" | null>(null);
   const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">("asc");
+  const [dialogOpenId, setDialogOpenId] = React.useState<string | null>(null);
+  const [filteredClasses, setFilteredClasses] = React.useState<string[]>([]);
+
+  const toggleClasseFilter = (classeId: string) => {
+    setFilteredClasses((prev) =>
+      prev.includes(classeId) ? prev.filter((id) => id !== classeId) : [...prev, classeId]
+    );
+    setPage(1);
+  };
+
 
   React.useEffect(() => {
     fetchAll();
   }, []);
 
   const fetchAll = async () => {
-    await Promise.all([
-      fetchProfesseurs(),
-      fetchClasses(),
-      fetchAssignations(),
-    ]);
+    await Promise.all([fetchProfesseurs(), fetchClasses(), fetchAssignations()]);
   };
 
   const fetchProfesseurs = async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, name, surname, email, avatar_url, role, created_at")
+      .select("id, name, surname, email, avatar_url, role")
       .eq("role", "professeur")
       .order("surname");
 
-    if (error) {
-      toast.error("Erreur chargement professeurs", { description: error.message });
-    } else {
-      setProfesseurs(data || []);
-    }
+    if (!error && data) setProfesseurs(data);
+    else toast.error("Erreur chargement professeurs", { description: error?.message });
   };
 
   const fetchClasses = async () => {
-    const { data, error } = await supabase
-      .from("classes")
-      .select("id, niveau, lettre")
-      .order("niveau");
+    const { data, error } = await supabase.from("classes").select("id, niveau, lettre").order("niveau");
 
-    if (error) {
-      toast.error("Erreur chargement classes", { description: error.message });
-    } else {
-      setClasses(data || []);
-    }
+    if (!error && data) setClasses(data);
+    else toast.error("Erreur chargement classes", { description: error?.message });
   };
 
   const fetchAssignations = async () => {
@@ -68,16 +69,13 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
       .from("professeurs_classes")
       .select("professeur_id, classe_id");
 
-    if (error) {
-      toast.error("Erreur chargement assignations", { description: error.message });
-    } else {
-      setAssignations(data || []);
-    }
+    if (!error && data) setAssignations(data);
+    else toast.error("Erreur chargement assignations", { description: error?.message });
   };
 
   const handleSort = (field: "name" | "surname" | "email") => {
     if (sortField === field) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setSortDirection(prev => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
       setSortDirection("asc");
@@ -89,10 +87,11 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
     if (!confirmation) return;
 
     const { error } = await supabase.rpc('delete_professeur_with_assignation', { p_professeur_id: professeur_id });
+
     if (error) {
-      toast.error(`Erreur lors de la suppression du professeur: ${error.message}`);
+      toast.error(`Erreur suppression : ${error.message}`);
     } else {
-      toast.success("Professeur supprimé avec succès");
+      toast.success("Professeur supprimé !");
       await fetchAll();
     }
   };
@@ -116,6 +115,7 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
       toast.error("⚠️ Aucun professeur à importer.");
       return;
     }
+
     setLoading(true);
     let count = 0;
 
@@ -124,7 +124,7 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
       const surname = (row.surname || "").trim();
       const email = (row.email || "").trim();
       const role = (row.role || "professeur").trim();
-      const avatar_url = "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars//1747523215141.png";
+      const avatar_url = "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747523215141.png";
 
       if (!name || !surname || !email) {
         toast.error(`⛔ Données manquantes pour : ${email || "ligne inconnue"}`);
@@ -139,20 +139,19 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
         });
 
         const result = await res.json();
-        if (!res.ok) {
-          toast.error(`❌ ${email} : ${result.error}`);
-        } else {
+        if (!res.ok) toast.error(`❌ ${email} : ${result.error}`);
+        else {
           count++;
           toast.success(`✅ ${email} ajouté`);
         }
-      } catch (err) {
+      } catch {
         toast.error(`❌ Erreur réseau pour ${email}`);
       }
     }
 
     await fetchProfesseurs();
     setLoading(false);
-    if (count > 0) toast.success(`${count} professeur(s) importé(s) avec succès`);
+    if (count > 0) toast.success(`${count} professeur(s) importé(s)`);
   };
 
   const handleExport = () => {
@@ -164,31 +163,34 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
 
   const filtered = professeurs
     .filter((p) => {
-      const textMatch = `${p.name} ${p.surname} ${p.email}`.toLowerCase().includes(search.toLowerCase());
-      const classesOfProf = assignations.filter(a => a.professeur_id === p.id).map(a => a.classe_id);
-      const matchClasse = selectedClasse ? classesOfProf.includes(selectedClasse) : true;
-      return textMatch && matchClasse;
+      const fullText = `${p.name} ${p.surname} ${p.email}`.toLowerCase();
+      const matchText = fullText.includes(search.toLowerCase());
+      const assignedClasseIds = assignations.filter(a => a.professeur_id === p.id).map(a => a.classe_id);
+
+      const matchClasse =
+        filteredClasses.length === 0 ||
+        filteredClasses.some((cls) => assignedClasseIds.includes(cls));
+
+      return matchText && matchClasse;
     })
     .sort((a, b) => {
       if (!sortField) return 0;
-      const fieldA = a[sortField].toLowerCase();
-      const fieldB = b[sortField].toLowerCase();
-      if (fieldA < fieldB) return sortDirection === "asc" ? -1 : 1;
-      if (fieldA > fieldB) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+      const fieldA = a[sortField]?.toLowerCase?.() || "";
+      const fieldB = b[sortField]?.toLowerCase?.() || "";
+      return sortDirection === "asc" ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA);
     });
+
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className={embedded ? "" : "min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 py-10"}>
-      
-      {/* === BARRE D’ACTIONS COMPACTE === */}
+    <div className={embedded ? "" :  "min-h-screen bg-gray-50"}>
+      {/* BARRE D’ACTIONS */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-3">
           <input
             type="text"
-            placeholder="Rechercher (nom, prénom, email)"
+            placeholder="🔍 Rechercher un professeur"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -196,82 +198,52 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
             }}
             className="border px-3 py-1.5 rounded text-sm w-full sm:w-64"
           />
-          <select
-            value={selectedClasse}
-            onChange={(e) => {
-              setSelectedClasse(e.target.value);
-              setPage(1);
-            }}
-            className="border px-3 py-1.5 rounded text-sm w-full sm:w-48"
-          >
-            <option value="">Toutes les classes</option>
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.niveau} {c.lettre}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => setAddDialogOpen(true)}
-            className="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-700"
-          >
-            + Ajouter
-          </button>
+          <UserFormDialog role="professeur" refresh={fetchAll} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-200">
             📂 Importer
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
+            <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
           </label>
-          <button
-            onClick={handleImport}
-            disabled={loading || parsedData.length === 0}
-            className="bg-indigo-500 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-600 disabled:opacity-50"
-          >
+          <button onClick={handleImport} disabled={loading || parsedData.length === 0} className="bg-indigo-500 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-600 disabled:opacity-50">
             {loading ? "Import..." : "Valider Import"}
           </button>
-          <button
-            onClick={handleExport}
-            className="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700"
-          >
+          <button onClick={handleExport} className="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700">
             Export Excel
           </button>
         </div>
       </div>
 
-      {/* === TABLEAU DES PROFESSEURS === */}
+      {/* TABLEAU PROFESSEURS */}
       <div className="overflow-auto border rounded shadow bg-white">
         <table className="w-full table-auto text-sm text-left border-collapse">
           <thead className="bg-indigo-50 text-indigo-700">
             <tr>
               <th className="p-2">Avatar</th>
-              <th className="p-2 cursor-pointer select-none" onClick={() => handleSort("name")}>
-                Nom {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
-              </th>
-              <th className="p-2 cursor-pointer select-none" onClick={() => handleSort("surname")}>
-                Prénom {sortField === "surname" && (sortDirection === "asc" ? "↑" : "↓")}
-              </th>
-              <th className="p-2 cursor-pointer select-none" onClick={() => handleSort("email")}>
-                Email {sortField === "email" && (sortDirection === "asc" ? "↑" : "↓")}
-              </th>
-              {classes.map((c) => (
-                <th key={c.id} className="p-2 text-center whitespace-nowrap">
-                  {c.niveau} {c.lettre}
-                </th>
-              ))}
-              <th className="p-2 text-center">Info</th>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort("name")}>Nom {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}</th>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort("surname")}>Prénom {sortField === "surname" && (sortDirection === "asc" ? "↑" : "↓")}</th>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort("email")}>Email {sortField === "email" && (sortDirection === "asc" ? "↑" : "↓")}</th>
+              {classes.map(classe => {
+                const isActive = filteredClasses.includes(classe.id);
+                return (
+                  <th
+                    key={classe.id}
+                    className={`p-2 text-center whitespace-nowrap cursor-pointer select-none ${isActive ? "bg-indigo-200" : ""}`}
+                    onClick={() => toggleClasseFilter(classe.id)}
+                  >
+                    {classe.niveau} {classe.lettre} {isActive ? "🔽" : "🔼"}
+                  </th>
+                );
+              })}
+
+              <th className="p-2 text-center">Infos</th>
               <th className="p-2 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map((prof) => {
-              const assignedClasseIds = assignations.filter((a) => a.professeur_id === prof.id).map((a) => a.classe_id);
+              const assignedIds = assignations.filter(a => a.professeur_id === prof.id).map(a => a.classe_id);
               return (
                 <tr key={prof.id} className="hover:bg-gray-50 border-t">
                   <td className="p-2">
@@ -280,21 +252,25 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
                   <td className="p-2">{prof.name}</td>
                   <td className="p-2">{prof.surname}</td>
                   <td className="p-2">{prof.email}</td>
-                  {classes.map((classe) => (
+                  {classes.map(classe => (
                     <td key={classe.id} className="p-2 text-center">
-                      {assignedClasseIds.includes(classe.id) ? (
-                        <span className="text-green-600 font-bold">✅</span>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
+                      {assignedIds.includes(classe.id) ? "✅" : "❌"}
                     </td>
                   ))}
                   <td className="p-2 text-center">
-                    <ProfesseurDialog
-                      prof={prof}
+                    <button
+                      onClick={() => setDialogOpenId(prof.id)}
+                      className="bg-gray-200 px-2 py-1 rounded text-sm hover:bg-gray-300"
+                    >
+                      👁 Voir
+                    </button>
+                    <UserDialog
+                      user={prof}
+                      role="professeur"
                       allClasses={classes}
                       refresh={fetchAssignations}
-                      onClose={() => setAddDialogOpen(false)}
+                      openExternally={dialogOpenId === prof.id}
+                      setOpenExternally={(open) => !open && setDialogOpenId(null)}
                     />
                   </td>
                   <td className="p-2 text-center">
@@ -312,37 +288,14 @@ export default function AdminProfesseur({ embedded = false }: AdminProfesseurPro
         </table>
       </div>
 
-      {/* === PAGINATION === */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-2 sm:gap-0">
-        <span className="text-sm text-gray-600">
-          {filtered.length} professeur{filtered.length > 1 ? "s" : ""} trouvé
-        </span>
+      {/* PAGINATION */}
+      <div className="flex justify-between items-center mt-6">
+        <span className="text-sm text-gray-600">{filtered.length} professeur(s) trouvé(s)</span>
         <div className="space-x-2">
-          <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1} className="px-3 py-1 bg-gray-200 rounded text-sm">
-            Précédent
-          </button>
-          <button
-            onClick={() => setPage((p) => (p * PAGE_SIZE < filtered.length ? p + 1 : p))}
-            disabled={page * PAGE_SIZE >= filtered.length}
-            className="px-3 py-1 bg-gray-200 rounded text-sm"
-          >
-            Suivant
-          </button>
+          <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1} className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50">Précédent</button>
+          <button onClick={() => setPage((p) => (p * PAGE_SIZE < filtered.length ? p + 1 : p))} disabled={page * PAGE_SIZE >= filtered.length} className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50">Suivant</button>
         </div>
       </div>
-
-      {/* === DIALOG AJOUT === */}
-      {addDialogOpen && (
-        <ProfesseurDialog
-          prof={null}
-          allClasses={classes}
-          openExternally={addDialogOpen}
-          setOpenExternally={setAddDialogOpen}
-          onAdd={(newProf) => {
-            setProfesseurs((prev) => [...prev, newProf]);
-          }}
-        />
-      )}
     </div>
   );
 }

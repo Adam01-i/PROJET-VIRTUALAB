@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 const niveaux = ["1èreS2"];
-const lettres = ["A", "B", "C", "D"];
+const lettres = ["A", "B", "C", "D", "E"];
 
 type Profile = {
   id: string;
