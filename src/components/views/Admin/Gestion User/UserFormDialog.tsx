@@ -20,58 +20,86 @@ const UserFormDialog: React.FC<Props> = ({ role, refresh }) => {
     surname: "",
     email: "",
   });
-  const [error, setError] = React.useState("");
 
   const handleCreate = async () => {
-    setError("");
     const { name, surname, email } = form;
+    const roleFinal = role;
 
     if (!name || !surname || !email) {
-      setError("Tous les champs sont requis.");
+      toast.warning("Tous les champs sont requis.");
       return;
     }
 
-    // Vérifier si l'email existe déjà
+    const emailClean = email.trim().toLowerCase();
+
     const { data: existing, error: emailCheckError } = await supabase
       .from("profiles")
       .select("id")
-      .eq("email", email.trim().toLowerCase());
+      .eq("email", emailClean);
 
     if (emailCheckError) {
-      toast.error("Erreur lors de la vérification de l'email");
+      console.error("Erreur vérif email:", emailCheckError.message);
+      toast.error("Erreur lors de la vérification de l'email.");
       return;
     }
 
     if (existing && existing.length > 0) {
-      setError("Cet email est déjà utilisé.");
+      toast.warning("Cet email est déjà utilisé.");
+      return;
+    }
+
+    const res = await fetch("http://localhost:3001/api/create-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: emailClean, password: "virtualab2025!" }),
+    });
+
+
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      console.error("Erreur API create-user:", result.error);
+      toast.error("Erreur création utilisateur", {
+        description: result.error,
+      });
+      return;
+    }
+
+    const userId = result.user?.id;
+
+    if (!userId) {
+      toast.error("ID utilisateur introuvable.");
+      console.error("Résultat API inattendu:", result);
       return;
     }
 
     const avatar_url =
-      role === "eleve"
+      roleFinal === "eleve"
         ? "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747586536054.jpg"
         : "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747523215141.png";
 
     const { error: insertError } = await supabase.from("profiles").insert([
       {
+        id: userId,
         name,
         surname,
-        email: email.trim().toLowerCase(),
-        role,
+        email: emailClean,
+        role: roleFinal,
         avatar_url,
       },
     ]);
 
     if (insertError) {
-      toast.error("Erreur lors de l'ajout de l'utilisateur", {
-        description: insertError.message,
-      });
-    } else {
-      toast.success(`${role === "eleve" ? "Élève" : "Professeur"} ajouté avec succès !`);
-      setForm({ name: "", surname: "", email: "" });
-      setOpen(false);
-      refresh();
+      console.error("Erreur insertion profil:", insertError.message);
+      toast.error("Erreur lors de l'enregistrement du profil.");
+      return;
     }
+
+    toast.success(`${roleFinal === "eleve" ? "Élève" : "Professeur"} ajouté avec succès !`);
+    setForm({ name: "", surname: "", email: "" });
+    setOpen(false);
+    refresh();
   };
 
   return (
@@ -118,12 +146,11 @@ const UserFormDialog: React.FC<Props> = ({ role, refresh }) => {
           <label className="text-sm font-medium block">Rôle</label>
           <input
             type="text"
-            value={role}
+            value={role === "eleve" ? "Élève" : "Professeur"}
+            readOnly
             disabled
-            className="w-full border px-3 py-2 rounded bg-gray-100 text-gray-600 cursor-not-allowed"
+            className="w-full bg-gray-100 border px-3 py-2 rounded cursor-not-allowed text-gray-700"
           />
-
-          {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
         </div>
 
         <Button

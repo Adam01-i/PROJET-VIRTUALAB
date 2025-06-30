@@ -19,5 +19,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "src/components/views/Admin/Dashboard/.tsx"]
+  "include": ["src", "src/components/views/Admin/Dashboard/.tsx", "backend/api/create-user.ts"]
 }
