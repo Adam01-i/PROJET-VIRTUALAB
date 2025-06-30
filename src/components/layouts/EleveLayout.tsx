@@ -71,6 +71,21 @@ export default function EleveLayout() {
             <div className="flex items-center gap-2">
               <Flask size={20} className="text-purple-300" />
               <span className="text-white font-semibold text-base">VirtuaLab</span>
+              {navItems.map(({ path, icon: Icon, label }) => (
+                <NavLink
+                  key={path}
+                  to={path}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${isActive
+                      ? 'bg-white/10 text-white font-semibold'
+                      : 'text-purple-200 hover:bg-white/5'
+                    }`
+                  }
+                >
+                  <Icon size={16} />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
             </div>
 
             {/* Bouton hamburger mobile */}
@@ -95,21 +110,7 @@ export default function EleveLayout() {
 
             {/* Menu desktop */}
             <div className="hidden md:flex flex-wrap gap-2">
-              {navItems.map(({ path, icon: Icon, label }) => (
-                <NavLink
-                  key={path}
-                  to={path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${isActive
-                      ? 'bg-white/10 text-white font-semibold'
-                      : 'text-purple-200 hover:bg-white/5'
-                    }`
-                  }
-                >
-                  <Icon size={16} />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
+              
               {isLoggedIn ? (
                 <UserMenu />
               ) : (
