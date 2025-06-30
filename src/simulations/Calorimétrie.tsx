@@ -727,8 +727,7 @@ const AdvancedCalorimeter3D = ({
         </group>
       )}
 
-      {/* Étiquettes */}
-      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#374151" anchorX="center" anchorY="middle">
+      <Text position={[0, -2.2, 0]} fontSize={0.12} color="#ffffff" anchorX="center" anchorY="middle">
         Calorimètre Professionnel
       </Text>
 
@@ -866,8 +865,8 @@ const CalorimetryScene = ({
       <pointLight position={[-6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
       <pointLight position={[6, 5, 4]} intensity={0.3} color="#a5b4fc" distance={12} decay={2} />
 
-      <color attach="background" args={["#1e1b4b"]} />
-      <fog attach="fog" args={["#312e81", 20, 50]} />
+      <color attach="background" args={["#2c3e50"]} />
+      <fog attach="fog" args={["#2c3e50", 15, 35]} />
 
       {/* Environnement et table du premier fichier */}
       <LabEnvironment />
@@ -1950,7 +1949,7 @@ export default function CalorimetrieSimulationAvancee() {
   } = useCalorimetrySimulation()
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-900 relative overflow-hidden">
+    <div className="w-full h-full relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-purple-900/10 to-transparent" />
 
       <Canvas

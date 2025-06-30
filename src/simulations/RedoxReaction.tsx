@@ -1501,7 +1501,7 @@ export default function RedoxReaction() {
       )}
 
       {/* Instructions et Guide - BAS DROITE - z-index élevé */}
-      <div className="absolute bottom-2 right-2 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg w-50">
+      <div className="absolute bottom-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
         <div className="flex items-center mb-2">
           <Info className="mr-2 text-indigo-600" size={14} />
           <span className="font-medium text-gray-700 text-sm">Guide d'Utilisation</span>
