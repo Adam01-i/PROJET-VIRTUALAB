@@ -140,24 +140,51 @@ export default function AdminEleve({ embedded = false }: AdminEleveProps) {
     reader.readAsBinaryString(file);
   };
 
-  const handleImport = async () => {
-    if (parsedData.length === 0) {
-      toast.error("Aucune donnée à importer");
-      return;
+const handleImport = async () => {
+  if (parsedData.length === 0) {
+    toast.error("⚠️ Aucun élève à importer.");
+    return;
+  }
+
+  setLoading(true);
+  let count = 0;
+
+  for (const row of parsedData) {
+    const name = (row.name || "").trim();
+    const surname = (row.surname || "").trim();
+    const email = (row.email || "").trim();
+    const avatar_url =
+      "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1748565991828.jpg";
+
+    if (!name || !surname || !email) {
+      toast.error(`⛔ Données manquantes pour : ${email || "ligne inconnue"}`);
+      continue;
     }
-    setLoading(true);
-    const { error } = await supabase
-      .rpc("import_users", { users: parsedData })
-      .select();
-    setLoading(false);
-    if (error) {
-      toast.error("Erreur import : " + error.message);
-    } else {
-      toast.success("Import réussi");
-      setParsedData([]);
-      fetchAll();
+
+    try {
+      const res = await fetch("http://localhost:3001/api/import-eleves", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, surname, email, avatar_url }),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        toast.error(`❌ ${email} : ${result.error}`);
+      } else {
+        count++;
+        toast.success(`✅ ${email} ajouté`);
+      }
+    } catch {
+      toast.error(`❌ Erreur réseau pour ${email}`);
     }
-  };
+  }
+
+  await fetchAll();
+  setLoading(false);
+  if (count > 0) toast.success(`${count} élève(s) importé(s)`);
+};
+
 
   const handleExport = () => {
     const exportData = filtered.map((e) => ({

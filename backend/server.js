@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import chatRoutes from "./routes/chat.js";
 import userRoutes from "./routes/create-user.js";
+import importProfsRoutes from "./routes/import-profs.js";
+import importElevesRoutes from "./routes/import-eleves.js";
 
 dotenv.config();
 
@@ -31,6 +33,10 @@ app.use("/api", userRoutes);
 
 // 🧠 Chatbot
 app.use("/api", chatRoutes);
+
+// Importer des utilisateurs(profs et élèves)
+app.use("/api", importProfsRoutes);
+app.use("/api", importElevesRoutes);
 
 // 🛡️ Gestion des erreurs
 app.use((err, req, res, next) => {

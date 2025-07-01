@@ -6,8 +6,6 @@ import {
 } from "../../../ui/Dialog";
 import { Button } from "../../../ui/button2";
 import { toast } from "sonner";
-import { supabase } from "../../../../lib/supabaseClient";
-
 type Props = {
   role: "eleve" | "professeur";
   refresh: () => void;
@@ -32,12 +30,24 @@ const handleCreate = async () => {
 
   const emailClean = email.trim().toLowerCase();
 
+  const avatar_url =
+    roleFinal === "eleve"
+      ? "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747586536054.jpg"
+      : "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747523215141.png";
+
   try {
-    // ✅ Création de l'utilisateur dans Supabase Auth
+    // ✅ Appel à l'API backend avec tous les champs nécessaires
     const res = await fetch("http://localhost:3001/api/create-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: emailClean, password: "virtualab2025!" }),
+      body: JSON.stringify({
+        email: emailClean,
+        password: "virtualab2025!",
+        name,
+        surname,
+        role: roleFinal,
+        avatar_url,
+      }),
     });
 
     const result = await res.json();
@@ -55,39 +65,16 @@ const handleCreate = async () => {
       return;
     }
 
-    const userId = result.user?.id;
-    if (!userId) {
-      toast.error("ID utilisateur introuvable.");
-      return;
-    }
-
-    // ✅ Mise à jour du profil (name, surname, avatar, role)
-    const avatar_url =
-      roleFinal === "eleve"
-        ? "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747586536054.jpg"
-        : "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747523215141.png";
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ name, surname, role: roleFinal, avatar_url })
-      .eq("id", userId);
-
-    if (updateError) {
-      console.warn("⚠️ Mise à jour du profil échouée :", updateError.message);
-      toast.error("Utilisateur créé, mais la mise à jour du profil a échoué.");
-      return;
-    }
-
     toast.success(`${roleFinal === "eleve" ? "Élève" : "Professeur"} ajouté avec succès !`);
     setForm({ name: "", surname: "", email: "" });
     setOpen(false);
     refresh();
-
   } catch (error) {
     console.error("❌ Erreur lors de la création :", error);
     toast.error("Erreur inattendue lors de la création de l'utilisateur.");
   }
 };
+
 
 
   return (

@@ -123,7 +123,6 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
       const name = (row.name || "").trim();
       const surname = (row.surname || "").trim();
       const email = (row.email || "").trim();
-      const role = (row.role || "professeur").trim();
       const avatar_url = "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747523215141.png";
 
       if (!name || !surname || !email) {
@@ -132,10 +131,10 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
       }
 
       try {
-        const res = await fetch("/api/import-users", {
+        const res = await fetch("http://localhost:3001/api/import-profs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, surname, email, avatar_url, role }),
+          body: JSON.stringify({ name, surname, email, avatar_url}),
         });
 
         const result = await res.json();
@@ -158,7 +157,7 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
     const worksheet = XLSX.utils.json_to_sheet(professeurs);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Professeurs");
-    XLSX.writeFile(workbook, "professeurs.xlsx");
+    XLSX.writeFile(workbook, "professeurs_export.xlsx");
   };
 
   const filtered = professeurs
@@ -254,7 +253,7 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
                   <td className="p-2">{prof.email}</td>
                   {classes.map(classe => (
                     <td key={classe.id} className="p-2 text-center">
-                      {assignedIds.includes(classe.id) ? "✅" : "❌"}
+                      {assignedIds.includes(classe.id) ? "oui✅" : "—"}
                     </td>
                   ))}
                   <td className="p-2 text-center">
