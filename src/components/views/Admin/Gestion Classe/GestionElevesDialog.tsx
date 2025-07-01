@@ -175,7 +175,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button variant="outline">Gérer les élèves</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl space-y-5">
