@@ -195,8 +195,10 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
       </div>
 
       <div className="flex items-center gap-4 mt-4">
-        <label className="text-sm font-medium">Importer fichier (.xlsx)</label>
-        <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} />
+        <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-200">
+          📂 Importer elèves(.xlsx)
+          <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
+        </label>
       </div>
 
       {importedEleves.length > 0 && (

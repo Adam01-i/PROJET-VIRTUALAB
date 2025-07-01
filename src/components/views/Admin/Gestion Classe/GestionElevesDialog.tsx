@@ -174,7 +174,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
     toast.success(`${count} élève(s) importé(s) !`);
     onChange?.();
   };
-  
+
   const filteredEleves = allEleves.filter(
     (eleve) =>
       ` ${eleve.surname} ${eleve.name}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -194,9 +194,12 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
         <div>
           <h4 className="font-semibold">Importer des élèves (.xlsx)</h4>
           <div className="flex items-center gap-4 mt-2">
-            <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} />
+            <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-200">
+              📂 Importer
+              <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
+            </label>
             <Button onClick={handleImport} disabled={importing || importedEleves.length === 0}>
-              {importing ? "Importation..." : "Importer"}
+              {importing ? "Importation..." : "Valider Import"}
             </Button>
           </div>
         </div>
