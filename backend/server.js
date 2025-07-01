@@ -26,13 +26,13 @@ app.use(
 );
 app.use(express.json());
 
-// 🧑‍🎓 Routes utilisateur : création, import
+// 🧑‍🎓 Routes utilisateur
 app.use("/api", userRoutes);
 
 // 🧠 Chatbot
 app.use("/api", chatRoutes);
 
-// 🛡️ Gestion d’erreurs globale
+// 🛡️ Gestion des erreurs
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
