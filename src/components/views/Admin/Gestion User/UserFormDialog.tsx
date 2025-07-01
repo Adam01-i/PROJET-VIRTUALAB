@@ -21,78 +21,60 @@ const UserFormDialog: React.FC<Props> = ({ role, refresh }) => {
     email: "",
   });
 
-  const handleCreate = async () => {
-    const { name, surname, email } = form;
-    const roleFinal = role;
+const handleCreate = async () => {
+  const { name, surname, email } = form;
+  const roleFinal = role;
 
-    if (!name || !surname || !email) {
-      toast.warning("Tous les champs sont requis.");
-      return;
-    }
+  if (!name || !surname || !email) {
+    toast.warning("Tous les champs sont requis.");
+    return;
+  }
 
-    const emailClean = email.trim().toLowerCase();
+  const emailClean = email.trim().toLowerCase();
 
-    const { data: existing, error: emailCheckError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", emailClean);
-
-    if (emailCheckError) {
-      console.error("Erreur vérif email:", emailCheckError.message);
-      toast.error("Erreur lors de la vérification de l'email.");
-      return;
-    }
-
-    if (existing && existing.length > 0) {
-      toast.warning("Cet email est déjà utilisé.");
-      return;
-    }
-
+  try {
+    // ✅ Création de l'utilisateur dans Supabase Auth
     const res = await fetch("http://localhost:3001/api/create-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: emailClean, password: "virtualab2025!" }),
     });
 
-
-
     const result = await res.json();
 
     if (!res.ok) {
-      console.error("Erreur API create-user:", result.error);
-      toast.error("Erreur création utilisateur", {
-        description: result.error,
-      });
+      if (result.user_id) {
+        toast.error("Utilisateur corrompu. Supprimez-le manuellement dans Supabase.", {
+          description: `ID utilisateur : ${result.user_id}`,
+        });
+      } else {
+        toast.error("Erreur création utilisateur", {
+          description: result.error,
+        });
+      }
       return;
     }
 
     const userId = result.user?.id;
-
     if (!userId) {
       toast.error("ID utilisateur introuvable.");
-      console.error("Résultat API inattendu:", result);
       return;
     }
 
+    // ✅ Mise à jour du profil (name, surname, avatar, role)
     const avatar_url =
       roleFinal === "eleve"
         ? "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747586536054.jpg"
         : "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1747523215141.png";
 
-    const { error: insertError } = await supabase.from("profiles").insert([
-      {
-        id: userId,
-        name,
-        surname,
-        email: emailClean,
-        role: roleFinal,
-        avatar_url,
-      },
-    ]);
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ name, surname, role: roleFinal, avatar_url })
+      .eq("id", userId);
 
-    if (insertError) {
-      console.error("Erreur insertion profil:", insertError.message);
-      toast.error("Erreur lors de l'enregistrement du profil.");
+    if (updateError) {
+      console.warn("⚠️ Mise à jour du profil échouée :", updateError.message);
+      toast.error("Utilisateur créé, mais la mise à jour du profil a échoué.");
       return;
     }
 
@@ -100,7 +82,13 @@ const UserFormDialog: React.FC<Props> = ({ role, refresh }) => {
     setForm({ name: "", surname: "", email: "" });
     setOpen(false);
     refresh();
-  };
+
+  } catch (error) {
+    console.error("❌ Erreur lors de la création :", error);
+    toast.error("Erreur inattendue lors de la création de l'utilisateur.");
+  }
+};
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
