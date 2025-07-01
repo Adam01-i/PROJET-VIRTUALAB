@@ -137,22 +137,30 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
 
     for (const eleve of importedEleves) {
       try {
-        const response = await fetch("/api/import-users", {
+        const response = await fetch("http://localhost:3001/api/import-eleves", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...eleve, role: "eleve" }),
+          body: JSON.stringify({
+            ...eleve,
+            role: "eleve",
+            avatar_url:
+              eleve.avatar_url ||
+              "https://dviccoqpvhriwxruxjby.supabase.co/storage/v1/object/public/avatars/1748565991828.jpg",
+          }),
         });
 
         const result = await response.json();
 
-        if (response.ok && result.id) {
+        if (response.ok && result.user?.id) {
           await supabase
             .from("eleves_classes")
-            .insert([{ eleve_id: result.id, classe_id: classeId, assigned_at: new Date().toISOString() }]);
+            .insert([{ eleve_id: result.user.id, classe_id: classeId }]);
+
           count++;
         } else {
-          toast.error(`Erreur pour ${eleve.email} : ${result.error}`);
+          toast.error(`❌ Erreur pour ${eleve.email} : ${result.error}`);
         }
+
       } catch {
         toast.error(`Erreur réseau pour ${eleve.email}`);
       }
@@ -162,10 +170,11 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
     fetchAllEleves();
     fetchElevesDansClasse();
     fetchElevesDansAutresClasses();
+
     toast.success(`${count} élève(s) importé(s) !`);
     onChange?.();
   };
-
+  
   const filteredEleves = allEleves.filter(
     (eleve) =>
       ` ${eleve.surname} ${eleve.name}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -198,7 +207,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
             <ul className="text-sm max-h-24 overflow-y-auto space-y-1">
               {importedEleves.map((e, i) => (
                 <li key={i} className="flex justify-between">
-                   {e.surname} {e.name} 
+                  {e.surname} {e.name}
                   <span className="text-gray-500">{e.email}</span>
                 </li>
               ))}
@@ -219,7 +228,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
             {filteredEleves.length === 0 && <p>Aucun résultat.</p>}
             {filteredEleves.map((eleve) => (
               <li key={eleve.id} className="flex justify-between items-center">
-                {eleve.surname} {eleve.name} 
+                {eleve.surname} {eleve.name}
                 <Button variant="ghost" size="icon" onClick={() => addEleveToClasse(eleve.id)}>
                   <UserPlus className="w-4 h-4 text-green-500" />
                 </Button>

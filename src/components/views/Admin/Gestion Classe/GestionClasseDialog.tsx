@@ -99,17 +99,17 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
     // 👥 Importer les élèves (via API -> insert in profiles -> insert in eleves_classes)
     for (const eleve of importedEleves) {
       try {
-        const response = await fetch("/api/import-users", {
+        const response = await fetch("http://localhost:3001/api/import-eleves", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...eleve, role: "eleve" }),
         });
 
         const result = await response.json();
-        if (response.ok && result.id) {
+        if (response.ok && result.user?.id) {
           await supabase
             .from("eleves_classes")
-            .insert([{ eleve_id: result.id, classe_id: newClasseId }]);
+            .insert([{ eleve_id: result.user.id, classe_id: newClasseId }]);
         } else {
           toast.error(`❌ Erreur pour ${eleve.email} : ${result.error}`);
         }
