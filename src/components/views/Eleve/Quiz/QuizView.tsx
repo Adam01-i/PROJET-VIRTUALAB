@@ -1,215 +1,205 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '../../../../lib/supabaseClient';
-import type { QuizWithClasse, QuizQuestion } from '../../../../types/Quiz/quiz';
-import QuizCard from './QuizCard';
-import QuizSession from './QuizSession';
+import { useEffect, useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { supabase } from "../../../../lib/supabaseClient"
+import type { QuizWithClasse, QuizQuestion } from "../../../../types/Quiz/quiz"
+import QuizCard from "./QuizCard"
+import QuizSession from "./QuizSession"
+import { trackQuizStart } from "../../../../utils/eleveActivityTracker"
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 3
 
 export default function QuizView() {
-  const [quizList, setQuizList] = useState<QuizWithClasse[]>([]);
-  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [prenom, setPrenom] = useState('');
-  const [resultsMap, setResultsMap] = useState<Map<string, { score: number; total: number; completed_at: string }>>(new Map());
-  const [cumulativeScore, setCumulativeScore] = useState({ score: 0, total: 0, percentage: 0 });
-  const [showOnlyUncompleted, setShowOnlyUncompleted] = useState(false);
+  const [quizList, setQuizList] = useState<QuizWithClasse[]>([])
+  const [activeQuizId, setActiveQuizId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [prenom, setPrenom] = useState("")
+  const [resultsMap, setResultsMap] = useState<Map<string, { score: number; total: number; completed_at: string }>>(
+    new Map(),
+  )
+  const [cumulativeScore, setCumulativeScore] = useState({ score: 0, total: 0, percentage: 0 })
+  const [showOnlyUncompleted, setShowOnlyUncompleted] = useState(false)
 
   const refreshData = async () => {
-    setLoading(true);
-    const { data: session } = await supabase.auth.getSession();
-    const user = session?.session?.user;
+    setLoading(true)
+    const { data: session } = await supabase.auth.getSession()
+    const user = session?.session?.user
 
     // 🎯 MODE INVITÉ
     if (!user) {
       const { data: allQuizzes, error } = await supabase
-        .from('vue_quiz_details')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("vue_quiz_details")
+        .select("*")
+        .order("created_at", { ascending: false })
 
       if (error) {
-        console.error("Erreur chargement quiz publics :", error);
-        setLoading(false);
-        return;
+        console.error("Erreur chargement quiz publics :", error)
+        setLoading(false)
+        return
       }
 
-      const quizIds = (allQuizzes || []).map(q => q.quiz_id);
+      const quizIds = (allQuizzes || []).map((q) => q.quiz_id)
 
       const { data: publicQuestions, error: questionError } = await supabase
-        .from('questions')
-        .select('*')
-        .in('quiz_id', quizIds);
+        .from("questions")
+        .select("*")
+        .in("quiz_id", quizIds)
 
       if (questionError) {
-        console.error("Erreur chargement questions publics :", questionError);
+        console.error("Erreur chargement questions publics :", questionError)
       }
 
       const quizzesWithQuestions = (allQuizzes || []).map((quiz) => ({
         ...quiz,
         id: quiz.quiz_id,
-        questions: (publicQuestions || []).filter(q => q.quiz_id === quiz.quiz_id) as QuizQuestion[],
-      }));
+        questions: (publicQuestions || []).filter((q) => q.quiz_id === quiz.quiz_id) as QuizQuestion[],
+      }))
 
-      setQuizList(quizzesWithQuestions);
-      setLoading(false);
-      return;
+      setQuizList(quizzesWithQuestions)
+      setLoading(false)
+      return
     }
 
     // 👤 UTILISATEUR CONNECTÉ
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', user.id)
-      .single();
+    const { data: profile } = await supabase.from("profiles").select("name, role").eq("id", user.id).single()
 
-    if (profile?.role !== 'eleve') {
-      setLoading(false);
-      return;
+    if (profile?.role !== "eleve") {
+      setLoading(false)
+      return
     }
 
-    setPrenom(profile.name || '');
+    setPrenom(profile.name || "")
 
-    const { data: ec } = await supabase
-      .from('eleves_classes')
-      .select('classe_id')
-      .eq('eleve_id', user.id)
-      .single();
+    const { data: ec } = await supabase.from("eleves_classes").select("classe_id").eq("eleve_id", user.id).single()
 
-    const classeId = ec?.classe_id;
+    const classeId = ec?.classe_id
     if (!classeId) {
-      setLoading(false);
-      return;
+      setLoading(false)
+      return
     }
 
-    const { data: classe } = await supabase
-      .from('classes')
-      .select('code_classe')
-      .eq('id', classeId)
-      .single();
+    const { data: classe } = await supabase.from("classes").select("code_classe").eq("id", classeId).single()
 
-    const code_classe = classe?.code_classe;
+    const code_classe = classe?.code_classe
     if (!code_classe) {
-      setLoading(false);
-      return;
+      setLoading(false)
+      return
     }
 
     const { data: quizzes, error: quizError } = await supabase
-      .from('vue_quiz_details')
-      .select('*')
-      .contains('code_classe', [code_classe])
-      .order('created_at', { ascending: false });
+      .from("vue_quiz_details")
+      .select("*")
+      .contains("code_classe", [code_classe])
+      .order("created_at", { ascending: false })
 
     if (quizError) {
-      console.error("Erreur chargement quiz:", quizError);
-      setLoading(false);
-      return;
+      console.error("Erreur chargement quiz:", quizError)
+      setLoading(false)
+      return
     }
 
-    const quizIds = quizzes?.map(q => q.quiz_id) || [];
+    const quizIds = quizzes?.map((q) => q.quiz_id) || []
 
     const { data: questions, error: questionError } = await supabase
-      .from('questions')
-      .select('*')
-      .in('quiz_id', quizIds);
+      .from("questions")
+      .select("*")
+      .in("quiz_id", quizIds)
 
     if (questionError) {
-      console.error("Erreur chargement questions :", questionError);
+      console.error("Erreur chargement questions :", questionError)
     }
 
     const quizzesWithQuestions = (quizzes || []).map((quiz) => ({
       ...quiz,
       id: quiz.quiz_id,
-      questions: (questions || []).filter(q => q.quiz_id === quiz.quiz_id) as QuizQuestion[],
-    }));
+      questions: (questions || []).filter((q) => q.quiz_id === quiz.quiz_id) as QuizQuestion[],
+    }))
 
-    setQuizList(quizzesWithQuestions);
+    setQuizList(quizzesWithQuestions)
 
-    const { data: results } = await supabase
-      .from('quiz_results')
-      .select('*')
-      .eq('eleve_id', user.id);
+    const { data: results } = await supabase.from("quiz_results").select("*").eq("eleve_id", user.id)
 
-    const resultMap = new Map();
-    let totalScore = 0;
-    let totalPossible = 0;
+    const resultMap = new Map()
+    let totalScore = 0
+    let totalPossible = 0
 
-    results?.forEach(result => {
+    results?.forEach((result) => {
       resultMap.set(result.quiz_id, {
         score: result.score,
         total: result.total,
         completed_at: result.completed_at,
-      });
-      totalScore += result.score;
-      totalPossible += result.total;
-    });
+      })
+      totalScore += result.score
+      totalPossible += result.total
+    })
 
-    setResultsMap(resultMap);
+    setResultsMap(resultMap)
     setCumulativeScore({
       score: totalScore,
       total: totalPossible,
       percentage: totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0,
-    });
+    })
 
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   useEffect(() => {
-    refreshData();
-  }, []);
+    refreshData()
+  }, [])
 
-  const handleStartQuiz = (quizId: string) => setActiveQuizId(quizId);
+  const handleStartQuiz = async (quizId: string) => {
+    const quiz = quizList.find((q) => q.id === quizId)
+    if (quiz) {
+      await trackQuizStart(quiz.id, quiz.titre)
+    }
+    setActiveQuizId(quizId)
+  }
   const handleCompleteQuiz = async () => {
-    setActiveQuizId(null);
-    await refreshData();
-  };
+    setActiveQuizId(null)
+    await refreshData()
+  }
 
-  const currentQuiz = activeQuizId ? quizList.find(q => q.id === activeQuizId) : null;
+  const currentQuiz = activeQuizId ? quizList.find((q) => q.id === activeQuizId) : null
 
-  const filteredQuizList = showOnlyUncompleted
-    ? quizList.filter((quiz) => !resultsMap.has(quiz.id))
-    : quizList;
+  const filteredQuizList = showOnlyUncompleted ? quizList.filter((quiz) => !resultsMap.has(quiz.id)) : quizList
 
-  const totalPages = Math.ceil(filteredQuizList.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentPageData = filteredQuizList.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredQuizList.length / ITEMS_PER_PAGE)
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE
+  const currentPageData = filteredQuizList.slice(startIdx, startIdx + ITEMS_PER_PAGE)
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+    if (page >= 1 && page <= totalPages) setCurrentPage(page)
+  }
 
   if (currentQuiz) {
-    return (
-      <QuizSession
-        quiz={currentQuiz}
-        onComplete={handleCompleteQuiz}
-        onExit={() => setActiveQuizId(null)}
-      />
-    );
+    return <QuizSession quiz={currentQuiz} onComplete={handleCompleteQuiz} onExit={() => setActiveQuizId(null)} />
   }
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-12 space-y-10">
       <h2 className="text-2xl font-bold text-gray-800">
-        {prenom ? `Bienvenue ${prenom} 👋 – Quiz disponibles` : 'Quiz disponibles (mode invité)'}
+        {prenom ? `Bienvenue ${prenom} 👋 – Quiz disponibles` : "Quiz disponibles (mode invité)"}
       </h2>
 
       {prenom && (
         <div className="bg-purple-50 border border-purple-100 p-4 rounded-md text-sm text-purple-800">
-          Progression cumulée : <strong>{cumulativeScore.score} / {cumulativeScore.total}</strong> ({cumulativeScore.percentage}%)
+          Progression cumulée :{" "}
+          <strong>
+            {cumulativeScore.score} / {cumulativeScore.total}
+          </strong>{" "}
+          ({cumulativeScore.percentage}%)
         </div>
       )}
 
       {prenom && (
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowOnlyUncompleted(prev => !prev)}
+            onClick={() => setShowOnlyUncompleted((prev) => !prev)}
             className="text-sm text-indigo-600 underline hover:text-indigo-800"
           >
-            {showOnlyUncompleted ? '🔁 Voir tous les quiz' : '⏳ Voir uniquement les quiz non faits'}
+            {showOnlyUncompleted ? "🔁 Voir tous les quiz" : "⏳ Voir uniquement les quiz non faits"}
           </button>
         </div>
       )}
@@ -222,12 +212,7 @@ export default function QuizView() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentPageData.map((quiz) => (
-              <QuizCard
-                key={quiz.id}
-                quiz={quiz}
-                onStart={handleStartQuiz}
-                scoreInfo={resultsMap.get(quiz.id)}
-              />
+              <QuizCard key={quiz.id} quiz={quiz} onStart={handleStartQuiz} scoreInfo={resultsMap.get(quiz.id)} />
             ))}
           </div>
 
@@ -241,20 +226,20 @@ export default function QuizView() {
             </button>
 
             {[...Array(totalPages)].map((_, index) => {
-              const pageNum = index + 1;
+              const pageNum = index + 1
               return (
                 <button
                   key={pageNum}
                   onClick={() => goToPage(pageNum)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition ${
                     currentPage === pageNum
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   {pageNum}
                 </button>
-              );
+              )
             })}
 
             <button
@@ -268,5 +253,5 @@ export default function QuizView() {
         </>
       )}
     </div>
-  );
+  )
 }

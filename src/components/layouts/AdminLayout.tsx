@@ -1,68 +1,87 @@
-'use client';
+"use client"
 
-import { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  UsersRound,
-  FileSpreadsheet,
-  FlaskRound as Flask,
-  Menu,
-  X,
-} from 'lucide-react';
-import UserMenu from './../../components/ui/UserMenu';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from "react"
+import { Outlet, NavLink } from "react-router-dom"
+import { LayoutDashboard, UsersRound, FileSpreadsheet, FlaskRoundIcon as Flask, Menu, X } from "lucide-react"
+import UserMenu from "./../../components/ui/UserMenu"
+import { toast } from "sonner"
+import { supabase } from "../../lib/supabaseClient"
+import { trackLogin } from "../../utils/eleveActivityTracker"
 
 export default function AdminLayout() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const drawerRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const drawerRef = useRef(null)
+  const hasTrackedLogin = useRef(false)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+      setIsScrolled(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isDrawerOpen &&
-        drawerRef.current &&
-        !(drawerRef.current as HTMLElement).contains(event.target as Node)
-      ) {
-        setIsDrawerOpen(false);
+      if (isDrawerOpen && drawerRef.current && !(drawerRef.current as HTMLElement).contains(event.target as Node)) {
+        setIsDrawerOpen(false)
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isDrawerOpen]);
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [isDrawerOpen])
 
   useEffect(() => {
-    toast.success('Bienvenue sur le tableau de bord administrateur 🧪');
-  }, []);
+    toast.success("Bienvenue sur le tableau de bord administrateur 🧪")
+
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession()
+      const isAuthenticated = !!data.session
+
+      // 🎯 Tracker la connexion admin une seule fois
+      if (isAuthenticated && !hasTrackedLogin.current) {
+        await trackLogin()
+        hasTrackedLogin.current = true
+        console.log("✅ Connexion admin trackée")
+      }
+    }
+    checkAuth()
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
+        await trackLogin()
+        hasTrackedLogin.current = true
+        console.log("✅ Connexion admin trackée (auth change)")
+      }
+
+      if (event === "SIGNED_OUT") {
+        hasTrackedLogin.current = false
+        console.log("🚪 Déconnexion admin")
+      }
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
 
   const navItems = [
-    { path: '/admin/AdminDashboard', icon: LayoutDashboard, label: 'Dashboard Administrateur' },
-    { path: '/admin/AdminUser', icon: FileSpreadsheet, label: 'Gestion Utilisateur' },
-    { path: '/admin/AdminClasse', icon: UsersRound, label: 'Gestion Classe' },
-  ];
+    { path: "/admin/AdminDashboard", icon: LayoutDashboard, label: "Dashboard Administrateur" },
+    { path: "/admin/AdminUser", icon: FileSpreadsheet, label: "Gestion Utilisateur" },
+    { path: "/admin/AdminClasse", icon: UsersRound, label: "Gestion Classe" },
+  ]
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
       {/* 🔵 Top Navbar */}
-      <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : 'bg-indigo-900'}`}>
+      <nav
+        className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? "bg-indigo-900/95 shadow-md" : "bg-indigo-900"}`}
+      >
         <div className="max-w-[1280px] mx-auto px-4 py-1">
           <div className="flex items-center justify-between h-14">
             {/* LEFT: Logo + Menu */}
             <div className="flex items-center gap-4">
               {/* Burger menu (mobile only) */}
-              <button
-                className="lg:hidden text-white"
-                onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-              >
+              <button className="lg:hidden text-white" onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
                 {isDrawerOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
 
@@ -85,7 +104,7 @@ export default function AdminLayout() {
       <div
         ref={drawerRef}
         className={`lg:hidden fixed top-16 left-0 w-64 h-screen bg-white z-40 shadow-md transform transition-transform duration-300 ease-in-out
-        ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Logo VirtuaLab dans le drawer */}
         <div className="flex items-center gap-2 px-4 py-3 border-b">
@@ -102,9 +121,7 @@ export default function AdminLayout() {
               onClick={() => setIsDrawerOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 text-sm py-2 px-3 rounded-md transition-all ${
-                  isActive
-                    ? 'bg-indigo-100 text-indigo-700 font-semibold'
-                    : 'text-gray-700 hover:bg-gray-100'
+                  isActive ? "bg-indigo-100 text-indigo-700 font-semibold" : "text-gray-700 hover:bg-gray-100"
                 }`
               }
             >
@@ -127,8 +144,8 @@ export default function AdminLayout() {
                   `text-sm font-medium px-2 pb-1 border-b-2 transition-all flex items-center gap-1.5
                   ${
                     isActive
-                      ? 'text-indigo-700 border-indigo-600'
-                      : 'text-gray-500 border-transparent hover:text-indigo-500 hover:border-indigo-300'
+                      ? "text-indigo-700 border-indigo-600"
+                      : "text-gray-500 border-transparent hover:text-indigo-500 hover:border-indigo-300"
                   }`
                 }
               >
@@ -154,5 +171,5 @@ export default function AdminLayout() {
         </div>
       </footer>
     </div>
-  );
+  )
 }

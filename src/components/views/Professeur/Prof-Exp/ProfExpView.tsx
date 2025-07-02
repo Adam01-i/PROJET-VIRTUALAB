@@ -1,175 +1,237 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../../../../lib/supabaseClient';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
-import ProfExpCard from './ProfExpCard';
-import ExperienceFormModal from './ExperienceFormModal';
+import { useEffect, useState } from "react"
+import { supabase } from "../../../../lib/supabaseClient"
+import { v4 as uuidv4 } from "uuid"
+import { toast } from "sonner"
+import ProfExpCard from "./ProfExpCard"
+import ExperienceFormModal from "./ExperienceFormModal"
+import { useAutoRefresh } from "../../../../hooks/useAutoRefresh"
+import {
+  trackExperienceCreate,
+  trackExperienceUpdate,
+  trackExperienceDelete,
+} from "../../../../utils/profActivityTracker"
 
-const DUREE_OPTIONS = ['15 min', '30 min', '45 min', '60 min'];
-const NIVEAU_OPTIONS = ['Débutant', 'Intermédiaire', 'Avancé'];
+const DUREE_OPTIONS = ["15 min", "30 min", "45 min", "60 min"]
+const NIVEAU_OPTIONS = ["Débutant", "Intermédiaire", "Avancé"]
 
 export default function ProfExpView() {
-  const [experiences, setExperiences] = useState<any[]>([]);
-  const [formData, setFormData] = useState<any | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [, setUploading] = useState(false);
-  const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([]);
-  const [classeFilter, setClasseFilter] = useState<string>('all');
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null)
+  const [classes, setClasses] = useState<{ id: string; code_classe: string }[]>([])
+  const [classeFilter, setClasseFilter] = useState<string>("all")
+  const [modalOpen, setModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState<any | null>(null)
+  const [experiences, setExperiences] = useState<any[]>([])
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  // const [loading, setLoading] = useState(false)
 
-  const totalExperiences = experiences.length;
+  const totalExperiences = experiences.length
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data: session } = await supabase.auth.getSession();
-      setUserId(session?.session?.user?.id ?? null);
-    };
-
-    const fetchClasses = async () => {
-      const { data } = await supabase.from('mes_classes').select('id, code_classe');
-      setClasses(data || []);
-    };
-
-    fetchSession();
-    fetchClasses();
-  }, []);
-
-  useEffect(() => {
-    if (userId) fetchExperiences();
-  }, [classeFilter, userId]);
-
+  // Déclarer fetchExperiences avant son utilisation
   const fetchExperiences = async () => {
+    if (!userId) return
+
     let query = supabase
       .from("vue_experience_details")
       .select("*")
       .eq("auteur_id", userId!)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
 
-    if (classeFilter !== 'all') {
-      query = query.contains("code_classe", [classeFilter]);
+    if (classeFilter !== "all") {
+      query = query.contains("code_classe", [classeFilter])
     }
 
-    const { data, error } = await query;
-    if (error) toast.error("Erreur chargement expériences", { description: error.message });
-    else setExperiences(data || []);
-  };
+    const { data, error } = await query
+    if (error) {
+      console.error("Erreur chargement expériences:", error)
+    } else {
+      setExperiences(data || [])
+      setLastUpdate(new Date())
+      console.log(`🔄 Expériences rechargées: ${data?.length || 0} éléments`)
+    }
+  }
+
+  // 🔄 Rafraîchissement automatique toutes les 10 secondes
+  const { forceRefresh } = useAutoRefresh({
+    onRefresh: fetchExperiences,
+    interval: 10000, // 10 secondes
+    enabled: !modalOpen, // Désactiver pendant l'édition
+  })
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: session } = await supabase.auth.getSession()
+      setUserId(session?.session?.user?.id ?? null)
+    }
+
+    const fetchClasses = async () => {
+      const { data } = await supabase.from("mes_classes").select("id, code_classe")
+      setClasses(data || [])
+    }
+
+    fetchSession()
+    fetchClasses()
+  }, [])
+
+  useEffect(() => {
+    if (userId) fetchExperiences()
+  }, [classeFilter, userId])
 
   const handleSave = async () => {
     if (!formData?.titre || !formData.description || !formData.selectedClasseIds?.length) {
-      toast.error("Titre, description et au moins une classe sont requis.");
-      return;
+      toast.error("Titre, description et au moins une classe sont requis.")
+      return
     }
 
-    const isNew = !formData.id;
+    const isNew = !formData.id
     const allowedKeys = [
-      'id', 'titre', 'description', 'duree', 'niveau',
-      'image', 'simulationPath', 'objectifs', 'materiel',
-      'resultatsAttendus', 'auteur_id', 'is_public'
-    ];
+      "id",
+      "titre",
+      "description",
+      "duree",
+      "niveau",
+      "image",
+      "simulationPath",
+      "objectifs",
+      "materiel",
+      "resultatsAttendus",
+      "auteur_id",
+      "is_public",
+    ]
 
-    const cleanFormData = Object.fromEntries(
-      Object.entries(formData).filter(([key]) => allowedKeys.includes(key))
-    );
+    const cleanFormData = Object.fromEntries(Object.entries(formData).filter(([key]) => allowedKeys.includes(key)))
 
     if (isNew) {
-      cleanFormData.id = uuidv4();
-      cleanFormData.auteur_id = userId;
+      cleanFormData.id = uuidv4()
+      cleanFormData.auteur_id = userId
     }
 
     await toast.promise(
       (async () => {
         if (isNew) {
-          const { data: inserted, error } = await supabase
-            .from("experiences")
-            .insert([cleanFormData])
-            .select();
-          if (error || !inserted?.[0]) throw new Error("Erreur ajout.");
-          await supabase
-            .from("classes_experiences")
-            .insert(formData.selectedClasseIds.map((classeId: string) => ({
-              experience_id: inserted[0].id, classe_id: classeId,
-            })));
-        } else {
-          await supabase
-            .from("experiences")
-            .update(cleanFormData)
-            .eq("id", formData.id);
-          await supabase.from("classes_experiences").delete().eq("experience_id", formData.id);
+          const { data: inserted, error } = await supabase.from("experiences").insert([cleanFormData]).select()
+          if (error || !inserted?.[0]) throw new Error("Erreur ajout.")
+
+          // 🎯 Tracker la création
+          await trackExperienceCreate(inserted[0].id, formData.titre)
+
           await supabase.from("classes_experiences").insert(
             formData.selectedClasseIds.map((classeId: string) => ({
-              experience_id: formData.id, classe_id: classeId,
-            }))
-          );
+              experience_id: inserted[0].id,
+              classe_id: classeId,
+            })),
+          )
+        } else {
+          await supabase.from("experiences").update(cleanFormData).eq("id", formData.id)
+
+          // 🎯 Tracker la modification
+          await trackExperienceUpdate(formData.id, formData.titre)
+
+          await supabase.from("classes_experiences").delete().eq("experience_id", formData.id)
+          await supabase.from("classes_experiences").insert(
+            formData.selectedClasseIds.map((classeId: string) => ({
+              experience_id: formData.id,
+              classe_id: classeId,
+            })),
+          )
         }
       })(),
       {
         loading: "Enregistrement...",
         success: isNew ? "Ajoutée !" : "Modifiée !",
         error: "Échec de l'enregistrement.",
-      }
-    );
+      },
+    )
 
-    fetchExperiences();
-    resetForm();
-  };
+    // 🔄 Rafraîchir immédiatement après sauvegarde
+    await fetchExperiences()
+    resetForm()
+  }
+
+  const handleDelete = async (id: string) => {
+    const experience = experiences.find((exp) => exp.id === id)
+    if (!experience) return
+
+    if (!confirm("Supprimer cette expérience ?")) return
+
+    const { error } = await supabase.from("experiences").delete().eq("id", id)
+    if (error) {
+      toast.error("Erreur suppression")
+    } else {
+      // 🎯 Tracker la suppression
+      await trackExperienceDelete(id, experience.titre)
+      toast.success("Expérience supprimée")
+
+      // 🔄 Rafraîchir immédiatement après suppression
+      await fetchExperiences()
+      resetForm()
+    }
+  }
 
   const resetForm = () => {
-    setFormData(null);
-    setIsEditing(false);
-    setModalOpen(false);
-  };
+    setFormData(null)
+    setIsEditing(false)
+    setModalOpen(false)
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const path = `simulations/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from("simulations").upload(path, file);
-    if (error) toast.error("Échec upload simulation");
+    const file = e.target.files?.[0]
+    if (!file) return
+    // setLoading(true)
+    const path = `simulations/${Date.now()}_${file.name}`
+    const { error } = await supabase.storage.from("simulations").upload(path, file)
+    if (error) toast.error("Échec upload simulation")
     else {
-      const { data } = supabase.storage.from("simulations").getPublicUrl(path);
-      setFormData((prev: any) => ({ ...prev, simulationPath: data.publicUrl }));
+      const { data } = supabase.storage.from("simulations").getPublicUrl(path)
+      setFormData((prev: any) => ({ ...prev, simulationPath: data.publicUrl }))
     }
-    setUploading(false);
-  };
+    // setLoading(false)
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const path = `${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from("images-sim").upload(path, file);
-    if (error) toast.error("Échec upload image");
+    const file = e.target.files?.[0]
+    if (!file) return
+    // setLoading(true)
+    const path = `${Date.now()}_${file.name}`
+    const { error } = await supabase.storage.from("images-sim").upload(path, file)
+    if (error) toast.error("Échec upload image")
     else {
-      const { data } = supabase.storage.from("images-sim").getPublicUrl(path);
-      setFormData((prev: any) => ({ ...prev, image: data.publicUrl }));
+      const { data } = supabase.storage.from("images-sim").getPublicUrl(path)
+      setFormData((prev: any) => ({ ...prev, image: data.publicUrl }))
     }
-    setUploading(false);
-  };
+    // setLoading(false)
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-indigo-800">Mes Simulations</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-indigo-800">Mes Simulations</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Dernière mise à jour: {lastUpdate.toLocaleTimeString("fr-FR")}
+            <button onClick={forceRefresh} className="ml-2 text-indigo-600 hover:text-indigo-800 underline">
+              🔄 Actualiser
+            </button>
+          </p>
+        </div>
         <button
           onClick={() => {
             setFormData({
-              titre: '',
-              description: '',
+              titre: "",
+              description: "",
               duree: DUREE_OPTIONS[0],
               niveau: NIVEAU_OPTIONS[0],
               objectifs: [],
               materiel: [],
               resultatsAttendus: [],
               selectedClasseIds: [],
-              image: '',
-              simulationPath: '',
-            });
-            setIsEditing(false);
-            setModalOpen(true);
+              image: "",
+              simulationPath: "",
+            })
+            setIsEditing(false)
+            setModalOpen(true)
           }}
           className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
         >
@@ -186,7 +248,9 @@ export default function ProfExpView() {
         >
           <option value="all">Toutes</option>
           {classes.map((c) => (
-            <option key={c.id} value={c.code_classe}>{c.code_classe}</option>
+            <option key={c.id} value={c.code_classe}>
+              {c.code_classe}
+            </option>
           ))}
         </select>
         <span className="ml-3 text-sm text-gray-500 font-normal">| Total : {totalExperiences} Simulations</span>
@@ -206,24 +270,15 @@ export default function ProfExpView() {
                 const { data: classeLinks } = await supabase
                   .from("classes_experiences")
                   .select("classe_id")
-                  .eq("experience_id", exp.id);
+                  .eq("experience_id", exp.id)
                 setFormData({
                   ...exp,
-                  selectedClasseIds: classeLinks?.map((l) => l.classe_id) || []
-                });
-                setIsEditing(true);
-                setModalOpen(true);
+                  selectedClasseIds: classeLinks?.map((l) => l.classe_id) || [],
+                })
+                setIsEditing(true)
+                setModalOpen(true)
               }}
-              onDelete={async (id) => {
-                if (!confirm("Supprimer cette expérience ?")) return;
-                const { error } = await supabase.from("experiences").delete().eq("id", id);
-                if (error) toast.error("Erreur suppression");
-                else {
-                  toast.success("Expérience supprimée");
-                  fetchExperiences();
-                  resetForm();
-                }
-              }}
+              onDelete={handleDelete}
             />
           ))
         )}
@@ -245,5 +300,5 @@ export default function ProfExpView() {
         handleImageUpload={handleImageUpload}
       />
     </div>
-  );
+  )
 }

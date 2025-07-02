@@ -1,71 +1,87 @@
-import { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import {
-  FlaskRound as Flask,
-  Brain,
-  Cuboid as Cube,
-  Book,
-  LogIn,
-} from 'lucide-react';
-import ImageCarouselBackground from '../ui/ImageCarouselBackground';
-import UserMenu from '../../components/ui/UserMenu';
-import { supabase } from '../../lib/supabaseClient';
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Outlet, NavLink, useLocation } from "react-router-dom"
+import { FlaskRoundIcon as Flask, Brain, CuboidIcon as Cube, Book, LogIn } from "lucide-react"
+import ImageCarouselBackground from "../ui/ImageCarouselBackground"
+import UserMenu from "../../components/ui/UserMenu"
+import { supabase } from "../../lib/supabaseClient"
+import { trackLogin } from "../../utils/eleveActivityTracker"
 
 export default function EleveLayout() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const location = useLocation();
-  const menuRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const location = useLocation()
+  const menuRef = useRef(null)
+  const hasTrackedLogin = useRef(false)
 
-  const fullWidthPaths = ["/eleve/experiences", "/eleve/3d", "/eleve/quiz"];
-  const isFullWidth = fullWidthPaths.some(path => location.pathname.includes(path));
+  const fullWidthPaths = ["/eleve/experiences", "/eleve/3d", "/eleve/quiz"]
+  const isFullWidth = fullWidthPaths.some((path) => location.pathname.includes(path))
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 500);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    const handleScroll = () => setIsScrolled(window.scrollY > 500)
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsLoggedIn(!!data.session);
-    };
-    checkAuth();
+      const { data } = await supabase.auth.getSession()
+      const isAuthenticated = !!data.session
+      setIsLoggedIn(isAuthenticated)
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
+      // 🎯 Tracker la connexion une seule fois
+      if (isAuthenticated && !hasTrackedLogin.current) {
+        await trackLogin()
+        hasTrackedLogin.current = true
+        console.log("✅ Connexion élève trackée")
+      }
+    }
+    checkAuth()
 
-    return () => listener.subscription.unsubscribe();
-  }, []);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const isAuthenticated = !!session
+      setIsLoggedIn(isAuthenticated)
+
+      if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
+        await trackLogin()
+        hasTrackedLogin.current = true
+        console.log("✅ Connexion élève trackée (auth change)")
+      }
+
+      if (event === "SIGNED_OUT") {
+        hasTrackedLogin.current = false
+        console.log("🚪 Déconnexion élève")
+      }
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isMobileMenuOpen &&
-        menuRef.current &&
-        !(menuRef.current as HTMLElement).contains(event.target as Node)
-      ) {
-        setIsMobileMenuOpen(false);
+      if (isMobileMenuOpen && menuRef.current && !(menuRef.current as HTMLElement).contains(event.target as Node)) {
+        setIsMobileMenuOpen(false)
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMobileMenuOpen]);
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [isMobileMenuOpen])
 
   const navItems = [
-    { path: '/', icon: Book, label: 'Accueil' },
-    { path: '/eleve/experiences', icon: Flask, label: 'Simulations' },
-    { path: '/eleve/quiz', icon: Brain, label: 'Quiz' },
-    { path: '/eleve/3d', icon: Cube, label: 'Visualisation 3D' },
-  ];
+    { path: "/", icon: Book, label: "Accueil" },
+    { path: "/eleve/experiences", icon: Flask, label: "Simulations" },
+    { path: "/eleve/quiz", icon: Brain, label: "Quiz" },
+    { path: "/eleve/3d", icon: Cube, label: "Visualisation 3D" },
+  ]
 
   return (
     <div className="min-h-screen bg-white text-white">
       {/* ✅ Navbar élève */}
-      <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-indigo-900/95 shadow-md' : ''}`}>
+      <nav
+        className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? "bg-indigo-900/95 shadow-md" : ""}`}
+      >
         <div className="max-w-[1280px] mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
@@ -76,9 +92,8 @@ export default function EleveLayout() {
                   key={path}
                   to={path}
                   className={({ isActive }) =>
-                    `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${isActive
-                      ? 'bg-white/10 text-white font-semibold'
-                      : 'text-purple-200 hover:bg-white/5'
+                    `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${
+                      isActive ? "bg-white/10 text-white font-semibold" : "text-purple-200 hover:bg-white/5"
                     }`
                   }
                 >
@@ -101,8 +116,11 @@ export default function EleveLayout() {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d={isMobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
                   />
                 </svg>
               </button>
@@ -110,7 +128,6 @@ export default function EleveLayout() {
 
             {/* Menu desktop */}
             <div className="hidden md:flex flex-wrap gap-2">
-              
               {isLoggedIn ? (
                 <UserMenu />
               ) : (
@@ -130,7 +147,7 @@ export default function EleveLayout() {
         <div
           ref={menuRef}
           className={`md:hidden absolute top-14 left-0 right-0 bg-indigo-900/95 shadow-md px-4 py-4 space-y-3 z-50 transform transition-transform duration-300 origin-top ${
-            isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 pointer-events-none'
+            isMobileMenuOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0 pointer-events-none"
           }`}
         >
           {navItems.map(({ path, icon: Icon, label }) => (
@@ -139,9 +156,8 @@ export default function EleveLayout() {
               to={path}
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition ${isActive
-                  ? 'bg-white/10 text-white font-semibold'
-                  : 'text-purple-200 hover:bg-white/5'
+                `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition ${
+                  isActive ? "bg-white/10 text-white font-semibold" : "text-purple-200 hover:bg-white/5"
                 }`
               }
             >
@@ -181,5 +197,5 @@ export default function EleveLayout() {
         </div>
       </footer>
     </div>
-  );
+  )
 }

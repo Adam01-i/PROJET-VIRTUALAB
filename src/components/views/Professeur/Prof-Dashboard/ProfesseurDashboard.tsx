@@ -1,142 +1,141 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../../../../lib/supabaseClient';
-import CardStat from '../../../ui/CardStat';
-import { AcademicCapIcon, UserGroupIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import GraphActivityByClasse from './GraphActivityByClasse';
-import GraphActivityParEleve from './GraphActivityParEleve';
-import AllActivity from './AllActivity';
+import { useEffect, useState } from "react"
+import { supabase } from "../../../../lib/supabaseClient"
+import CardStat from "../../../ui/CardStat"
+import { AcademicCapIcon, UserGroupIcon, ChartBarIcon } from "@heroicons/react/24/outline"
+import GraphActivityByClasse from "./GraphActivityByClasse"
+import GraphActivityParEleve from "./GraphActivityParEleve"
+import AllActivity from "./AllActivity"
 
-type Classe = { id: string; code_classe: string };
+type Classe = { id: string; code_classe: string }
 
 type EleveActivite = {
-  id: string;
-  name: string;
-  classe: string;
-  quiz: number;
-  simulation: number;
-  objet3d: number;
-  total_score: number;
-  created_at?: string;
-};
+  id: string
+  name: string
+  classe: string
+  quiz: number
+  simulation: number
+  objet3d: number
+  total_score: number
+  created_at?: string
+}
 
 type ActiviteClasse = {
-  classe: string;
-  quiz: number;
-  simulation: number;
-  objet3d: number;
-  created_at: string;
-};
+  classe: string
+  quiz: number
+  simulation: number
+  objet3d: number
+  created_at: string
+}
 
 export default function ProfesseurDashboard() {
-  const [period] = useState<'7j' | '30j'>('7j');
-  const [classes, setClasses] = useState<Classe[]>([]);
-  const [selectedClasseEleve, setSelectedClasseEleve] = useState<string | 'all'>('all');
-  const [parClasse, setParClasse] = useState<ActiviteClasse[]>([]);
-  const [parEleve, setParEleve] = useState<EleveActivite[]>([]);
+  const [period] = useState<"7j" | "30j">("7j")
+  const [classes, setClasses] = useState<Classe[]>([])
+  const [selectedClasseEleve, setSelectedClasseEleve] = useState<string | "all">("all")
+  const [parClasse, setParClasse] = useState<ActiviteClasse[]>([])
+  const [parEleve, setParEleve] = useState<EleveActivite[]>([])
+  const [totalActivities, setTotalActivities] = useState(0)
 
   useEffect(() => {
-    loadData();
-  }, [period]);
+    loadData()
+  }, [period])
 
   async function loadData() {
-    const since = new Date();
-    since.setDate(since.getDate() - (period === '7j' ? 7 : 30));
+    const since = new Date()
+    since.setDate(since.getDate() - (period === "7j" ? 7 : 30))
 
     const [{ data: mesClasses }, { data: elevesClasses }] = await Promise.all([
-      supabase.from('mes_classes').select('*'),
-      supabase.from('eleves_classes').select('eleve_id, classe_id'),
-    ]);
+      supabase.from("mes_classes").select("*"),
+      supabase.from("eleves_classes").select("eleve_id, classe_id"),
+    ])
 
-    if (!mesClasses || !elevesClasses) return;
+    if (!mesClasses || !elevesClasses) return
 
-    setClasses(mesClasses);
+    setClasses(mesClasses)
 
-    const classeMap: Record<string, string> = {};
-    const eleveIds: string[] = [];
+    const classeMap: Record<string, string> = {}
+    const eleveIds: string[] = []
 
     elevesClasses.forEach(({ eleve_id, classe_id }) => {
-      const cl = mesClasses.find((c) => c.id === classe_id);
+      const cl = mesClasses.find((c) => c.id === classe_id)
       if (cl) {
-        classeMap[eleve_id] = cl.code_classe;
-        eleveIds.push(eleve_id);
+        classeMap[eleve_id] = cl.code_classe
+        eleveIds.push(eleve_id)
       }
-    });
+    })
 
     const [{ data: profils }, { data: logs }] = await Promise.all([
-      supabase.from('profiles').select('id, name, surname').in('id', eleveIds),
-      supabase
-        .from('activity_logs')
-        .select('user_id, created_at, type')
-        .in('user_id', eleveIds),
-    ]);
+      supabase.from("profiles").select("id, name, surname").in("id", eleveIds),
+      supabase.from("activity_logs").select("user_id, created_at, activity_type").in("user_id", eleveIds),
+    ])
 
-    if (!profils || !logs) return;
+    if (!profils || !logs) return
+
+    // Compter le total des activités des élèves
+    setTotalActivities(logs.length)
 
     // === 🔍 1. Activités par élève
-    const eleveMap: Record<string, EleveActivite> = {};
+    const eleveMap: Record<string, EleveActivite> = {}
     for (const e of profils) {
       eleveMap[e.id] = {
         id: e.id,
-        name: `${e.name ?? ''} ${e.surname ?? ''}`.trim(),
-        classe: classeMap[e.id] || 'Inconnue',
+        name: `${e.name ?? ""} ${e.surname ?? ""}`.trim(),
+        classe: classeMap[e.id] || "Inconnue",
         quiz: 0,
         simulation: 0,
         objet3d: 0,
         total_score: 0,
         created_at: undefined,
-      };
+      }
     }
 
-    logs.forEach(({ user_id, type, created_at }) => {
-      const el = eleveMap[user_id];
-      if (!el) return;
+    logs.forEach(({ user_id, activity_type, created_at }) => {
+      const el = eleveMap[user_id]
+      if (!el) return
 
       if (!el.created_at || new Date(created_at) > new Date(el.created_at)) {
-        el.created_at = created_at;
+        el.created_at = created_at
       }
 
-      if (type === 'quiz') el.quiz++;
-      if (type === 'simulation') el.simulation++;
-      if (type === 'objet3d') el.objet3d++;
-      el.total_score++;
-    });
+      if (activity_type === "quiz") el.quiz++
+      if (activity_type === "simulation") el.simulation++
+      if (activity_type === "objet3d") el.objet3d++
+      el.total_score++
+    })
 
-    setParEleve(Object.values(eleveMap));
+    setParEleve(Object.values(eleveMap))
 
     // === 🔍 2. Activité par classe basée sur les logs
-    const classeAgg: Record<string, ActiviteClasse[]> = {};
+    const classeAgg: Record<string, ActiviteClasse[]> = {}
 
-    logs.forEach(({ user_id, type, created_at }) => {
-      const classe = classeMap[user_id];
-      if (!classe) return;
+    logs.forEach(({ user_id, activity_type, created_at }) => {
+      const classe = classeMap[user_id]
+      if (!classe) return
 
       if (!classeAgg[classe]) {
-        classeAgg[classe] = [];
+        classeAgg[classe] = []
       }
 
       classeAgg[classe].push({
         classe,
-        quiz: type === 'quiz' ? 1 : 0,
-        simulation: type === 'simulation' ? 1 : 0,
-        objet3d: type === 'objet3d' ? 1 : 0,
+        quiz: activity_type === "quiz" ? 1 : 0,
+        simulation: activity_type === "simulation" ? 1 : 0,
+        objet3d: activity_type === "objet3d" ? 1 : 0,
         created_at,
-      });
-    });
+      })
+    })
 
     // 🧮 Agréger par classe
     const aggregatedClasse = Object.entries(classeAgg).flatMap(([, logs]) => {
       return logs.reduce((acc: ActiviteClasse[], log) => {
-        acc.push(log);
-        return acc;
-      }, []);
-    });
+        acc.push(log)
+        return acc
+      }, [])
+    })
 
-    setParClasse(aggregatedClasse);
+    setParClasse(aggregatedClasse)
   }
-
-  const totalActivites = parEleve.reduce((acc, e) => acc + e.total_score, 0);
 
   return (
     <div className="p-6">
@@ -145,19 +144,16 @@ export default function ProfesseurDashboard() {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <CardStat label="Mes classes" count={classes.length} icon={<AcademicCapIcon className="h-6 w-6" />} />
         <CardStat label="Élèves suivis" count={parEleve.length} icon={<UserGroupIcon className="h-6 w-6" />} />
-        <CardStat label="Activités" count={totalActivites} icon={<ChartBarIcon className="h-6 w-6" />} />
+        <CardStat label="Activités élèves" count={totalActivities} icon={<ChartBarIcon className="h-6 w-6" />} />
       </div>
 
       {/* ✅ Ici on envoie bien created_at */}
-      <GraphActivityByClasse 
-        data={parClasse}
-        classes={classes} 
-      />
+      <GraphActivityByClasse data={parClasse} classes={classes} />
 
       <GraphActivityParEleve
-        data={parEleve.map(e => ({
+        data={parEleve.map((e) => ({
           ...e,
-          created_at: e.created_at ?? ''
+          created_at: e.created_at ?? "",
         }))}
         classes={classes}
         selectedClasse={selectedClasseEleve}
@@ -166,5 +162,5 @@ export default function ProfesseurDashboard() {
 
       <AllActivity />
     </div>
-  );
+  )
 }

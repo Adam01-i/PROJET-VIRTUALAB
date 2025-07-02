@@ -1,19 +1,20 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ExperienceCard from './ExperienceCard';
-import ExperienceDetailView from './ExperienceDetailView';
-import { supabase } from '../../../../lib/supabaseClient';
-import { experienceData } from '../../../../data/Experience/experienceData';
+import { useEffect, useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import ExperienceCard from "./ExperienceCard"
+import ExperienceDetailView from "./ExperienceDetailView"
+import { supabase } from "../../../../lib/supabaseClient"
+import { experienceData } from "../../../../data/Experience/experienceData"
+import { trackSimulationStart } from "../../../../utils/eleveActivityTracker"
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 3
 
-const localSimulationModules = import.meta.glob('../../../../simulations/*.tsx');
+const localSimulationModules = import.meta.glob("../../../../simulations/*.tsx")
 
 const getLocalSimulations = async (): Promise<any[]> => {
   return Object.keys(localSimulationModules).map((path, index) => {
-    const fileName = path.split('/').pop()?.replace('.tsx', '') || `local-${index}`;
+    const fileName = path.split("/").pop()?.replace(".tsx", "") || `local-${index}`
     return {
       id: `local-${fileName}`,
       titre: `Simulation locale : ${fileName}`,
@@ -26,129 +27,105 @@ const getLocalSimulations = async (): Promise<any[]> => {
       simulationPath: fileName,
       image: "/images/simulation-default.jpg",
       created_at: new Date().toISOString(),
-    };
-  });
-};
+    }
+  })
+}
 
 const enrichLocalSimulations = (simulations: any[]) => {
   return simulations.map((sim) => {
-    const detailed = experienceData.find((d) => sim.simulationPath === d.simulationPath);
+    const detailed = experienceData.find((d) => sim.simulationPath === d.simulationPath)
     return detailed
       ? { ...sim, ...detailed, id: sim.id } // on garde l'ID local
-      : sim;
-  });
-};
+      : sim
+  })
+}
 
 export default function ExperienceView() {
-  const [activeExperience, setActiveExperience] = useState<string | null>(null);
-  const [experiences, setExperiences] = useState<any[]>([]);
-  const [localIds, setLocalIds] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [prenom, setPrenom] = useState('');
-  const [filtre, setFiltre] = useState<'all' | 'supabase' | 'local'>('all');
+  const [activeExperience, setActiveExperience] = useState<string | null>(null)
+  const [experiences, setExperiences] = useState<any[]>([])
+  const [localIds, setLocalIds] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [prenom, setPrenom] = useState("")
+  const [filtre, setFiltre] = useState<"all" | "supabase" | "local">("all")
 
   const handleStartExperience = async (experienceId: string) => {
-    const experience = experiences.find((e) => e.id === experienceId);
+    const experience = experiences.find((e) => e.id === experienceId)
     if (experience) {
-      const { data: session } = await supabase.auth.getSession();
-      const userId = session?.session?.user?.id;
-      if (userId) {
-        await supabase.from('activity_logs').insert({
-          user_id: userId,
-          type: 'simulation',
-          duree: null,
-          meta: {
-            experience_id: experience.id,
-            titre: experience.titre,
-          },
-        });
-      }
+      // Tracker le démarrage de la simulation
+      await trackSimulationStart(experience.id, experience.titre)
     }
-    setActiveExperience(experienceId);
-  };
+    setActiveExperience(experienceId)
+  }
 
   useEffect(() => {
     const fetchExperiences = async () => {
-      setLoading(true);
+      setLoading(true)
 
-      const { data: session } = await supabase.auth.getSession();
-      const user = session?.session?.user;
+      const { data: session } = await supabase.auth.getSession()
+      const user = session?.session?.user
 
-      const rawLocalSimulations = await getLocalSimulations();
-      const enrichedLocalSimulations = enrichLocalSimulations(rawLocalSimulations);
-      const localIdSet = new Set(enrichedLocalSimulations.map((sim) => sim.id));
-      setLocalIds(localIdSet);
+      const rawLocalSimulations = await getLocalSimulations()
+      const enrichedLocalSimulations = enrichLocalSimulations(rawLocalSimulations)
+      const localIdSet = new Set(enrichedLocalSimulations.map((sim) => sim.id))
+      setLocalIds(localIdSet)
 
       if (!user) {
         const { data: allExperiences } = await supabase
-          .from('vue_experience_details')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .from("vue_experience_details")
+          .select("*")
+          .order("created_at", { ascending: false })
 
-        setExperiences([...(allExperiences || []), ...enrichedLocalSimulations]);
-        setLoading(false);
-        return;
+        setExperiences([...(allExperiences || []), ...enrichedLocalSimulations])
+        setLoading(false)
+        return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name, role')
-        .eq('id', user.id)
-        .single();
+      const { data: profile } = await supabase.from("profiles").select("name, role").eq("id", user.id).single()
 
-      if (!profile || profile.role !== 'eleve') {
-        setLoading(false);
-        return;
+      if (!profile || profile.role !== "eleve") {
+        setLoading(false)
+        return
       }
 
-      setPrenom(profile.name || '');
+      setPrenom(profile.name || "")
 
       const { data: classeExperiences } = await supabase
-        .from('vue_experience_eleve')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("vue_experience_eleve")
+        .select("*")
+        .order("created_at", { ascending: false })
 
-      setExperiences(classeExperiences || []);
-      setLoading(false);
-    };
+      setExperiences(classeExperiences || [])
+      setLoading(false)
+    }
 
-    fetchExperiences();
-  }, []);
+    fetchExperiences()
+  }, [])
 
   const filteredExperiences = experiences.filter((exp) => {
-    if (filtre === 'supabase') return !localIds.has(exp.id);
-    if (filtre === 'local') return localIds.has(exp.id);
-    return true;
-  });
+    if (filtre === "supabase") return !localIds.has(exp.id)
+    if (filtre === "local") return localIds.has(exp.id)
+    return true
+  })
 
-  const totalPages = Math.ceil(filteredExperiences.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentData = filteredExperiences.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredExperiences.length / ITEMS_PER_PAGE)
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE
+  const currentData = filteredExperiences.slice(startIdx, startIdx + ITEMS_PER_PAGE)
 
-  const currentExperience = activeExperience
-    ? experiences.find((e) => e.id === activeExperience)
-    : null;
+  const currentExperience = activeExperience ? experiences.find((e) => e.id === activeExperience) : null
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+      setCurrentPage(page)
     }
-  };
+  }
 
   if (loading) {
-    return (
-      <div className="text-center py-20 text-gray-500">Chargement des expériences...</div>
-    );
+    return <div className="text-center py-20 text-gray-500">Chargement des expériences...</div>
   }
 
   if (currentExperience) {
-    return (
-      <ExperienceDetailView
-        experience={currentExperience}
-        onBack={() => setActiveExperience(null)}
-      />
-    );
+    return <ExperienceDetailView experience={currentExperience} onBack={() => setActiveExperience(null)} />
   }
 
   return (
@@ -159,26 +136,24 @@ export default function ExperienceView() {
 
       {!prenom && (
         <div className="flex gap-3 flex-wrap">
-          {['all', 'supabase', 'local'].map((f) => (
+          {["all", "supabase", "local"].map((f) => (
             <button
               key={f}
               onClick={() => setFiltre(f as any)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${
                 filtre === f
-                  ? 'bg-purple-600 text-white border-purple-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? "bg-purple-600 text-white border-purple-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
               }`}
             >
-              {f === 'all' ? 'Toutes' : f === 'supabase' ? 'Supabase' : 'Locales'}
+              {f === "all" ? "Toutes" : f === "supabase" ? "Supabase" : "Locales"}
             </button>
           ))}
         </div>
       )}
 
       {filteredExperiences.length === 0 ? (
-        <div className="text-gray-500 text-center py-12">
-          Aucune expérience disponible pour le moment.
-        </div>
+        <div className="text-gray-500 text-center py-12">Aucune expérience disponible pour le moment.</div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -202,20 +177,20 @@ export default function ExperienceView() {
             </button>
 
             {[...Array(totalPages)].map((_, index) => {
-              const pageNum = index + 1;
+              const pageNum = index + 1
               return (
                 <button
                   key={pageNum}
                   onClick={() => goToPage(pageNum)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition ${
                     currentPage === pageNum
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   {pageNum}
                 </button>
-              );
+              )
             })}
 
             <button
@@ -229,5 +204,5 @@ export default function ExperienceView() {
         </>
       )}
     </div>
-  );
+  )
 }

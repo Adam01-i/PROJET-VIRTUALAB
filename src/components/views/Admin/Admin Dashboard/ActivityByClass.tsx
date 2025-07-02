@@ -1,92 +1,79 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../../../../lib/supabaseClient';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-} from 'recharts';
+import { useEffect, useState } from "react"
+import { supabase } from "../../../../lib/supabaseClient"
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts"
 
-type Classe = { id: string; code_classe: string };
-type ActivityLog = { classe: string; simulation: number; quiz: number; objet3d: number };
-type Props = { classes: Classe[] };
+type Classe = { id: string; code_classe: string }
+type ActivityLog = { classe: string; simulation: number; quiz: number; objet3d: number }
+type Props = { classes: Classe[] }
 
 export default function ActivityByClass({ classes }: Props) {
-  const [dateRange, setDateRange] = useState<'7j' | '30j' | 'tout'>('tout');
-  const [selectedClasseId, setSelectedClasseId] = useState<'toutes' | string>('toutes');
-  const [activityByClasse, setActivityByClasse] = useState<ActivityLog[]>([]);
+  const [dateRange, setDateRange] = useState<"7j" | "30j" | "tout">("tout")
+  const [selectedClasseId, setSelectedClasseId] = useState<"toutes" | string>("toutes")
+  const [activityByClasse, setActivityByClasse] = useState<ActivityLog[]>([])
 
   const buttonClass = (active: boolean) =>
     `px-3 py-1 rounded-full border text-sm ${
-      active
-        ? 'bg-indigo-600 text-white border-indigo-600'
-        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-    }`;
+      active ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+    }`
 
   useEffect(() => {
     const fetchActivity = async () => {
-      const days = dateRange === '7j' ? 7 : dateRange === '30j' ? 30 : 365;
-      const since = new Date();
-      since.setDate(since.getDate() - days);
+      const days = dateRange === "7j" ? 7 : dateRange === "30j" ? 30 : 365
+      const since = new Date()
+      since.setDate(since.getDate() - days)
 
-      const { data: elevesClasse } = await supabase
-        .from('eleves_classes')
-        .select('eleve_id, classe_id');
+      const { data: elevesClasse } = await supabase.from("eleves_classes").select("eleve_id, classe_id")
 
-      const eleveClasseMap: Record<string, string> = {};
+      const eleveClasseMap: Record<string, string> = {}
       elevesClasse?.forEach(({ eleve_id, classe_id }) => {
-        const code = classes.find((c) => c.id === classe_id)?.code_classe;
-        if (code && (selectedClasseId === 'toutes' || classe_id === selectedClasseId)) {
-          eleveClasseMap[eleve_id] = code;
+        const code = classes.find((c) => c.id === classe_id)?.code_classe
+        if (code && (selectedClasseId === "toutes" || classe_id === selectedClasseId)) {
+          eleveClasseMap[eleve_id] = code
         }
-      });
+      })
 
-      const eleveIds = Object.keys(eleveClasseMap);
-      if (eleveIds.length === 0) return setActivityByClasse([]);
+      const eleveIds = Object.keys(eleveClasseMap)
+      if (eleveIds.length === 0) return setActivityByClasse([])
 
       const { data: logs } = await supabase
-        .from('activity_logs')
-        .select('user_id, created_at, type')
-        .in('user_id', eleveIds)
-        .gte('created_at', since.toISOString());
+        .from("activity_logs")
+        .select("user_id, created_at, activity_type")
+        .in("user_id", eleveIds)
+        .gte("created_at", since.toISOString())
 
-      const agg: Record<string, ActivityLog> = {};
+      const agg: Record<string, ActivityLog> = {}
       Object.values(eleveClasseMap).forEach((classe) => {
-        agg[classe] = { classe, simulation: 0, quiz: 0, objet3d: 0 };
-      });
+        agg[classe] = { classe, simulation: 0, quiz: 0, objet3d: 0 }
+      })
 
-      logs?.forEach(({ user_id, type }) => {
-        const classe = eleveClasseMap[user_id];
-        if (!classe) return;
-        if (type === 'simulation') agg[classe].simulation++;
-        else if (type === 'quiz') agg[classe].quiz++;
-        else if (type === 'objet3d') agg[classe].objet3d++;
-      });
+      logs?.forEach(({ user_id, activity_type }) => {
+        const classe = eleveClasseMap[user_id]
+        if (!classe) return
+        if (activity_type === "simulation") agg[classe].simulation++
+        else if (activity_type === "quiz") agg[classe].quiz++
+        else if (activity_type === "objet3d") agg[classe].objet3d++
+      })
 
-      setActivityByClasse(Object.values(agg));
-    };
+      setActivityByClasse(Object.values(agg))
+    }
 
-    fetchActivity();
-  }, [dateRange, selectedClasseId, classes]);
+    fetchActivity()
+  }, [dateRange, selectedClasseId, classes])
 
   return (
     <div className="bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
       <h2 className="text-2xl font-semibold">Activité par classe</h2>
 
       <div className="flex flex-wrap items-center gap-3">
-        {['7j', '30j', 'tout'].map((opt) => (
+        {["7j", "30j", "tout"].map((opt) => (
           <button
             key={opt}
-            onClick={() => setDateRange(opt as '7j' | '30j' | 'tout')}
+            onClick={() => setDateRange(opt as "7j" | "30j" | "tout")}
             className={buttonClass(dateRange === opt)}
           >
-            {opt === '7j' ? '7 jours' : opt === '30j' ? '30 jours' : 'Tout'}
+            {opt === "7j" ? "7 jours" : opt === "30j" ? "30 jours" : "Tout"}
           </button>
         ))}
 
@@ -97,7 +84,9 @@ export default function ActivityByClass({ classes }: Props) {
         >
           <option value="toutes">Toutes les classes</option>
           {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.code_classe}</option>
+            <option key={c.id} value={c.id}>
+              {c.code_classe}
+            </option>
           ))}
         </select>
       </div>
@@ -115,5 +104,5 @@ export default function ActivityByClass({ classes }: Props) {
         </BarChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }

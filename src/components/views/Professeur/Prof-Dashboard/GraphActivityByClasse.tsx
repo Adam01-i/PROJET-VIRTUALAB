@@ -1,56 +1,48 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-} from 'recharts';
+import { useState } from "react"
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts"
 
 type Classe = {
-  id: string;
-  code_classe: string;
-};
+  id: string
+  code_classe: string
+}
 
 type ActiviteClasse = {
-  classe: string;
-  quiz: number;
-  simulation: number;
-  objet3d: number;
-  created_at?: string;
-};
+  classe: string
+  quiz: number
+  simulation: number
+  objet3d: number
+  created_at?: string
+}
 
 type Props = {
-  data: ActiviteClasse[];
-  classes: Classe[];
-};
+  data: ActiviteClasse[]
+  classes: Classe[]
+}
 
 export default function GraphActivityByClasse({ data, classes }: Props) {
-  const [selectedClasse, setSelectedClasse] = useState<'all' | string>('all');
-  const [dateRange, setDateRange] = useState<'1j' | '7j' | '30j' | 'tout'>('tout');
+  const [selectedClasse, setSelectedClasse] = useState<"all" | string>("all")
+  const [dateRange, setDateRange] = useState<"1j" | "7j" | "30j" | "tout">("tout")
 
   const getSinceDate = (range: typeof dateRange) => {
-    if (range === 'tout') return null;
-    const d = new Date();
-    const days = range === '1j' ? 1 : range === '7j' ? 7 : 30;
-    d.setDate(d.getDate() - days);
-    return d;
-  };
+    if (range === "tout") return null
+    const d = new Date()
+    const days = range === "1j" ? 1 : range === "7j" ? 7 : 30
+    d.setDate(d.getDate() - days)
+    return d
+  }
 
-  const sinceDate = getSinceDate(dateRange);
+  const sinceDate = getSinceDate(dateRange)
 
+  // Filtrer les logs d'activité des élèves uniquement
   const filteredLogs = data.filter((d) => {
-    const matchClasse = selectedClasse === 'all' || d.classe === selectedClasse;
-    const matchDate = !sinceDate || (d.created_at && new Date(d.created_at) >= sinceDate);
-    return matchClasse && matchDate;
-  });
+    const matchClasse = selectedClasse === "all" || d.classe === selectedClasse
+    const matchDate = !sinceDate || (d.created_at && new Date(d.created_at) >= sinceDate)
+    return matchClasse && matchDate
+  })
 
-  // ✅ Agréger les activités par classe
+  // ✅ Agréger les activités par classe (uniquement les élèves)
   const aggregatedData = Object.values(
     filteredLogs.reduce<Record<string, ActiviteClasse>>((acc, curr) => {
       if (!acc[curr.classe]) {
@@ -59,20 +51,20 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
           quiz: 0,
           simulation: 0,
           objet3d: 0,
-        };
+        }
       }
-      acc[curr.classe].quiz += curr.quiz;
-      acc[curr.classe].simulation += curr.simulation;
-      acc[curr.classe].objet3d += curr.objet3d;
-      return acc;
-    }, {})
-  );
+      acc[curr.classe].quiz += curr.quiz
+      acc[curr.classe].simulation += curr.simulation
+      acc[curr.classe].objet3d += curr.objet3d
+      return acc
+    }, {}),
+  )
 
   return (
     <div className="mt-12 bg-white p-6 sm:p-8 rounded-xl shadow-md space-y-6 text-gray-800">
       {/* 🧭 Filtres */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold">Activité par Classe</h2>
+        <h2 className="text-2xl font-bold">Activité des Élèves par Classe</h2>
 
         <div className="flex flex-wrap gap-4 items-center">
           {/* 🎓 Filtre classe */}
@@ -117,9 +109,7 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
 
       {/* 📊 Graphe ou message */}
       {aggregatedData.length === 0 ? (
-        <p className="text-sm text-gray-500 italic mt-4">
-          Aucune activité enregistrée pour cette sélection.
-        </p>
+        <p className="text-sm text-gray-500 italic mt-4">Aucune activité d'élève enregistrée pour cette sélection.</p>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={aggregatedData}>
@@ -135,5 +125,5 @@ export default function GraphActivityByClasse({ data, classes }: Props) {
         </ResponsiveContainer>
       )}
     </div>
-  );
+  )
 }

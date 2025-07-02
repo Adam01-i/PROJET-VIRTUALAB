@@ -1,178 +1,148 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import {
-  FlaskRound as Flask,
-  PenTool as Tool,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
-import MoleculeCard from './MoleculeCard';
-import EquipmentCard from './EquipmentCard';
-import MoleculeDetails from './MoleculeDetail';
-import EquipmentDetails from './EquipmentDetail';
-import GLBViewer from './GLBViewer';
-import { supabase } from '../../../../lib/supabaseClient';
-import type { lab_items } from '../../../../types/Viewer3D/lab_items';
+import { useState, useEffect } from "react"
+import { FlaskRoundIcon as Flask, PenToolIcon as Tool, ChevronLeft, ChevronRight } from "lucide-react"
+import MoleculeCard from "./MoleculeCard"
+import EquipmentCard from "./EquipmentCard"
+import MoleculeDetails from "./MoleculeDetail"
+import EquipmentDetails from "./EquipmentDetail"
+import GLBViewer from "./GLBViewer"
+import { supabase } from "../../../../lib/supabaseClient"
+import type { lab_items } from "../../../../types/Viewer3D/lab_items"
+import { trackObject3DView } from "../../../../utils/eleveActivityTracker"
 
-type ViewMode = 'molecules' | 'equipment';
+type ViewMode = "molecules" | "equipment"
 
 export default function Viewer3DView() {
-  const [viewMode, setViewMode] = useState<ViewMode>('molecules');
-  const [moleculeList, setMoleculeList] = useState<lab_items[]>([]);
-  const [equipmentList, setEquipmentList] = useState<lab_items[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [prenom, setPrenom] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>("molecules")
+  const [moleculeList, setMoleculeList] = useState<lab_items[]>([])
+  const [equipmentList, setEquipmentList] = useState<lab_items[]>([])
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [prenom, setPrenom] = useState("")
 
   useEffect(() => {
-    fetchItems();
-  }, [viewMode]);
+    fetchItems()
+  }, [viewMode])
 
   const logActivity = async (item: lab_items) => {
-    const { data: session } = await supabase.auth.getSession();
-    const user = session?.session?.user;
-    if (!user) return;
-
-    await supabase.from('activity_logs').insert({
-      user_id: user.id,
-      type: 'objet3d',
-      meta: {
-        lab_item_id: item.id,
-        nom: item.nom,
-        category: item.category,
-      },
-    });
-  };
+    await trackObject3DView(item.id, item.nom, item.category)
+  }
 
   const fetchItems = async () => {
-    setLoading(true);
-    const { data: session } = await supabase.auth.getSession();
-    const user = session?.session?.user;
-    const category = viewMode === 'molecules' ? 'molecule' : 'equipment';
+    setLoading(true)
+    const { data: session } = await supabase.auth.getSession()
+    const user = session?.session?.user
+    const category = viewMode === "molecules" ? "molecule" : "equipment"
 
     if (!user) {
       const { data, error } = await supabase
-        .from('vue_lab_items_details')
-        .select('*')
-        .eq('category', category)
-        .order('created_at', { ascending: false });
+        .from("vue_lab_items_details")
+        .select("*")
+        .eq("category", category)
+        .order("created_at", { ascending: false })
 
       if (error) {
-        console.error("Erreur de chargement (invité) :", error);
+        console.error("Erreur de chargement (invité) :", error)
       } else {
-        viewMode === 'molecules'
-          ? setMoleculeList(data || [])
-          : setEquipmentList(data || []);
-        setSelectedIndex(0);
+        viewMode === "molecules" ? setMoleculeList(data || []) : setEquipmentList(data || [])
+        setSelectedIndex(0)
       }
 
-      setLoading(false);
-      return;
+      setLoading(false)
+      return
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', user.id)
-      .single();
+    const { data: profile } = await supabase.from("profiles").select("name, role").eq("id", user.id).single()
 
-    if (profile?.role !== 'eleve') {
-      setLoading(false);
-      return;
+    if (profile?.role !== "eleve") {
+      setLoading(false)
+      return
     }
 
-    setPrenom(profile.name || '');
+    setPrenom(profile.name || "")
 
-    const { data: ec } = await supabase
-      .from('eleves_classes')
-      .select('classe_id')
-      .eq('eleve_id', user.id)
-      .single();
+    const { data: ec } = await supabase.from("eleves_classes").select("classe_id").eq("eleve_id", user.id).single()
 
-    const classeId = ec?.classe_id;
+    const classeId = ec?.classe_id
     if (!classeId) {
-      setLoading(false);
-      return;
+      setLoading(false)
+      return
     }
 
-    const classeData = await supabase
-      .from('classes')
-      .select('code_classe')
-      .eq('id', classeId)
-      .single();
+    const classeData = await supabase.from("classes").select("code_classe").eq("id", classeId).single()
 
-    const code_classe = classeData.data?.code_classe;
+    const code_classe = classeData.data?.code_classe
     if (!code_classe) {
-      setLoading(false);
-      return;
+      setLoading(false)
+      return
     }
 
     const { data, error } = await supabase
-      .from('vue_lab_items_details')
-      .select('*')
-      .eq('category', category)
-      .contains('code_classe', [code_classe])
-      .order('created_at', { ascending: false });
+      .from("vue_lab_items_details")
+      .select("*")
+      .eq("category", category)
+      .contains("code_classe", [code_classe])
+      .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("Erreur de chargement :", error);
+      console.error("Erreur de chargement :", error)
     } else {
-      viewMode === 'molecules'
-        ? setMoleculeList(data || [])
-        : setEquipmentList(data || []);
-      setSelectedIndex(0);
+      viewMode === "molecules" ? setMoleculeList(data || []) : setEquipmentList(data || [])
+      setSelectedIndex(0)
 
       if (data && data[0]) {
-        await logActivity(data[0]);
+        await logActivity(data[0])
       }
     }
 
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
-  const dataList = viewMode === 'molecules' ? moleculeList : equipmentList;
-  const selectedItem = dataList[selectedIndex] || null;
+  const dataList = viewMode === "molecules" ? moleculeList : equipmentList
+  const selectedItem = dataList[selectedIndex] || null
 
   const handleSelect = async (index: number) => {
-    setSelectedIndex(index);
-    const item = dataList[index];
-    if (item) await logActivity(item);
-  };
+    setSelectedIndex(index)
+    const item = dataList[index]
+    if (item) await logActivity(item)
+  }
 
   const handleNext = () => {
-    const nextIndex = (selectedIndex + 1) % dataList.length;
-    handleSelect(nextIndex);
-  };
+    const nextIndex = (selectedIndex + 1) % dataList.length
+    handleSelect(nextIndex)
+  }
 
   const handlePrev = () => {
-    const prevIndex = (selectedIndex - 1 + dataList.length) % dataList.length;
-    handleSelect(prevIndex);
-  };
+    const prevIndex = (selectedIndex - 1 + dataList.length) % dataList.length
+    handleSelect(prevIndex)
+  }
 
   return (
     <div className="w-full px-6 md:px-10 py-6 space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">
-          {prenom ? `Bienvenue ${prenom} – Visualisation 3D` : 'Visualisation 3D (mode invité)'}
+          {prenom ? `Bienvenue ${prenom} – Visualisation 3D` : "Visualisation 3D (mode invité)"}
         </h2>
         <div className="flex space-x-2">
           <button
-            onClick={() => setViewMode('molecules')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${viewMode === 'molecules'
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+            onClick={() => setViewMode("molecules")}
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
+              viewMode === "molecules"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
           >
             <Flask size={18} />
             <span>Molécules</span>
           </button>
           <button
-            onClick={() => setViewMode('equipment')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${viewMode === 'equipment'
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+            onClick={() => setViewMode("equipment")}
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
+              viewMode === "equipment"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
           >
             <Tool size={18} />
             <span>Matériel</span>
@@ -183,7 +153,7 @@ export default function Viewer3DView() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="space-y-6">
           {selectedItem &&
-            (viewMode === 'molecules' ? (
+            (viewMode === "molecules" ? (
               <MoleculeDetails molecule={selectedItem as lab_items} />
             ) : (
               <EquipmentDetails equipment={selectedItem as lab_items} />
@@ -191,21 +161,17 @@ export default function Viewer3DView() {
 
           <div className="bg-gray-50 border border-gray-200 rounded-md p-4 shadow-sm">
             <h3 className="text-base font-semibold text-gray-800 mb-3">
-              {viewMode === 'molecules'
-                ? 'Molécules disponibles'
-                : 'Matériel disponible'}
+              {viewMode === "molecules" ? "Molécules disponibles" : "Matériel disponible"}
             </h3>
 
             {loading ? (
               <p className="text-sm text-gray-500">Chargement...</p>
             ) : dataList.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center">
-                Aucun élément disponible
-              </p>
+              <p className="text-sm text-gray-500 text-center">Aucun élément disponible</p>
             ) : (
               <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                 {dataList.map((item, index) =>
-                  viewMode === 'molecules' ? (
+                  viewMode === "molecules" ? (
                     <MoleculeCard
                       key={item.id}
                       molecule={item}
@@ -219,7 +185,7 @@ export default function Viewer3DView() {
                       isSelected={selectedIndex === index}
                       onSelect={() => handleSelect(index)}
                     />
-                  )
+                  ),
                 )}
               </div>
             )}
@@ -227,7 +193,7 @@ export default function Viewer3DView() {
         </div>
 
         <div className="relative md:col-span-2 bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
-          {selectedItem?.structure?.endsWith('.glb') && (
+          {selectedItem?.structure?.endsWith(".glb") && (
             <GLBViewer
               key={`${viewMode}-${selectedItem.id}`}
               glbUrl={selectedItem.structure}
@@ -254,5 +220,5 @@ export default function Viewer3DView() {
         </div>
       </div>
     </div>
-  );
+  )
 }

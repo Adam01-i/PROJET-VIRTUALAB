@@ -1,91 +1,80 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../../../../lib/supabaseClient';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-} from 'recharts';
+import { useEffect, useState } from "react"
+import { supabase } from "../../../../lib/supabaseClient"
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts"
 
 type ActivityLog = {
-  date: string;
-  simulation: number;
-  quiz: number;
-  objet3d: number;
-};
+  date: string
+  simulation: number
+  quiz: number
+  objet3d: number
+}
 
 type Profile = {
-  id: string;
-  name: string;
-};
+  id: string
+  name: string
+}
 
 export default function ActivityByProf({ professeurs }: { professeurs: Profile[] }) {
-  const [filters, setFilters] = useState({ userId: 'tous', dateRange: 'tous' });
-  const [activityByProf, setActivityByProf] = useState<ActivityLog[]>([]);
+  const [filters, setFilters] = useState({ userId: "tous", dateRange: "tous" })
+  const [activityByProf, setActivityByProf] = useState<ActivityLog[]>([])
 
   useEffect(() => {
     const fetchActivity = async () => {
-      const days = filters.dateRange === '7j' ? 7 : filters.dateRange === '30j' ? 30 : 365;
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
+      const days = filters.dateRange === "7j" ? 7 : filters.dateRange === "30j" ? 30 : 365
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - days)
 
       const { data: logs } = await supabase
-        .from('activity_logs')
-        .select('created_at, type, user_id')
-        .gte('created_at', startDate.toISOString());
+        .from("activity_logs")
+        .select("created_at, activity_type, user_id")
+        .gte("created_at", startDate.toISOString())
 
-      const profIds = professeurs.map((p) => p.id);
-      const relevantLogs = logs?.filter((l) => profIds.includes(l.user_id)) || [];
+      const profIds = professeurs.map((p) => p.id)
+      const relevantLogs = logs?.filter((l) => profIds.includes(l.user_id)) || []
 
-      const grouped: Record<string, ActivityLog> = {};
+      const grouped: Record<string, ActivityLog> = {}
 
       for (const prof of professeurs) {
-        if (filters.userId !== 'tous' && prof.id !== filters.userId) continue;
-        grouped[prof.name] = { date: prof.name, simulation: 0, quiz: 0, objet3d: 0 };
+        if (filters.userId !== "tous" && prof.id !== filters.userId) continue
+        grouped[prof.name] = { date: prof.name, simulation: 0, quiz: 0, objet3d: 0 }
       }
 
       for (const log of relevantLogs) {
-        const prof = professeurs.find((p) => p.id === log.user_id);
-        if (!prof || (filters.userId !== 'tous' && prof.id !== filters.userId)) continue;
-        const row = grouped[prof.name];
+        const prof = professeurs.find((p) => p.id === log.user_id)
+        if (!prof || (filters.userId !== "tous" && prof.id !== filters.userId)) continue
+        const row = grouped[prof.name]
         if (row) {
-          if (log.type === 'simulation') row.simulation++;
-          else if (log.type === 'quiz') row.quiz++;
-          else if (log.type === 'objet3d') row.objet3d++;
+          if (log.activity_type === "simulation") row.simulation++
+          else if (log.activity_type === "quiz") row.quiz++
+          else if (log.activity_type === "objet3d") row.objet3d++
         }
       }
 
+      setActivityByProf(Object.values(grouped))
+    }
 
-      setActivityByProf(Object.values(grouped));
-    };
-
-    fetchActivity();
-  }, [filters, professeurs]);
+    fetchActivity()
+  }, [filters, professeurs])
 
   const buttonClass = (active: boolean) =>
-    `px-3 py-1 rounded-full border text-sm ${active
-      ? 'bg-indigo-600 text-white border-indigo-600'
-      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-    }`;
+    `px-3 py-1 rounded-full border text-sm ${
+      active ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+    }`
 
   return (
     <div className="mt-24 bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
       <h2 className="text-2xl font-semibold">Activité par professeur</h2>
 
       <div className="flex gap-2 flex-wrap items-center mb-4">
-        {['7j', '30j', 'tout'].map((opt) => (
+        {["7j", "30j", "tout"].map((opt) => (
           <button
             key={opt}
             onClick={() => setFilters((f) => ({ ...f, dateRange: opt }))}
             className={buttonClass(filters.dateRange === opt)}
           >
-            {opt === '7j' ? '7 jours' : opt === '30j' ? '30 jours' : 'Tout'}
+            {opt === "7j" ? "7 jours" : opt === "30j" ? "30 jours" : "Tout"}
           </button>
         ))}
 
@@ -96,7 +85,9 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
         >
           <option value="tous">Tous les professeurs</option>
           {professeurs.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
         </select>
       </div>
@@ -114,5 +105,5 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
         </BarChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }
