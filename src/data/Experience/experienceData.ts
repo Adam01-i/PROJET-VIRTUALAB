@@ -48,7 +48,7 @@ export const experienceData: Experience[] = [
   {
   id: "2",
   classe_id: "",
-  titre: "Électrolyse de solutions ioniques",
+  titre: "Synthese Moleculaire",
   description:
     "Expérimentez le phénomène d’électrolyse en décomposant différentes solutions ioniques sous l’action d’un courant électrique. Observez les réactions aux électrodes, les dépôts ou dégagements gazeux, et comprenez le rôle des ions en solution.",
   duree: "45 min",
@@ -123,7 +123,7 @@ export const experienceData: Experience[] = [
 {
   id: '4',
   classe_id: '',
-  titre: 'Calorimétrie : mesure d\'énergie thermique',
+  titre: 'Neutralisation et test d\'une Solution Acide-Base',
   description: 'Mesurez la quantité de chaleur échangée lors d\'une réaction acide-base exothermique en utilisant un calorimètre.',
   duree: '45 min',
   niveau: 'Première',

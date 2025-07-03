@@ -177,6 +177,7 @@ class ChemistryCalculator {
   ): string {
     if (!alcoholAdded && !oxidantAdded) return "#ffffff"
     if (alcoholAdded && !oxidantAdded) return selectedAlcohol.colorHex
+    if (!alcoholAdded && oxidantAdded) return selectedOxidant.colorHex
     if (alcoholAdded && oxidantAdded && !reactionComplete) {
       return heating ? this.getTransitionColor(selectedOxidant) : selectedOxidant.colorHex
     }
@@ -1316,13 +1317,12 @@ const UIControls = ({
       <button
         onClick={toggleHeating}
         disabled={!(alcoholAdded && oxidantAdded && autoHeatingComplete)}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-          alcoholAdded && oxidantAdded && autoHeatingComplete
+        className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${alcoholAdded && oxidantAdded && autoHeatingComplete
             ? heating
               ? "bg-red-500 hover:bg-red-600 text-white"
               : "bg-orange-500 hover:bg-orange-600 text-white"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
-        }`}
+          }`}
       >
         {heating ? <Pause size={16} /> : <Flame size={16} />}
         {heating ? "Arrêter le chauffage" : "Chauffage manuel"}
@@ -1446,8 +1446,7 @@ const UIResults = ({
                 {label}
               </span>
               <span
-                className={`font-medium text-xs ${
-                  special === "heating"
+                className={`font-medium text-xs ${special === "heating"
                     ? value
                       ? "text-orange-600"
                       : "text-gray-500"
@@ -1458,7 +1457,7 @@ const UIResults = ({
                       : value
                         ? "text-green-600"
                         : "text-gray-500"
-                }`}
+                  }`}
               >
                 {value ? "✓" : "✗"}
               </span>
