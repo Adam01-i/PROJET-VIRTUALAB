@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from "uuid"
 import { toast } from "sonner"
 import ProfExpCard from "./ProfExpCard"
 import ExperienceFormModal from "./ExperienceFormModal"
-import { useAutoRefresh } from "../../../../hooks/useAutoRefresh"
 import {
   trackExperienceCreate,
   trackExperienceUpdate,
@@ -24,41 +23,9 @@ export default function ProfExpView() {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<any | null>(null)
   const [experiences, setExperiences] = useState<any[]>([])
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
-  // const [loading, setLoading] = useState(false)
+  const [,setLoading] = useState(false)
 
   const totalExperiences = experiences.length
-
-  // Déclarer fetchExperiences avant son utilisation
-  const fetchExperiences = async () => {
-    if (!userId) return
-
-    let query = supabase
-      .from("vue_experience_details")
-      .select("*")
-      .eq("auteur_id", userId!)
-      .order("created_at", { ascending: false })
-
-    if (classeFilter !== "all") {
-      query = query.contains("code_classe", [classeFilter])
-    }
-
-    const { data, error } = await query
-    if (error) {
-      console.error("Erreur chargement expériences:", error)
-    } else {
-      setExperiences(data || [])
-      setLastUpdate(new Date())
-      console.log(`🔄 Expériences rechargées: ${data?.length || 0} éléments`)
-    }
-  }
-
-  // 🔄 Rafraîchissement automatique toutes les 10 secondes
-  const { forceRefresh } = useAutoRefresh({
-    onRefresh: fetchExperiences,
-    interval: 10000, // 10 secondes
-    enabled: !modalOpen, // Désactiver pendant l'édition
-  })
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -78,6 +45,27 @@ export default function ProfExpView() {
   useEffect(() => {
     if (userId) fetchExperiences()
   }, [classeFilter, userId])
+
+  const fetchExperiences = async () => {
+    if (!userId) return
+
+    let query = supabase
+      .from("vue_experience_details")
+      .select("*")
+      .eq("auteur_id", userId!)
+      .order("created_at", { ascending: false })
+
+    if (classeFilter !== "all") {
+      query = query.contains("code_classe", [classeFilter])
+    }
+
+    const { data, error } = await query
+    if (error) {
+      console.error("Erreur chargement expériences:", error)
+    } else {
+      setExperiences(data || [])
+    }
+  }
 
   const handleSave = async () => {
     if (!formData?.titre || !formData.description || !formData.selectedClasseIds?.length) {
@@ -114,7 +102,6 @@ export default function ProfExpView() {
           const { data: inserted, error } = await supabase.from("experiences").insert([cleanFormData]).select()
           if (error || !inserted?.[0]) throw new Error("Erreur ajout.")
 
-          // 🎯 Tracker la création
           await trackExperienceCreate(inserted[0].id, formData.titre)
 
           await supabase.from("classes_experiences").insert(
@@ -125,8 +112,6 @@ export default function ProfExpView() {
           )
         } else {
           await supabase.from("experiences").update(cleanFormData).eq("id", formData.id)
-
-          // 🎯 Tracker la modification
           await trackExperienceUpdate(formData.id, formData.titre)
 
           await supabase.from("classes_experiences").delete().eq("experience_id", formData.id)
@@ -145,7 +130,6 @@ export default function ProfExpView() {
       },
     )
 
-    // 🔄 Rafraîchir immédiatement après sauvegarde
     await fetchExperiences()
     resetForm()
   }
@@ -160,11 +144,8 @@ export default function ProfExpView() {
     if (error) {
       toast.error("Erreur suppression")
     } else {
-      // 🎯 Tracker la suppression
       await trackExperienceDelete(id, experience.titre)
       toast.success("Expérience supprimée")
-
-      // 🔄 Rafraîchir immédiatement après suppression
       await fetchExperiences()
       resetForm()
     }
@@ -179,7 +160,7 @@ export default function ProfExpView() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // setLoading(true)
+    setLoading(true)
     const path = `simulations/${Date.now()}_${file.name}`
     const { error } = await supabase.storage.from("simulations").upload(path, file)
     if (error) toast.error("Échec upload simulation")
@@ -187,13 +168,13 @@ export default function ProfExpView() {
       const { data } = supabase.storage.from("simulations").getPublicUrl(path)
       setFormData((prev: any) => ({ ...prev, simulationPath: data.publicUrl }))
     }
-    // setLoading(false)
+    setLoading(false)
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // setLoading(true)
+    setLoading(true)
     const path = `${Date.now()}_${file.name}`
     const { error } = await supabase.storage.from("images-sim").upload(path, file)
     if (error) toast.error("Échec upload image")
@@ -201,21 +182,13 @@ export default function ProfExpView() {
       const { data } = supabase.storage.from("images-sim").getPublicUrl(path)
       setFormData((prev: any) => ({ ...prev, image: data.publicUrl }))
     }
-    // setLoading(false)
+    setLoading(false)
   }
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-indigo-800">Mes Simulations</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Dernière mise à jour: {lastUpdate.toLocaleTimeString("fr-FR")}
-            <button onClick={forceRefresh} className="ml-2 text-indigo-600 hover:text-indigo-800 underline">
-              🔄 Actualiser
-            </button>
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold text-indigo-800">Mes Simulations</h1>
         <button
           onClick={() => {
             setFormData({

@@ -119,7 +119,7 @@ export default function Login() {
               Bienvenue dans le <span className="text-yellow-300">Laboratoire Virtuel</span>
             </h1>
             <p className="text-lg text-indigo-100 font-light leading-relaxed">
-              Connectez-vous pour accéder à vos expériences, quiz et simulations 3D de chimie.
+              Connectez-vous pour accéder à vos simulations d'expériences, quiz et visualisation d'objet 3D de chimie.
             </p>
             <div className="w-20 h-1 bg-yellow-400 rounded"></div>
           </div>

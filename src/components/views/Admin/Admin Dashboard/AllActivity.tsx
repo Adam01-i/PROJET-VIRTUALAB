@@ -34,14 +34,14 @@ export default function AllActivity() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
+  const [itemsPerPage] = useState(6)
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
   const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   const getActionInFrench = (action: string) => {
     const translations: Record<string, string> = {
-      login: "Connexion",
+      login: "Se connecter",
       start: "Démarrer",
       complete: "Terminer",
       view: "Visualiser",
@@ -133,9 +133,9 @@ export default function AllActivity() {
   }, [filterRole, filterType, filterAction, filterDate, searchQuery, activities])
 
   return (
-    <div className="mt-24">
+    <div className="mt-28">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        📋 Historique des Activités (Tous utilisateurs) - {filtered.length} activités
+        📋 Historique des Activités (Tous utilisateurs) 
       </h2>
 
       {/* 🔍 Filtres */}

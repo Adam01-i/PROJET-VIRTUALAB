@@ -79,9 +79,7 @@ export default function EleveLayout() {
   return (
     <div className="min-h-screen bg-white text-white">
       {/* ✅ Navbar élève */}
-      <nav
-        className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? "bg-indigo-900/95 shadow-md" : ""}`}
-      >
+      <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? "bg-indigo-900/95 shadow-md" : ""}`}>
         <div className="max-w-[1280px] mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">

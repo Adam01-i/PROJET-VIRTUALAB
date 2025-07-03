@@ -109,7 +109,7 @@ export default function GraphActivityParEleve({
           Aucune activité d'élève enregistrée pour cette classe ou période.
         </p>
       ) : (
-        <ResponsiveContainer width="100%" height={350}>
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart data={filtered}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis dataKey="name" stroke="#4B5563" />

@@ -1,15 +1,16 @@
-import type { lab_items } from '../../../../types/Viewer3D/lab_items';
-import { FlaskRound as Flask, GraduationCap, Info } from 'lucide-react';
+import type { lab_items } from "../../../../types/Viewer3D/lab_items"
+import { FlaskRoundIcon as Flask, GraduationCap, Info } from "lucide-react"
+import { ChemicalFormula } from "../../../ui/ChemicalFormula"
 
 type MoleculeWithClasse = lab_items & {
   classes?: {
-    code_classe: string;
-  };
-};
+    code_classe: string
+  }
+}
 
 type Props = {
-  molecule: MoleculeWithClasse;
-};
+  molecule: MoleculeWithClasse
+}
 
 export default function ProfMoleculeDetails({ molecule }: Props) {
   return (
@@ -21,7 +22,7 @@ export default function ProfMoleculeDetails({ molecule }: Props) {
         {molecule.formule && (
           <div className="flex items-center gap-2">
             <Flask size={16} />
-            <span>{molecule.formule}</span>
+            <ChemicalFormula formula={molecule.formule} className="text-lg font-mono" />
           </div>
         )}
 
@@ -29,9 +30,7 @@ export default function ProfMoleculeDetails({ molecule }: Props) {
         {molecule.classes?.code_classe && (
           <div className="flex items-center gap-2">
             <GraduationCap size={16} />
-            <span className="text-purple-700 font-medium">
-              {molecule.classes.code_classe}
-            </span>
+            <span className="text-purple-700 font-medium">{molecule.classes.code_classe}</span>
           </div>
         )}
 
@@ -51,5 +50,5 @@ export default function ProfMoleculeDetails({ molecule }: Props) {
         )}
       </div>
     </div>
-  );
+  )
 }

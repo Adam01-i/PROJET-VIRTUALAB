@@ -63,7 +63,7 @@ export default function ActivityByClass({ classes }: Props) {
   }, [dateRange, selectedClasseId, classes])
 
   return (
-    <div className="bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
+    <div className="mt-16 bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
       <h2 className="text-2xl font-semibold">Activité par classe</h2>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -91,7 +91,7 @@ export default function ActivityByClass({ classes }: Props) {
         </select>
       </div>
 
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart data={activityByClasse}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis dataKey="classe" stroke="#4B5563" />

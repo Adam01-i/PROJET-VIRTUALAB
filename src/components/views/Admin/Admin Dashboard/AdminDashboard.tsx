@@ -81,24 +81,24 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="px-4 mt-15">
+    <div className="px-4 mt-4">
       <h1 className="text-3xl font-extrabold text-indigo-900 ">Tableau de bord Administrateur</h1>
 
       {/* 🔢 Statistiques de base */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4">
         {cards.map((card, index) => (
           <CardStat key={index} label={card.label} count={card.count} icon={card.icon} />
         ))}
       </div>
-
-      {/* 🏫 Activité par classe */}
-      <ActivityByClass classes={classes} />
 
       {/* 📊 Activité par professeur */}
       <ActivityByProf professeurs={professeurs} />
 
       {/* 👨‍🎓 Activité par élève */}
       <ActivityByEleve eleves={eleves} />
+
+      {/* 🏫 Activité par classe */}
+      <ActivityByClass classes={classes} />
 
       {/* 📋 Historique des activités des eleves et professeurs*/}
       <AllActivity />

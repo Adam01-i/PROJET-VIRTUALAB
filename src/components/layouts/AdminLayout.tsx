@@ -5,14 +5,11 @@ import { Outlet, NavLink } from "react-router-dom"
 import { LayoutDashboard, UsersRound, FileSpreadsheet, FlaskRoundIcon as Flask, Menu, X } from "lucide-react"
 import UserMenu from "./../../components/ui/UserMenu"
 import { toast } from "sonner"
-import { supabase } from "../../lib/supabaseClient"
-import { trackLogin } from "../../utils/eleveActivityTracker"
 
 export default function AdminLayout() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const drawerRef = useRef(null)
-  const hasTrackedLogin = useRef(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,34 +31,6 @@ export default function AdminLayout() {
 
   useEffect(() => {
     toast.success("Bienvenue sur le tableau de bord administrateur 🧪")
-
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession()
-      const isAuthenticated = !!data.session
-
-      // 🎯 Tracker la connexion admin une seule fois
-      if (isAuthenticated && !hasTrackedLogin.current) {
-        await trackLogin()
-        hasTrackedLogin.current = true
-        console.log("✅ Connexion admin trackée")
-      }
-    }
-    checkAuth()
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
-        await trackLogin()
-        hasTrackedLogin.current = true
-        console.log("✅ Connexion admin trackée (auth change)")
-      }
-
-      if (event === "SIGNED_OUT") {
-        hasTrackedLogin.current = false
-        console.log("🚪 Déconnexion admin")
-      }
-    })
-
-    return () => listener.subscription.unsubscribe()
   }, [])
 
   const navItems = [

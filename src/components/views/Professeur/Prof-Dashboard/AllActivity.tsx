@@ -39,7 +39,7 @@ export default function AllActivity() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
+  const [itemsPerPage] = useState(8)
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
   const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -164,8 +164,8 @@ export default function AllActivity() {
   }
 
   return (
-    <div className="mt-36">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Activités des élèves - {filtered.length} activités</h2>
+    <div className="mt-40">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Activités des élèves</h2>
 
       {/* Filtres */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">

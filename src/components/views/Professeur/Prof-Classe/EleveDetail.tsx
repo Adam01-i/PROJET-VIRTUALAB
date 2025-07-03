@@ -50,16 +50,8 @@ export default function EleveDetail({ eleve, onClose }: Props) {
         ) : results.length === 0 ? (
           <p className="text-gray-500 italic">Aucun quiz réalisé récemment.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-auto max-h-100">
             {results.map((r, i) => {
-              const ratio = (r.correct_answers / r.total_questions) * 100;
-              const recommend =
-                ratio < 50
-                  ? '🔁 Revoir les notions de base.'
-                  : ratio < 75
-                  ? '👍 Bon travail, peut encore progresser.'
-                  : '🌟 Excellent niveau !';
-
               return (
                 <div
                   key={i}
@@ -73,7 +65,7 @@ export default function EleveDetail({ eleve, onClose }: Props) {
                     ✅ {r.correct_answers}/{r.total_questions} bonnes réponses — 🗓️{' '}
                     {new Date(r.date_completed).toLocaleDateString()}
                   </p>
-                  <p className="text-sm italic text-gray-500 mt-1">{recommend}</p>
+                  {/* <p className="text-sm italic text-gray-500 mt-1">{recommend}</p> */}
                 </div>
               );
             })}

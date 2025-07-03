@@ -64,7 +64,7 @@ export default function ActivityByProf({ professeurs }: { professeurs: Profile[]
     }`
 
   return (
-    <div className="mt-24 bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
+    <div className="mt-2 bg-white shadow rounded-xl p-6 space-y-6 text-gray-800">
       <h2 className="text-2xl font-semibold">Activité par professeur</h2>
 
       <div className="flex gap-2 flex-wrap items-center mb-4">
