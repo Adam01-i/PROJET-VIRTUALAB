@@ -54,8 +54,8 @@ Bienvenue dans le Laboratoire Virtuel de Chimie, une plateforme interactive dest
 ├── vite.config.ts                  # Configuration Vite (proxy vers API backend)
 └── README.md                       # Ce fichier
 
-ts-node src/script/insert-experiences.ts
-ts-node src/script/insert-quizzes.ts
+ts-node src/scripts/insert-experiences.ts
+ts-node src/scripts/insert-quizzes.ts
 ts-node src/scripts/insertLabItems.ts
 
 

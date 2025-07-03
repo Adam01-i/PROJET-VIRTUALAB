@@ -1,4 +1,4 @@
-import type { Experience } from '../../types/Experience/experience';
+import type { Experience } from "../../types/Experience/experience";
 
 export const experienceData: Experience[] = [
   {
@@ -9,7 +9,8 @@ export const experienceData: Experience[] = [
       "Explorez les réactions redox en observant l'interaction entre le fer métallique et différents sels métalliques en solution. Découvrez la série électrochimique à travers des expériences interactives.",
     duree: "35 min",
     niveau: "Première",
-    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80", // ✅ Parfait
+    image:
+      "/public/assets/sim-redox-reaction.png", // ✅ Remplacée
     simulationPath: "RedoxReaction",
     objectifs: [
       "Comprendre le principe des réactions d'oxydo-réduction",
@@ -43,43 +44,44 @@ export const experienceData: Experience[] = [
       "Avec ZnSO₄ : Solution reste bleue claire, pas de dépôt",
       "Mesure de l'efficacité de réaction : 85% (CuSO₄), 75% (AgNO₃), 0% (ZnSO₄)",
       "Analyse quantitative : masse de métal déposé, concentration finale",
-    ]
+    ],
   },
   {
-  id: "2",
-  classe_id: "",
-  titre: "Synthese Moleculaire",
-  description:
-    "Expérimentez le phénomène d’électrolyse en décomposant différentes solutions ioniques sous l’action d’un courant électrique. Observez les réactions aux électrodes, les dépôts ou dégagements gazeux, et comprenez le rôle des ions en solution.",
-  duree: "45 min",
-  niveau: "Première",
-    image: "https://images.unsplash.com/photo-1581091012184-d77b3c5dc2b3?auto=format&fit=crop&w=800&q=80", // ✅ Remplacée
-  simulationPath: "electrolyse-generale",
-  objectifs: [
-    "Comprendre le principe de l’électrolyse et le rôle des électrodes",
-    "Décomposer une solution ionique en ses constituants par courant continu",
-    "Établir les demi-équations d’oxydation et de réduction",
-    "Identifier les produits formés selon la nature des ions",
-    "Illustrer des cas concrets comme l’électrolyse de CuSO₄, NaCl ou H₂SO₄"
-  ],
-  materiel: [
-    "Solutions ioniques : CuSO₄, NaCl, H₂SO₄ (0,1 M)",
-    "Électrodes : cuivre, graphite ou platine",
-    "Cuve électrolytique ou béchers de 250 mL",
-    "Source de courant continu avec réglage de tension",
-    "Fils électriques avec pinces crocodile",
-    "Ampèremètre (optionnel) et voltmètre",
-    "Gants, lunettes, et blouse de protection"
-  ],
-  resultatsAttendus: [
-    "CuSO₄ : Dépôt de cuivre à la cathode, dissolution de l’anode en cuivre",
-    "NaCl : Dégagement de gaz (H₂) à la cathode, Cl₂ à l’anode (odeur piquante)",
-    "H₂SO₄ : Production de dihydrogène à la cathode et de dioxygène à l’anode",
-    "Couleurs et gaz visibles selon la solution utilisée",
-    "Demi-équations redox identifiées selon les espèces ioniques",
-    "Compréhension du sens des réactions et du rôle de l’énergie électrique"
-  ]
-},
+    id: "2",
+    classe_id: "",
+    titre: "Synthese Moleculaire",
+    description:
+      "Expérimentez le phénomène d’électrolyse en décomposant différentes solutions ioniques sous l’action d’un courant électrique. Observez les réactions aux électrodes, les dépôts ou dégagements gazeux, et comprenez le rôle des ions en solution.",
+    duree: "45 min",
+    niveau: "Première",
+    image:
+      "/public/assets/sim-synthese-moleculaire.png", // ✅ Remplacée
+    simulationPath: "SyntheseMoleculaire",
+    objectifs: [
+      "Comprendre le principe de l’électrolyse et le rôle des électrodes",
+      "Décomposer une solution ionique en ses constituants par courant continu",
+      "Établir les demi-équations d’oxydation et de réduction",
+      "Identifier les produits formés selon la nature des ions",
+      "Illustrer des cas concrets comme l’électrolyse de CuSO₄, NaCl ou H₂SO₄",
+    ],
+    materiel: [
+      "Solutions ioniques : CuSO₄, NaCl, H₂SO₄ (0,1 M)",
+      "Électrodes : cuivre, graphite ou platine",
+      "Cuve électrolytique ou béchers de 250 mL",
+      "Source de courant continu avec réglage de tension",
+      "Fils électriques avec pinces crocodile",
+      "Ampèremètre (optionnel) et voltmètre",
+      "Gants, lunettes, et blouse de protection",
+    ],
+    resultatsAttendus: [
+      "CuSO₄ : Dépôt de cuivre à la cathode, dissolution de l’anode en cuivre",
+      "NaCl : Dégagement de gaz (H₂) à la cathode, Cl₂ à l’anode (odeur piquante)",
+      "H₂SO₄ : Production de dihydrogène à la cathode et de dioxygène à l’anode",
+      "Couleurs et gaz visibles selon la solution utilisée",
+      "Demi-équations redox identifiées selon les espèces ioniques",
+      "Compréhension du sens des réactions et du rôle de l’énergie électrique",
+    ],
+  },
   {
     id: "3",
     classe_id: "",
@@ -88,7 +90,8 @@ export const experienceData: Experience[] = [
       "Réalisez un titrage acido-basique précis en utilisant différents indicateurs colorés pour déterminer le point d'équivalence. Maîtrisez les techniques de dosage et l'analyse quantitative.",
     duree: "45 min",
     niveau: "Première",
-    image: "https://images.unsplash.com/photo-1554475900-0a0350e3fc7b?auto=format&fit=crop&w=800&q=80",
+    image:
+      "/public/assets/sim-titrage-acido-basique.png", // ✅ Remplacée
     simulationPath: "TitrageAcidoBasique",
     objectifs: [
       "Comprendre le principe du titrage acido-basique",
@@ -120,37 +123,39 @@ export const experienceData: Experience[] = [
       "Rapport détaillé avec calculs d'incertitude",
     ],
   },
-{
-  id: '4',
-  classe_id: '',
-  titre: 'Neutralisation et test d\'une Solution Acide-Base',
-  description: 'Mesurez la quantité de chaleur échangée lors d\'une réaction acide-base exothermique en utilisant un calorimètre.',
-  duree: '45 min',
-  niveau: 'Première',
-  image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
-  simulationPath: 'Calorimétrie',
-  objectifs: [
-    'Comprendre le principe de la calorimétrie et les réactions exothermiques',
-    'Utiliser un calorimètre pour mesurer la variation de température',
-    'Calculer l\'enthalpie de réaction avec la formule ΔH = mcΔT/n',
-    'Analyser les résultats et comparer aux valeurs théoriques'
-  ],
-  materiel: [
-    'Calorimètre isolé avec couvercle',
-    'Thermomètre numérique de précision',
-    'Solutions d\'acide chlorhydrique (HCl 1M)',
-    'Solutions d\'hydroxyde de sodium (NaOH 1M)',
-    'Béchers de 100 mL',
-    'Agitateur magnétique',
-    'Balance de précision'
-  ],
-  resultatsAttendus: [
-    'Augmentation de température de 13-14°C pour HCl + NaOH',
-    'Calcul de ΔH ≈ -57 kJ/mol (neutralisation)',
-    'Formation de chlorure de sodium et d\'eau',
-    'Validation du caractère exothermique de la réaction'
-  ]
-},
+  {
+    id: "4",
+    classe_id: "",
+    titre: "Neutralisation et test d'une Solution Acide-Base",
+    description:
+      "Mesurez la quantité de chaleur échangée lors d'une réaction acide-base exothermique en utilisant un calorimètre.",
+    duree: "45 min",
+    niveau: "Première",
+    image:
+      "/public/assets/sim-neutralisation.png", // ✅ Remplacée
+    simulationPath: "NeutralisationEtTestSolution",
+    objectifs: [
+      "Comprendre le principe de la calorimétrie et les réactions exothermiques",
+      "Utiliser un calorimètre pour mesurer la variation de température",
+      "Calculer l'enthalpie de réaction avec la formule ΔH = mcΔT/n",
+      "Analyser les résultats et comparer aux valeurs théoriques",
+    ],
+    materiel: [
+      "Calorimètre isolé avec couvercle",
+      "Thermomètre numérique de précision",
+      "Solutions d'acide chlorhydrique (HCl 1M)",
+      "Solutions d'hydroxyde de sodium (NaOH 1M)",
+      "Béchers de 100 mL",
+      "Agitateur magnétique",
+      "Balance de précision",
+    ],
+    resultatsAttendus: [
+      "Augmentation de température de 13-14°C pour HCl + NaOH",
+      "Calcul de ΔH ≈ -57 kJ/mol (neutralisation)",
+      "Formation de chlorure de sodium et d'eau",
+      "Validation du caractère exothermique de la réaction",
+    ],
+  },
   {
     id: "5",
     classe_id: "",
@@ -159,8 +164,9 @@ export const experienceData: Experience[] = [
       "Étudiez l'oxydation sélective des alcools primaires et secondaires avec différents oxydants. Observez les changements de couleur caractéristiques et identifiez les produits formés.",
     duree: "50 min",
     niveau: "Première",
-    image: "https://images.unsplash.com/photo-1622489461232-e451cc7fcf3e?auto=format&fit=crop&w=800&q=80",
-    simulationPath: "ComposésOxygénés",
+    image:
+      "/public/assets/sim-composes-oxygenes.png", // ✅ Remplacée
+    simulationPath: "ComposeOxygene",
     objectifs: [
       "Différencier les alcools primaires et secondaires par leurs réactions d'oxydation",
       "Identifier les produits : aldéhydes, cétones, acides carboxyliques",
@@ -196,34 +202,36 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-  id: "6",
-  classe_id: "",
-  titre: "Chaînes carbonées insaturées : test à l’eau de brome",
-  description: "Identifiez la présence de doubles liaisons dans les chaînes carbonées grâce à la décoloration de l’eau de brome. Cette expérience illustre la réactivité des alcènes et autres composés insaturés.",
-  duree: "30 min",
-  niveau: "Première",
-    image: "https://images.unsplash.com/photo-1608500211311-217d83f9c4b8?auto=format&fit=crop&w=800&q=80", // ✅ Remplacée
-  simulationPath: "chaines-insaturees-3d",
-  objectifs: [
-    "Identifier les chaînes carbonées insaturées (alcènes, alcynes)",
-    "Observer la réactivité chimique des doubles liaisons",
-    "Mettre en évidence une insaturation par la décoloration de l’eau de brome",
-    "Comprendre les mécanismes d’addition électrophile"
-  ],
-  materiel: [
-    "Tube à essai",
-    "Eau de brome (solution orangée)",
-    "Composés organiques : cyclohexène (insaturé), cyclohexane (saturé)",
-    "Pipettes ou compte-gouttes",
-    "Agitateur en verre",
-    "Support pour tube à essai",
-    "Gants et lunettes de protection"
-  ],
-  resultatsAttendus: [
-    "Décoloration de l’eau de brome en présence d’un composé insaturé",
-    "Absence de décoloration avec les alcanes (composés saturés)",
-    "Identification des composés insaturés à partir du changement de couleur",
-    "Interprétation des résultats en lien avec la structure moléculaire"
-  ]
-}
+    id: "6",
+    classe_id: "",
+    titre: "Chaînes carbonées insaturées : test à l’eau de brome",
+    description:
+      "Identifiez la présence de doubles liaisons dans les chaînes carbonées grâce à la décoloration de l’eau de brome. Cette expérience illustre la réactivité des alcènes et autres composés insaturés.",
+    duree: "30 min",
+    niveau: "Première",
+    image:
+      "https://images.unsplash.com/photo-1608500211311-217d83f9c4b8?auto=format&fit=crop&w=800&q=80", // ✅ Remplacée
+    simulationPath: "ChainesInsaturees",
+    objectifs: [
+      "Identifier les chaînes carbonées insaturées (alcènes, alcynes)",
+      "Observer la réactivité chimique des doubles liaisons",
+      "Mettre en évidence une insaturation par la décoloration de l’eau de brome",
+      "Comprendre les mécanismes d’addition électrophile",
+    ],
+    materiel: [
+      "Tube à essai",
+      "Eau de brome (solution orangée)",
+      "Composés organiques : cyclohexène (insaturé), cyclohexane (saturé)",
+      "Pipettes ou compte-gouttes",
+      "Agitateur en verre",
+      "Support pour tube à essai",
+      "Gants et lunettes de protection",
+    ],
+    resultatsAttendus: [
+      "Décoloration de l’eau de brome en présence d’un composé insaturé",
+      "Absence de décoloration avec les alcanes (composés saturés)",
+      "Identification des composés insaturés à partir du changement de couleur",
+      "Interprétation des résultats en lien avec la structure moléculaire",
+    ],
+  },
 ];
