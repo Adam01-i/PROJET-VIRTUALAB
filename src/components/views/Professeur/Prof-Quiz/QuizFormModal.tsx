@@ -23,9 +23,9 @@ export default function QuizFormModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-h-[90vh] max-w-[50vw] overflow-y-auto">
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            onSave();
+            await onSave(); // ⏳ attendre que toutes les opérations async soient terminées
             setOpen(false);
           }}
           className="space-y-4"

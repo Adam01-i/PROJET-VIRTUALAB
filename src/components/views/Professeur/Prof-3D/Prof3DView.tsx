@@ -249,7 +249,7 @@ export default function Prof3DView() {
               selectedClasseIds: [],
             })
           }}
-          className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md"
+          className="bg-indigo-800 hover:bg-indigo-600 text-white text-sm px-4 py-2 rounded-md"
         >
           ➕ Nouveau {viewMode === "molecule" ? "Molécule" : "Matériel"}
         </button>

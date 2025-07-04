@@ -206,7 +206,7 @@ export default function ProfExpView() {
             setIsEditing(false)
             setModalOpen(true)
           }}
-          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+          className="bg-indigo-800 hover:bg-indigo-600 text-white text-sm px-4 py-2 rounded-md"
         >
           ➕ Nouvelle expérience
         </button>

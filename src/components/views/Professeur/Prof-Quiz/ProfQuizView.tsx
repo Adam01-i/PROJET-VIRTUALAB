@@ -123,14 +123,30 @@ export default function ProfQuizView() {
         )
 
         for (const question of formData.questions || []) {
-          if (!question.question?.trim() || question.options?.length < 2) continue
+          if (!question.question?.trim() || question.options?.length < 2) {
+            console.warn("❌ Question ignorée (incomplète) :", question)
+            continue
+          }
 
-          await supabase.from("questions").insert({
-            ...question,
-            id: question.id || uuidv4(),
+          const { id, question: questionText, options, correctAnswer, explanation } = question
+
+          const { error } = await supabase.from("questions").insert({
+            id: id || uuidv4(),
             quiz_id: quizId,
+            question: questionText,
+            options,
+            correctAnswer,
+            explanation,
           })
+
+          if (error) {
+            console.error("❌ Erreur insertion question :", error.message)
+          } else {
+            console.log("✅ Question insérée :", questionText)
+          }
         }
+
+
       },
       {
         loading: "Enregistrement...",
@@ -229,9 +245,9 @@ export default function ProfQuizView() {
             })
             setIsModalOpen(true)
           }}
-          className="bg-indigo-600 hover:bg-indigo-800 text-white px-4 py-2 rounded text-sm"
+          className="bg-indigo-800 hover:bg-indigo-600 text-white text-sm px-4 py-2 rounded-md"
         >
-          ➕ Ajouter un nouveau quiz
+          ➕ Nouveau quiz
         </button>
       </div>
 
