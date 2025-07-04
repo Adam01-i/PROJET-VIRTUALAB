@@ -11,12 +11,12 @@ import { quizData } from '../data/Quiz/quizData';
 
 async function insertQuizzes() {
   for (const quiz of quizData) {
-    const { titre, description, niveau, duree, image, questions } = quiz;
+    const { titre, description, duree, image, questions } = quiz;
 
     // ➕ Insertion du quiz
     const { data: insertedQuiz, error: quizError } = await supabase
       .from('quizzes')
-      .insert([{ titre, description, niveau, duree, image }])
+      .insert([{ titre, description, duree, image }])
       .select();
 
     if (quizError) {

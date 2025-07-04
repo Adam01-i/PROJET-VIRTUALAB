@@ -25,39 +25,40 @@ export default function EleveLayout() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession()
-      const isAuthenticated = !!data.session
-      setIsLoggedIn(isAuthenticated)
+useEffect(() => {
+  const trackLoginOnce = async () => {
+    const { data } = await supabase.auth.getSession()
+    const isAuthenticated = !!data.session
+    setIsLoggedIn(isAuthenticated)
 
-      // 🎯 Tracker la connexion une seule fois
-      if (isAuthenticated && !hasTrackedLogin.current) {
-        await trackLogin()
-        hasTrackedLogin.current = true
-        console.log("✅ Connexion élève trackée")
-      }
+    if (isAuthenticated && !hasTrackedLogin.current) {
+      hasTrackedLogin.current = true // ⛔️ empêcher double tracking
+      await trackLogin()
+      console.log("✅ Connexion élève trackée (session)")
     }
-    checkAuth()
+  }
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const isAuthenticated = !!session
-      setIsLoggedIn(isAuthenticated)
+  trackLoginOnce()
 
-      if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
-        await trackLogin()
-        hasTrackedLogin.current = true
-        console.log("✅ Connexion élève trackée (auth change)")
-      }
+  const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const isAuthenticated = !!session
+    setIsLoggedIn(isAuthenticated)
 
-      if (event === "SIGNED_OUT") {
-        hasTrackedLogin.current = false
-        console.log("🚪 Déconnexion élève")
-      }
-    })
+    if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
+      hasTrackedLogin.current = true // ✅ bloquer ici aussi
+      await trackLogin()
+      console.log("✅ Connexion élève trackée (auth change)")
+    }
 
-    return () => listener.subscription.unsubscribe()
-  }, [])
+    if (event === "SIGNED_OUT") {
+      hasTrackedLogin.current = false
+      console.log("🚪 Déconnexion élève")
+    }
+  })
+
+  return () => listener.subscription.unsubscribe()
+}, [])
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

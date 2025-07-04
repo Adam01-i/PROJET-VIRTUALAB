@@ -21,6 +21,8 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
   });
 
   const [timeLeft, setTimeLeft] = useState(600);
+  const [finalizing, setFinalizing] = useState(false);
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -36,8 +38,28 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     return () => clearInterval(timer);
   }, [progress.completed]);
 
+  useEffect(() => {
+    if (progress.completed) {
+      // onComplete(progress.score);
+    }
+  }, [progress.completed]); // 🔁 se déclenche automatiquement à la fin du quiz
+
+
   const currentQuestion = quiz.questions[progress.currentQuestion];
   const hasAnswered = progress.answers[progress.currentQuestion] !== undefined;
+
+  const resetQuiz = () => {
+    setProgress({
+      currentQuestion: 0,
+      answers: [],
+      score: 0,
+      completed: false,
+      showExplanation: false,
+    });
+    setTimeLeft(600);
+    setFinalizing(false);
+  };
+
 
   const handleAnswer = (answerIndex: number) => {
     if (hasAnswered) return;
@@ -74,25 +96,37 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
 
   const handleNext = () => {
     if (progress.currentQuestion === quiz.questions.length - 1) {
-      setProgress(prev => ({ ...prev, completed: true }));
+      const finalizeQuiz = async () => {
+        setFinalizing(true);
 
-      const saveScore = async () => {
+        const finalScore = progress.score;
+
         const { data: session } = await supabase.auth.getSession();
         const user = session?.session?.user;
-        if (!user) return;
+        if (!user) {
+          setFinalizing(false);
+          return;
+        }
 
         await supabase.from('quiz_results').insert({
           eleve_id: user.id,
           quiz_id: quiz.id,
-          score: progress.score,
+          score: finalScore,
           total: quiz.questions.length,
         });
 
         await logActivity();
-        onComplete(progress.score);
+
+        // Marquer comme complété (onComplete sera déclenché ailleurs)
+        setProgress(prev => ({
+          ...prev,
+          completed: true,
+        }));
+
+        setFinalizing(false);
       };
 
-      saveScore();
+      finalizeQuiz();
     } else {
       setProgress(prev => ({
         ...prev,
@@ -101,6 +135,8 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
       }));
     }
   };
+
+
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -227,7 +263,7 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
         </div>
       </div>
 
-      {progress.completed && (
+      {progress.completed && !finalizing && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-indigo-900 rounded-md p-5 w-full max-w-md mx-4">
             <div className="text-center mb-6">
@@ -241,21 +277,28 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
             </div>
             <div className="flex gap-4">
               <button
-                onClick={onExit}
+                onClick={() => {
+                  onComplete(progress.score); // 🔁 Appelle le parent manuellement ici
+                  onExit();                   // 🔚 Quitte le quiz
+                }}
                 className="bg-purple-600 hover:bg-purple-700 text-white w-full py-2 rounded-md text-sm"
               >
                 Revenir à l'accueil
               </button>
+
               <button
-                onClick={() => window.location.reload()}
+                onClick={resetQuiz}
                 className="bg-gray-600 hover:bg-gray-700 text-white w-full py-2 rounded-md text-sm"
               >
                 Réessayer
               </button>
+
+
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

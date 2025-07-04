@@ -131,7 +131,7 @@ export default function ProfQuizView() {
           const { id, question: questionText, options, correctAnswer, explanation } = question
 
           const { error } = await supabase.from("questions").insert({
-            id: id || uuidv4(),
+            id: id || uuidv4(), 
             quiz_id: quizId,
             question: questionText,
             options,

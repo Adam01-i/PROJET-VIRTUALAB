@@ -10,7 +10,7 @@ export const experienceData: Experience[] = [
     duree: "35 min",
     niveau: "Première",
     image:
-      "/public/assets/sim-redox-reaction.png", // ✅ Remplacée
+      "/public/assets/simulations/sim-redox-reaction.png", // ✅ Remplacée
     simulationPath: "RedoxReaction",
     objectifs: [
       "Comprendre le principe des réactions d'oxydo-réduction",
@@ -55,7 +55,7 @@ export const experienceData: Experience[] = [
     duree: "45 min",
     niveau: "Première",
     image:
-      "/public/assets/sim-synthese-moleculaire.png", // ✅ Remplacée
+      "/public/assets/simulations/sim-synthese-moleculaire.png", // ✅ Remplacée
     simulationPath: "SyntheseMoleculaire",
     objectifs: [
       "Comprendre le principe de l’électrolyse et le rôle des électrodes",
@@ -91,7 +91,7 @@ export const experienceData: Experience[] = [
     duree: "45 min",
     niveau: "Première",
     image:
-      "/public/assets/sim-titrage-acido-basique.png", // ✅ Remplacée
+      "/public/assets/simulations/sim-titrage-acido-basique.png", // ✅ Remplacée
     simulationPath: "TitrageAcidoBasique",
     objectifs: [
       "Comprendre le principe du titrage acido-basique",
@@ -132,7 +132,7 @@ export const experienceData: Experience[] = [
     duree: "45 min",
     niveau: "Première",
     image:
-      "/public/assets/sim-neutralisation.png", // ✅ Remplacée
+      "/public/assets/simulations/sim-neutralisation.png", // ✅ Remplacée
     simulationPath: "NeutralisationEtTestSolution",
     objectifs: [
       "Comprendre le principe de la calorimétrie et les réactions exothermiques",
@@ -165,7 +165,7 @@ export const experienceData: Experience[] = [
     duree: "50 min",
     niveau: "Première",
     image:
-      "/public/assets/sim-composes-oxygenes.png", // ✅ Remplacée
+      "/public/assets/simulations/sim-composes-oxygenes.png", // ✅ Remplacée
     simulationPath: "ComposeOxygene",
     objectifs: [
       "Différencier les alcools primaires et secondaires par leurs réactions d'oxydation",

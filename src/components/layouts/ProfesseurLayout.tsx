@@ -20,35 +20,42 @@ export default function ProfesseurLayout() {
     { path: "/professeur/3D", icon: Cube, label: "Gestion 3D" },
   ]
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession()
-      const isAuthenticated = !!data.session
+useEffect(() => {
+  let mounted = true
 
-      // 🎯 Tracker la connexion professeur une seule fois
-      if (isAuthenticated && !hasTrackedLogin.current) {
-        await trackLogin()
-        hasTrackedLogin.current = true
-        console.log("✅ Connexion professeur trackée")
-      }
+  const trackOnce = async () => {
+    const { data } = await supabase.auth.getSession()
+    const isAuthenticated = !!data.session
+
+    if (isAuthenticated && !hasTrackedLogin.current) {
+      hasTrackedLogin.current = true // ✅ bloquer toute double exécution
+      await trackLogin()
+      console.log("✅ Connexion professeur trackée (session)")
     }
-    checkAuth()
+  }
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
-        await trackLogin()
-        hasTrackedLogin.current = true
-        console.log("✅ Connexion professeur trackée (auth change)")
-      }
+  trackOnce()
 
-      if (event === "SIGNED_OUT") {
-        hasTrackedLogin.current = false
-        console.log("🚪 Déconnexion professeur")
-      }
-    })
+  const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
+    if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
+      hasTrackedLogin.current = true
+      await trackLogin()
+      console.log("✅ Connexion professeur trackée (auth state)")
+    }
 
-    return () => listener.subscription.unsubscribe()
-  }, [])
+    if (event === "SIGNED_OUT") {
+      hasTrackedLogin.current = false
+      console.log("🚪 Déconnexion professeur")
+    }
+  })
+
+  return () => {
+    mounted = false
+    listener.subscription.unsubscribe()
+  }
+}, [])
+
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -8,7 +8,7 @@ export const quizData: Quiz[] = [
     titre: 'Les réactions acido-basiques',
     description: 'Testez vos connaissances sur les réactions entre acides et bases, le pH et les indicateurs colorés.',
     duree: '30 min',
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
+    image: '/public/assets/quiz/quiz-reaction-acido-basique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -79,7 +79,7 @@ export const quizData: Quiz[] = [
     titre: 'Équilibres chimiques',
     description: 'Comprendre les équilibres chimiques et le principe de Le Chatelier.',
     duree: '45 min',
-    image: 'https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?auto=format&fit=crop&w=800&q=80',
+    image: '/public/assets/quiz/quiz-equilibre-chimique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -150,7 +150,7 @@ export const quizData: Quiz[] = [
     titre: 'La thermodynamique',
     description: 'Testez vos connaissances sur les principes de la thermodynamique et les changements d\'énergie.',
     duree: '40 min',
-    image: 'https://images.unsplash.com/photo-1519824112455-0b2aef03cfd0?auto=format&fit=crop&w=800&q=80',
+    image: '/public/assets/quiz/quiz-equilibre-chimique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -221,7 +221,7 @@ export const quizData: Quiz[] = [
     titre: 'Les solutions',
     description: 'Testez vos connaissances sur les solutions et leur préparation.',
     duree: '30 min',
-    image: 'https://images.unsplash.com/photo-1602560519088-53ef418e2b2f?auto=format&fit=crop&w=800&q=80',
+    image: '/public/assets/quiz/quiz-solutions.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -292,7 +292,7 @@ export const quizData: Quiz[] = [
     titre: 'La chimie organique',
     description: 'Testez vos connaissances sur la chimie organique et ses différentes familles de composés.',
     duree: '50 min',
-    image: 'https://images.unsplash.com/photo-1519990354110-b869b4a41659?auto=format&fit=crop&w=800&q=80',
+    image: '/public/assets/quiz/quiz-chimie-organique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
