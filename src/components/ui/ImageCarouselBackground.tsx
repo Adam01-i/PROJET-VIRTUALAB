@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { FlaskRound as Flask, Brain } from "lucide-react";
 
 const images = [
-  "/assets/img1.png",
-  "/assets/img2.png",
-  "/assets/img3.png",
-  "/assets/img4.png",
-  "/assets/img5.png",
+  "/assets/bg/img1.png",
+  "/assets/bg/img2.png",
+  "/assets/bg/img3.png",
+  "/assets/bg/img4.png",
+  "/assets/bg/img5.png",
 ];
 
 function ImageCarouselBackground() {
