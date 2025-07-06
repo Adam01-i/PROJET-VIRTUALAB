@@ -8,7 +8,7 @@ export const quizData: Quiz[] = [
     titre: 'Les réactions acido-basiques',
     description: 'Testez vos connaissances sur les réactions entre acides et bases, le pH et les indicateurs colorés.',
     duree: '30 min',
-    image: '/public/assets/quiz/quiz-reaction-acido-basique.png', // ✅ Remplacée
+    image: '/assets/quiz/quiz-reaction-acido-basique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -79,7 +79,7 @@ export const quizData: Quiz[] = [
     titre: 'Équilibres chimiques',
     description: 'Comprendre les équilibres chimiques et le principe de Le Chatelier.',
     duree: '45 min',
-    image: '/public/assets/quiz/quiz-equilibre-chimique.png', // ✅ Remplacée
+    image: '/assets/quiz/quiz-equilibre-chimique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -150,7 +150,7 @@ export const quizData: Quiz[] = [
     titre: 'La thermodynamique',
     description: 'Testez vos connaissances sur les principes de la thermodynamique et les changements d\'énergie.',
     duree: '40 min',
-    image: '/public/assets/quiz/quiz-equilibre-chimique.png', // ✅ Remplacée
+    image: '/assets/quiz/quiz-equilibre-chimique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -221,7 +221,7 @@ export const quizData: Quiz[] = [
     titre: 'Les solutions',
     description: 'Testez vos connaissances sur les solutions et leur préparation.',
     duree: '30 min',
-    image: '/public/assets/quiz/quiz-solutions.png', // ✅ Remplacée
+    image: '/assets/quiz/quiz-solutions.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
@@ -292,7 +292,7 @@ export const quizData: Quiz[] = [
     titre: 'La chimie organique',
     description: 'Testez vos connaissances sur la chimie organique et ses différentes familles de composés.',
     duree: '50 min',
-    image: '/public/assets/quiz/quiz-chimie-organique.png', // ✅ Remplacée
+    image: '/assets/quiz/quiz-chimie-organique.png', // ✅ Remplacée
     questions: [
       {
         id: '1',
