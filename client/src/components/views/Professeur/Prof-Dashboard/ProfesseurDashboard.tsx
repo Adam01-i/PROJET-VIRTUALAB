@@ -51,7 +51,6 @@ export default function ProfesseurDashboard() {
     ])
 
     if (!mesClasses || !elevesClasses) return
-
     setClasses(mesClasses)
 
     const classeMap: Record<string, string> = {}
@@ -67,17 +66,19 @@ export default function ProfesseurDashboard() {
 
     const [{ data: profils }, { data: logs }] = await Promise.all([
       supabase.from("profiles").select("id, name, surname").in("id", eleveIds),
-      supabase.from("activity_logs").select("user_id, created_at, activity_type").in("user_id", eleveIds),
+      supabase
+        .from("activity_logs")
+        .select("user_id, created_at, activity_type")
+        .in("user_id", eleveIds)
+        .gte("created_at", since.toISOString()),
     ])
 
     if (!profils || !logs) return
-
-    // Compter le total des activités des élèves
     setTotalActivities(logs.length)
 
-    // === 🔍 1. Activités par élève
+    // === 🔍 1. Activité par élève
     const eleveMap: Record<string, EleveActivite> = {}
-    for (const e of profils) {
+    profils.forEach((e) => {
       eleveMap[e.id] = {
         id: e.id,
         name: `${e.name ?? ""} ${e.surname ?? ""}`.trim(),
@@ -88,7 +89,7 @@ export default function ProfesseurDashboard() {
         total_score: 0,
         created_at: undefined,
       }
-    }
+    })
 
     logs.forEach(({ user_id, activity_type, created_at }) => {
       const el = eleveMap[user_id]
@@ -106,50 +107,64 @@ export default function ProfesseurDashboard() {
 
     setParEleve(Object.values(eleveMap))
 
-    // === 🔍 2. Activité par classe basée sur les logs
-    const classeAgg: Record<string, ActiviteClasse[]> = {}
+    // === 🔍 2. Activité par classe
+    const classeAgg: Record<string, ActiviteClasse> = {}
 
     logs.forEach(({ user_id, activity_type, created_at }) => {
       const classe = classeMap[user_id]
       if (!classe) return
 
       if (!classeAgg[classe]) {
-        classeAgg[classe] = []
+        classeAgg[classe] = {
+          classe,
+          quiz: 0,
+          simulation: 0,
+          objet3d: 0,
+          created_at,
+        }
       }
 
-      classeAgg[classe].push({
-        classe,
-        quiz: activity_type === "quiz" ? 1 : 0,
-        simulation: activity_type === "simulation" ? 1 : 0,
-        objet3d: activity_type === "objet3d" ? 1 : 0,
-        created_at,
-      })
+      if (activity_type === "quiz") classeAgg[classe].quiz++
+      if (activity_type === "simulation") classeAgg[classe].simulation++
+      if (activity_type === "objet3d") classeAgg[classe].objet3d++
     })
 
-    // 🧮 Agréger par classe
-    const aggregatedClasse = Object.entries(classeAgg).flatMap(([, logs]) => {
-      return logs.reduce((acc: ActiviteClasse[], log) => {
-        acc.push(log)
-        return acc
-      }, [])
-    })
-
-    setParClasse(aggregatedClasse)
+    setParClasse(Object.values(classeAgg))
   }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold text-indigo-800">Tableau de bord Professeur</h1>
+return (
+  <div className="p-4 md:p-6 max-w-screen-xl mx-auto">
+    {/* Titre principal */}
+    <h1 className="text-2xl md:text-3xl font-bold text-indigo-800 mb-6">
+      Tableau de bord Professeur
+    </h1>
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <CardStat label="Mes classes" count={classes.length} icon={<AcademicCapIcon className="h-6 w-6" />} />
-        <CardStat label="Élèves suivis" count={parEleve.length} icon={<UserGroupIcon className="h-6 w-6" />} />
-        <CardStat label="Activités élèves" count={totalActivities} icon={<ChartBarIcon className="h-6 w-6" />} />
-      </div>
+    {/* Statistiques globales */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      <CardStat
+        label="Mes classes"
+        count={classes.length}
+        icon={<AcademicCapIcon className="h-6 w-6" />}
+      />
+      <CardStat
+        label="Élèves suivis"
+        count={parEleve.length}
+        icon={<UserGroupIcon className="h-6 w-6" />}
+      />
+      <CardStat
+        label="Activités élèves"
+        count={totalActivities}
+        icon={<ChartBarIcon className="h-6 w-6" />}
+      />
+    </div>
 
-      {/* ✅ Ici on envoie bien created_at */}
+    {/* Graphique Activité par Classe */}
+    <div className="mb-10">
       <GraphActivityByClasse data={parClasse} classes={classes} />
+    </div>
 
+    {/* Graphique Activité par Élève */}
+    <div className="mb-10">
       <GraphActivityParEleve
         data={parEleve.map((e) => ({
           ...e,
@@ -159,8 +174,12 @@ export default function ProfesseurDashboard() {
         selectedClasse={selectedClasseEleve}
         onClasseChange={setSelectedClasseEleve}
       />
+    </div>
 
+    {/* Activité complète */}
+    <div className="mb-10">
       <AllActivity />
     </div>
-  )
+  </div>
+)
 }
