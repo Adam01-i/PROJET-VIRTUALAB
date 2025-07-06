@@ -30,38 +30,52 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const toggleFullscreen = useCallback(() => {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  const toggleFullscreen = useCallback(async () => {
     const elem = containerRef.current;
     if (!elem) return;
 
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const requestFullscreen =
+      elem.requestFullscreen ||
+      (elem as any).webkitRequestFullscreen ||
+      (elem as any).mozRequestFullScreen ||
+      (elem as any).msRequestFullscreen;
 
-    if (!document.fullscreenElement) {
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-      } else if ((elem as any).webkitRequestFullscreen) {
-        (elem as any).webkitRequestFullscreen();
-      } else if ((elem as any).mozRequestFullScreen) {
-        (elem as any).mozRequestFullScreen();
-      } else if ((elem as any).msRequestFullscreen) {
-        (elem as any).msRequestFullscreen();
-      } else if (isMobile) {
-        alert("⚠️ Le mode plein écran peut ne pas être pris en charge sur ce navigateur.");
-      }
+    const exitFullscreen =
+      document.exitFullscreen ||
+      (document as any).webkitExitFullscreen ||
+      (document as any).mozCancelFullScreen ||
+      (document as any).msExitFullscreen;
+
+    if (!document.fullscreenElement && requestFullscreen) {
+      await requestFullscreen.call(elem);
       setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
-      } else if ((document as any).mozCancelFullScreen) {
-        (document as any).mozCancelFullScreen();
-      } else if ((document as any).msExitFullscreen) {
-        (document as any).msExitFullscreen();
+
+      // 🎯 Orientation paysage sur Chrome Android
+      if (isMobile && screen.orientation && screen.orientation.lock) {
+        try {
+          await screen.orientation.lock("landscape");
+        } catch (err) {
+          console.warn("Orientation lock non supportée :", err);
+        }
       }
+    } else if (document.fullscreenElement && exitFullscreen) {
+      await exitFullscreen.call(document);
       setIsFullscreen(false);
+
+      // 🔁 Revenir à l'orientation portrait
+      if (isMobile && screen.orientation && screen.orientation.unlock) {
+        try {
+          screen.orientation.unlock();
+        } catch (err) {
+          console.warn("Impossible de débloquer l'orientation :", err);
+        }
+      }
+    } else if (isMobile && !requestFullscreen) {
+      alert("⚠️ Le mode plein écran n'est pas supporté sur ce navigateur mobile (iOS/Safari).");
     }
-  }, []);
+  }, [isMobile]);
 
   const renderSimulation = () => {
     if (!experience.simulationPath) {
