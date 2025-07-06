@@ -53,9 +53,13 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
       setIsFullscreen(true);
 
       // 🎯 Orientation paysage sur Chrome Android
-      if (isMobile && screen.orientation && screen.orientation.lock) {
+      if (
+        isMobile &&
+        screen.orientation &&
+        (screen.orientation as any).lock
+      ) {
         try {
-          await screen.orientation.lock("landscape");
+          await (screen.orientation as any).lock("landscape");
         } catch (err) {
           console.warn("Orientation lock non supportée :", err);
         }
