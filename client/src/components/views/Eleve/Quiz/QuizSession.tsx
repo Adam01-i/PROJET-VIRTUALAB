@@ -94,20 +94,17 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     });
   };
 
-  const handleNext = () => {
-    if (progress.currentQuestion === quiz.questions.length - 1) {
-      const finalizeQuiz = async () => {
-        setFinalizing(true);
+const handleNext = () => {
+  if (progress.currentQuestion === quiz.questions.length - 1) {
+    const finalizeQuiz = async () => {
+      setFinalizing(true);
+      const finalScore = progress.score;
 
-        const finalScore = progress.score;
+      const { data: session } = await supabase.auth.getSession();
+      const user = session?.session?.user;
 
-        const { data: session } = await supabase.auth.getSession();
-        const user = session?.session?.user;
-        if (!user) {
-          setFinalizing(false);
-          return;
-        }
-
+      // Enregistrement si l'utilisateur est connecté
+      if (user) {
         await supabase.from('quiz_results').insert({
           eleve_id: user.id,
           quiz_id: quiz.id,
@@ -116,25 +113,26 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
         });
 
         await logActivity();
+      }
 
-        // Marquer comme complété (onComplete sera déclenché ailleurs)
-        setProgress(prev => ({
-          ...prev,
-          completed: true,
-        }));
-
-        setFinalizing(false);
-      };
-
-      finalizeQuiz();
-    } else {
+      // Marquer comme terminé, même si non connecté
       setProgress(prev => ({
         ...prev,
-        currentQuestion: prev.currentQuestion + 1,
-        showExplanation: false,
+        completed: true,
       }));
-    }
-  };
+
+      setFinalizing(false);
+    };
+
+    finalizeQuiz();
+  } else {
+    setProgress(prev => ({
+      ...prev,
+      currentQuestion: prev.currentQuestion + 1,
+      showExplanation: false,
+    }));
+  }
+};
 
 
 

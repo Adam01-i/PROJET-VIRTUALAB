@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   FlaskRound as Flask,
@@ -7,11 +7,11 @@ import {
   ArrowLeft,
   Book,
   ListChecks,
-} from 'lucide-react';
-import { useCallback, useState, lazy, Suspense } from 'react';
-import type { Experience } from '../../../../types/Experience/experience';
+} from "lucide-react";
+import { useCallback, useRef, useState, lazy, Suspense } from "react";
+import type { Experience } from "../../../../types/Experience/experience";
 
-const simulationModules = import.meta.glob('../../../../simulations/*.tsx');
+const simulationModules = import.meta.glob("../../../../simulations/*.tsx");
 
 const loadSimulationComponent = (fileName: string) => {
   const modulePath = `../../../../simulations/${fileName}.tsx`;
@@ -28,18 +28,40 @@ type ExperienceDetailViewProps = {
 
 export default function ExperienceDetailView({ experience, onBack }: ExperienceDetailViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const toggleFullscreen = useCallback(() => {
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if ((elem as any).webkitRequestFullscreen) {
+        (elem as any).webkitRequestFullscreen();
+      } else if ((elem as any).mozRequestFullScreen) {
+        (elem as any).mozRequestFullScreen();
+      } else if ((elem as any).msRequestFullscreen) {
+        (elem as any).msRequestFullscreen();
+      } else if (isMobile) {
+        alert("⚠️ Le mode plein écran peut ne pas être pris en charge sur ce navigateur.");
+      }
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen();
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
       setIsFullscreen(false);
     }
   }, []);
-
-
 
   const renderSimulation = () => {
     if (!experience.simulationPath) {
@@ -69,11 +91,10 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
     </div>
   );
 
-  // MODE PLEIN ÉCRAN
+  // ✅ Mode plein écran
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-white overflow-hidden">
-        {/* Bouton 'X' fixe centré en haut */}
+      <div ref={containerRef} className="fixed inset-0 z-50 bg-white overflow-hidden">
         <div className="absolute top-1 left-1/2 transform -translate-x-1/2 z-50">
           <button
             onClick={toggleFullscreen}
@@ -83,14 +104,11 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
           </button>
         </div>
 
-
-        {/* Simulation 100% écran */}
         <SimulationContainer height="h-full" />
       </div>
     );
   }
 
-  // MODE NORMAL
   const Header = () => (
     <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-white rounded-t-md">
       <div className="flex items-start gap-3">
@@ -124,7 +142,7 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
     <div className="max-w-[1280px] mx-auto py-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-3 space-y-5">
-          <div className="bg-white border border-gray-200 rounded-md shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-md shadow-sm" ref={containerRef}>
             <Header />
             <SimulationContainer height="h-[550px]" />
           </div>
