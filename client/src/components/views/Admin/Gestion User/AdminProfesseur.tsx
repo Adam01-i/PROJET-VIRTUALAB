@@ -131,11 +131,12 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
       }
 
       try {
-        const res = await fetch("http://localhost:3001/api/import-profs", {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/import-profs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, surname, email, avatar_url}),
+          body: JSON.stringify({ name, surname, email, avatar_url }),
         });
+
 
         const result = await res.json();
         if (!res.ok) toast.error(`❌ ${email} : ${result.error}`);
@@ -183,7 +184,7 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className={embedded ? "" :  "min-h-screen bg-gray-50"}>
+    <div className={embedded ? "" : "min-h-screen bg-gray-50"}>
       {/* BARRE D’ACTIONS */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-3">

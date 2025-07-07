@@ -137,7 +137,7 @@ const GestionElevesDialog: React.FC<Props> = ({ classeId, classeNom, onChange })
 
     for (const eleve of importedEleves) {
       try {
-        const response = await fetch("http://localhost:3001/api/import-eleves", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/import-profs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

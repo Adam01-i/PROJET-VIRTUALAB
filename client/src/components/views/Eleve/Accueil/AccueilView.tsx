@@ -113,7 +113,7 @@ export default function AccueilView() {
                 <span>Évaluer mes connaissances</span>
               </Link>              
             </div>
-            <div className='mt-6 sm:mt-0'>
+            <div className='mt-12 sm:mt-0'>
                 <p className="text-base sm:text-lg text-indigo-100 mb-8 leading-relaxed font-light drop-shadow-sm">
                   Réalisez des expériences en toute sécurité, testez vos connaissances<br className="hidden sm:block" />
                   avec des quiz ludiques, et explorez des structures moléculaires en 3D comme jamais auparavant.
