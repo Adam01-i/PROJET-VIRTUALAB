@@ -72,25 +72,22 @@ const GestionProfesseurPrincipalDialog: React.FC<Props> = ({
     }
   };
 
- const remplacerProfesseur = async (profId: string) => {
-  const { error } = await supabase.rpc("remplacer_professeur_principal", {
-    classe: classeId,
-    prof: profId,
-  });
-
-  if (error) {
-    toast.error("Erreur remplacement professeur", {
-      description: error.message,
+  const remplacerProfesseur = async (profId: string) => {
+    const { error } = await supabase.rpc("remplacer_professeur_principal", {
+      classe: classeId,
+      prof: profId,
     });
-  } else {
-    toast.success("Professeur principal défini");
-    await fetchProfPrincipal();
-    onChange?.();
-  }
-};
 
-
-
+    if (error) {
+      toast.error("Erreur remplacement professeur", {
+        description: error.message,
+      });
+    } else {
+      toast.success("Professeur principal défini");
+      await fetchProfPrincipal();
+      onChange?.();
+    }
+  };
 
   const retirerProfesseur = async () => {
     const { error } = await supabase
@@ -114,7 +111,7 @@ const GestionProfesseurPrincipalDialog: React.FC<Props> = ({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button variant="outline">Gérer le professeur principal</Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg space-y-4">

@@ -99,7 +99,7 @@ const GestionClasseDialog: React.FC<Props> = ({ onClose, onSuccess }) => {
     // 👥 Importer les élèves (via API -> insert in profiles -> insert in eleves_classes)
     for (const eleve of importedEleves) {
       try {
-        const response = await fetch("http://localhost:3001/api/import-eleves", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/import-eleves`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...eleve, role: "eleve" }),

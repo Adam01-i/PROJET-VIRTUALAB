@@ -101,7 +101,7 @@ const AdminClasse: React.FC = () => {
         </h2>
 
         <Dialog>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button
               onClick={() => setDialogOpen(true)}
               className="flex gap-2 items-center"

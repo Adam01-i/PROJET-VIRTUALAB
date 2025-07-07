@@ -111,14 +111,14 @@ export default function AccueilView() {
               <Link to="/eleve/quiz" className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-md flex items-center justify-center gap-2 text-sm font-medium shadow hover:shadow-white/10 transition duration-300">
                 <Brain size={18} />
                 <span>Évaluer mes connaissances</span>
-              </Link>              
+              </Link>
             </div>
-            <div className='mt-12 sm:mt-0'>
-                <p className="text-base sm:text-lg text-indigo-100 mb-8 leading-relaxed font-light drop-shadow-sm">
-                  Réalisez des expériences en toute sécurité, testez vos connaissances<br className="hidden sm:block" />
-                  avec des quiz ludiques, et explorez des structures moléculaires en 3D comme jamais auparavant.
-                </p>
-              </div>
+            <div className=' sm:mt-3'>
+              <p className="text-base sm:text-lg text-indigo-100 mb-8 leading-relaxed font-light drop-shadow-sm">
+                Réalisez des expériences en toute sécurité, testez vos connaissances<br className="hidden sm:block" />
+                avec des quiz ludiques, et explorez des structures moléculaires en 3D comme jamais auparavant.
+              </p>
+            </div>
           </div>
         </HeroSection>
       </div>

@@ -1,4 +1,3 @@
-// backend/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -11,15 +10,16 @@ import importElevesRoutes from "./routes/import-eleves.js";
 dotenv.config();
 
 const app = express();
+
+// ✅ CORRECT: port injecté dynamiquement par Railway
 const PORT = process.env.PORT || 3001;
 
-// 🔐 Supabase client admin
+// 🔐 Supabase
 export const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ⚙️ Middleware
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -28,17 +28,13 @@ app.use(
 );
 app.use(express.json());
 
-// 🧑‍🎓 Routes utilisateur
+// Routes
 app.use("/api", userRoutes);
-
-// 🧠 Chatbot
 app.use("/api", chatRoutes);
-
-// Importer des utilisateurs(profs et élèves)
 app.use("/api", importProfsRoutes);
 app.use("/api", importElevesRoutes);
 
-// 🛡️ Gestion des erreurs
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -50,7 +46,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 🚀 Lancer le serveur
+// ✅ Écoute sur le bon port
 app.listen(PORT, () => {
   console.log(`🚀 Serveur Express démarré sur http://localhost:${PORT}`);
 });
