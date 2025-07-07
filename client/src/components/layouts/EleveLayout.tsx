@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Outlet, NavLink, useLocation } from "react-router-dom"
 import { FlaskRoundIcon as Flask, Brain, CuboidIcon as Cube, Book, LogIn } from "lucide-react"
-import ImageCarouselBackground from "../ui/ImageCarouselBackground"
 import UserMenu from "../../components/ui/UserMenu"
 import { supabase } from "../../lib/supabaseClient"
 import { trackLogin } from "../../utils/eleveActivityTracker"
@@ -16,11 +15,8 @@ export default function EleveLayout() {
   const menuRef = useRef(null)
   const hasTrackedLogin = useRef(false)
 
-  const fullWidthPaths = ["/eleve/experiences", "/eleve/3d", "/eleve/quiz"]
-  const isFullWidth = fullWidthPaths.some((path) => location.pathname.includes(path))
-
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 500)
+    const handleScroll = () => setIsScrolled(window.scrollY > 300)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -79,7 +75,7 @@ export default function EleveLayout() {
   return (
     <div className="min-h-screen bg-white text-white flex flex-col">
       {/* Navbar */}
-      <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? "bg-indigo-900/95 shadow-md" : "bg-indigo-900/95 shadow-md"}`}>
+      <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? "bg-indigo-900/95 shadow-md" : ""}`}>
         <div className="max-w-[1280px] mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             {/* Left: Logo + nav items (desktop) */}
@@ -93,8 +89,7 @@ export default function EleveLayout() {
                     key={path}
                     to={path}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition ${
-                        isActive ? "bg-white/10 text-white font-semibold" : "text-purple-200 hover:bg-white/5"
+                      `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition  ${isActive ? "bg-white/10 text-white font-semibold" : "text-purple-200 hover:bg-white/5 "
                       }`
                     }
                   >
@@ -140,9 +135,8 @@ export default function EleveLayout() {
         {/* Mobile menu */}
         <div
           ref={menuRef}
-          className={`md:hidden absolute top-14 left-0 right-0 bg-indigo-900/95 shadow-md px-4 py-4 space-y-3 z-50 transition-all duration-300 transform origin-top ${
-            isMobileMenuOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0 pointer-events-none"
-          }`}
+          className={`md:hidden absolute top-14 left-0 right-0 bg-indigo-900/95 shadow-md px-4 py-4 space-y-3 z-50 transition-all duration-300 transform origin-top ${isMobileMenuOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0 pointer-events-none"
+            }`}
         >
           {navItems.map(({ path, icon: Icon, label }) => (
             <NavLink
@@ -150,8 +144,7 @@ export default function EleveLayout() {
               to={path}
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition ${
-                  isActive ? "bg-white/10 text-white font-semibold" : "text-purple-200 hover:bg-white/5"
+                `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition ${isActive ? "bg-white/10 text-white font-semibold" : "text-purple-200 hover:bg-white/5"
                 }`
               }
             >
@@ -174,13 +167,8 @@ export default function EleveLayout() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="mt-14">
-        <ImageCarouselBackground />
-      </section>
-
       {/* Main content */}
-      <main className={`${isFullWidth ? "w-full px-0 py-0" : "max-w-[1280px] mx-auto px-6 md:px-28 py-10"} flex-grow`}>
+      <main className={`${location.pathname === "/" ? "w-full p-0" : "max-w-[full]  "} flex-grow`}>
         <Outlet />
       </main>
 

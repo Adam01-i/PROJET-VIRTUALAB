@@ -3,22 +3,24 @@ import { FlaskRound as Flask, Brain, Cuboid as Cube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../../../lib/supabaseClient';
 import { motion } from 'framer-motion';
+import HeroSection from '../../../../components/ui/HeroSection';
+
 
 const commentairesFictifs = [
   {
-    auteur: "Nina, élève de Terminale",
+    auteur: "Amina, élève de Terminale",
     contenu: "Le labo virtuel m'a permis de comprendre des expériences que je n’avais jamais osé essayer en vrai.",
   },
   {
-    auteur: "Youssef, professeur de physique-chimie",
+    auteur: "Youssou, professeur de physique-chimie",
     contenu: "C’est un outil formidable pour rendre mes cours plus interactifs et engageants.",
   },
   {
-    auteur: "Inès, lycéenne",
+    auteur: "Ibrahima, lycéenne",
     contenu: "Les quiz m’aident à mémoriser plus facilement. C’est fun et utile !",
   },
   {
-    auteur: "Lucas, élève de Première",
+    auteur: "Lamine, élève de Première",
     contenu: "Visualiser les molécules en 3D m’a aidé à mieux comprendre les structures.",
   },
   {
@@ -26,7 +28,7 @@ const commentairesFictifs = [
     contenu: "J’adore refaire les expériences quand je veux. C’est comme un jeu éducatif.",
   },
   {
-    auteur: "Mehdi, parent d’élève",
+    auteur: "Alioune, parent d’élève",
     contenu: "Une plateforme éducative moderne, intuitive et rassurante pour les parents.",
   },
 ];
@@ -84,8 +86,45 @@ export default function AccueilView() {
     }),
   };
 
-  return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-[#f0f4ff] via-white to-[#f9f9ff] min-h-screen">
+return (
+  <div>
+    {/* ✅ Section Hero avec image de fond et texte lisible */}
+    <div className="relative">
+      <HeroSection images={["/assets/bg/home0.png"]}>
+        {/* Overlay sombre pour améliorer contraste */}
+        <div className="absolute inset-0 bg-black/40 z-0" />
+        
+        {/* Contenu texte au-dessus de l'overlay */}
+        <div className="relative z-10 text-center mt-56 max-w-3xl mx-auto px-4">
+          <Flask size={48} className="text-indigo-300 mx-auto mb-6 drop-shadow-md" />
+
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
+            Votre Laboratoire de Chimie Virtuel
+          </h1>
+
+          <p className="text-lg text-indigo-100 mb-10 leading-relaxed font-light drop-shadow-sm">
+            Réalisez des expériences en toute sécurité, testez vos connaissances<br />
+             avec des quiz ludiques,
+            et explorez des structures moléculaires en 3D comme jamais auparavant.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/eleve/experiences" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-md flex items-center justify-center gap-2 shadow hover:shadow-indigo-400/20 text-sm font-medium transition duration-300">
+              <Flask size={18} />
+              <span>Lancer une expérience</span>
+            </Link>
+
+            <Link to="/eleve/quiz" className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-md flex items-center justify-center gap-2 text-sm font-medium shadow hover:shadow-white/10 transition duration-300">
+              <Brain size={18} />
+              <span>Évaluer mes connaissances</span>
+            </Link>
+          </div>
+        </div>
+      </HeroSection>
+    </div>
+
+    {/* ✅ Partie inférieure de la page */}
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#f9f9ff] via-white to-[#f9f9ff] min-h-screen px-24">
       <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -114,19 +153,19 @@ export default function AccueilView() {
         >
           <FeatureCard
             to="/eleve/experiences"
-            icon={<Flask size={28} className="text-purple-600" />}
+            icon={<Flask size={28} className="text-indigo-600" />}
             title="Expériences Virtuelles"
             text="Réalisez des expériences de chimie en toute sécurité. Manipulez virtuellement le matériel et observez les réactions."
           />
           <FeatureCard
             to="/eleve/quiz"
-            icon={<Brain size={28} className="text-purple-600" />}
+            icon={<Brain size={28} className="text-indigo-600" />}
             title="Quiz Interactifs"
             text="Testez vos connaissances avec des quiz adaptés au programme de première. Progressez à votre rythme."
           />
           <FeatureCard
             to="/eleve/3d"
-            icon={<Cube size={28} className="text-purple-600" />}
+            icon={<Cube size={28} className="text-indigo-600" />}
             title="Visualisation 3D"
             text="Explorez les molécules en trois dimensions. Comprenez leur structure et leurs propriétés."
           />
@@ -170,7 +209,7 @@ export default function AccueilView() {
           </div>
         </motion.div>
 
-        {/* Formulaire de contact (Formspree) */}
+        {/* Formulaire de contact */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={5}
           className="mx-auto max-w-3xl bg-white/30 backdrop-blur-xl border border-indigo-100 p-10 rounded-3xl shadow-2xl"
         >
@@ -180,21 +219,25 @@ export default function AccueilView() {
           </p>
 
           <form
-            action="https://formspree.io/f/xovwznly" // 🔁 Remplace ici par ton vrai lien
+            action="https://formspree.io/f/xovwznly"
             method="POST"
             className="space-y-6"
           >
             <div className="flex flex-col sm:flex-row gap-4">
-              <input name="nom" type="text" placeholder="Votre nom" required className="flex-1 px-4 py-3 bg-white/80 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-indigo-400" />
-              <input name="email" type="email" placeholder="Votre email" required className="flex-1 px-4 py-3 bg-white/80 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-indigo-400" />
+              <input name="nom" type="text" placeholder="Votre nom" required className="flex-1 px-4 py-3 bg-white/80 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-indigo-400 text-black" />
+              <input name="email" type="email" placeholder="Votre email" required className="flex-1 px-4 py-3 bg-white/80 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-indigo-400 text-black" />
             </div>
             <textarea name="message" rows={5} placeholder="Votre message" required className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-indigo-400 text-black" />
-            <button type="submit" className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:brightness-110 transition">Envoyer le message</button>
+            <button type="submit" className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:brightness-110 transition">
+              Envoyer le message
+            </button>
           </form>
         </motion.div>
       </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 function FeatureCard({ to, icon, title, text }: { to: string; icon: React.ReactNode; title: string; text: string }) {
