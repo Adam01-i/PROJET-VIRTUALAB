@@ -134,7 +134,9 @@ export default function ExperienceView() {
       <HeroSection images={[
         "/assets/bg/exp1.png",
         "/assets/bg/exp2.png",
-        "/assets/bg/exp3.png"
+        "/assets/bg/exp3.png",
+        "/assets/bg/exp4.png",
+        "/assets/bg/exp5.png"
       ]}>
         {/* Overlay sombre pour améliorer contraste */}
         <div className="absolute inset-0 bg-black/40 z-0" />

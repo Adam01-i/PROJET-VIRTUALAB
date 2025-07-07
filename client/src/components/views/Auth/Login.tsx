@@ -109,7 +109,7 @@ export default function Login() {
       {/* Partie gauche visuelle */}
       <div className="col-span-2 relative hidden md:block">
         <img
-          src="/assets/bg/img1.png"
+          src="/assets/bg/login.png"
           alt="Laboratoire Virtuel"
           className="object-cover h-full w-full"
         />
