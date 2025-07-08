@@ -37,7 +37,7 @@ const handleCreate = async () => {
 
   try {
     // ✅ Appel à l'API backend avec tous les champs nécessaires
-    const res = await fetch("http://localhost:3001/api/create-user", {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/create-user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
