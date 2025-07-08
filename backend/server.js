@@ -18,30 +18,23 @@
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // ✅ Liste blanche des origines
-  const allowedOrigins = [
-    "http://localhost:5173",
-    "https://virtualab2025.vercel.app",
-    "https://virtualab2025-1egpvrq8n-seckmote-5687s-projects.vercel.app",
-  ];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://virtualab2025.vercel.app",
+];
 
-  // ✅ Middleware manuel pour **forcer les headers CORS**
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-      res.setHeader("Access-Control-Allow-Origin", origin);
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-      res.setHeader("Access-Control-Allow-Credentials", "true");
-      console.log(`🌐 Requête entrante : ${req.method} ${req.url}`);
-  next();
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
     }
-    // ✅ Réponse immédiate si OPTIONS
-    if (req.method === "OPTIONS") {
-      return res.sendStatus(204);
-    }
-    next();
-  });
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
   // Body parser
   app.use(express.json());
