@@ -152,7 +152,7 @@ export default function ExperienceView() {
         </div>
       </HeroSection>
 
-      <div className="max-w-[1280px] mx-auto px-0 md:px-26 py-12 space-y-10">
+      <div className="max-w-[1280px] mx-auto md:px-26  space-y-10">
 
       {/* ✅ Contenu centré */}
         <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-12 space-y-10">

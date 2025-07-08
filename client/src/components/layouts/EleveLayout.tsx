@@ -16,7 +16,7 @@ export default function EleveLayout() {
   const hasTrackedLogin = useRef(false)
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 300)
+    const handleScroll = () => setIsScrolled(window.scrollY > 0)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -173,7 +173,7 @@ export default function EleveLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full bg-indigo-900/95 text-white mt-auto">
+      <footer className="w-full bg-indigo-900/95 text-white my-0">
         <div className="border-t border-indigo-600 text-center text-sm text-indigo-200 py-4">
           © {new Date().getFullYear()} VirtuaLaB. Tous droits réservés.
         </div>

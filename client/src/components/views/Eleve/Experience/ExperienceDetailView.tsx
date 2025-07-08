@@ -157,7 +157,7 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
   );
 
   return (
-    <div className="max-w-[1280px] mx-auto py-6">
+    <div className="max-w-[1280px] mx-auto py-4 mt-14 space-y-24">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-3 space-y-5">
           <div className="bg-white border border-gray-200 rounded-md shadow-sm" ref={containerRef}>

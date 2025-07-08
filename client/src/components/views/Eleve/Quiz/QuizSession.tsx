@@ -143,7 +143,7 @@ const handleNext = () => {
   };
 
   return (
-    <div className="max-w-[700px] mx-auto bg-white rounded-md border border-gray-200 shadow-lg my-20">
+    <div className="max-w-[700px] mx-auto bg-white rounded-md border border-gray-200 shadow-lg my-36">
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-t-md">
         <div className="flex items-center justify-between">
           <button onClick={onExit} className="flex items-center gap-2 text-white text-sm">
