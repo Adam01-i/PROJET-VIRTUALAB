@@ -86,6 +86,8 @@ export default function AdminProfesseur({ embedded = true }: AdminProfesseurProp
     const confirmation = confirm("Êtes-vous sûr de vouloir supprimer ce professeur ?");
     if (!confirmation) return;
 
+    const { error : delete_experience  } = await supabase.rpc('UPDATE experiences SET auteur_id = NULL WHERE auteur_id = ?', { p_auteur_id: professeur_id });
+
     const { error } = await supabase.rpc('delete_professeur_with_assignation', { p_professeur_id: professeur_id });
 
     if (error) {
