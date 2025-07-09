@@ -29,6 +29,11 @@ const corsOptions = {
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: ["Content-Type", "Authorization"]
 };
+app.get("/api/ping", (req, res) => {
+  res.json({ message: "pong" });
+});
+
+
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // important
 

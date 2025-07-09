@@ -43,7 +43,7 @@ router.post("/import-eleves", async (req, res) => {
     // 🛠️ Création dans auth
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
       email: emailClean,
-      password: "virtualab2025!",
+      password: "virtualab2025",
       email_confirm: true,
       user_metadata: {
         name: name.trim(),

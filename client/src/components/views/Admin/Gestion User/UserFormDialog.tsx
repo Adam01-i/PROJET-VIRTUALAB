@@ -42,7 +42,7 @@ const handleCreate = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: emailClean,
-        password: "virtualab2025!",
+        password: "virtualab2025",
         name,
         surname,
         role: roleFinal,

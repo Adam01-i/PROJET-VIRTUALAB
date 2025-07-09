@@ -196,13 +196,26 @@ export default function Prof3DView() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (!file.name.endsWith(".glb")) {
+      return toast.error("❌ Seuls les fichiers .glb sont acceptés.")
+    }
+
     const folder = viewMode === "molecule" ? "molecules" : "equipments"
     const filename = `${folder}/${Date.now()}_${file.name}`
 
-    const { error } = await supabase.storage.from("3d-models").upload(filename, file)
-    if (error) return toast.error("❌ Échec de l'upload")
+    const { error } = await supabase.storage
+      .from("structures")
+      .upload(filename, file, {
+        contentType: "model/gltf-binary",
+        upsert: true,
+      })
 
-    const { data } = supabase.storage.from("3d-models").getPublicUrl(filename)
+    if (error) {
+      console.error("Erreur Supabase upload:", error)
+      return toast.error("❌ Upload échoué : " + error.message)
+    }
+
+    const { data } = supabase.storage.from("structures").getPublicUrl(filename)
     if (data?.publicUrl) {
       setFormData((prev) => ({ ...prev, structure: data.publicUrl }))
       toast.success("✅ Fichier .glb uploadé !")
