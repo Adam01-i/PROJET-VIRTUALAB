@@ -29,8 +29,6 @@ import AdminClasse from './components/views/Admin/Gestion Classe/AdminClasse';
 
 import useFullscreenOnLoad from './hooks/useFullscreenOnLoad';
 
-import { Chatbot } from './components/ui/Aichatbot';
-
 function App() {
   useFullscreenOnLoad();
 
@@ -86,7 +84,7 @@ function App() {
           <Route path="AdminClasse" element={<AdminClasse />} />
         </Route>
       </Routes>
-      <Chatbot />
+  
     </>
   );
 }

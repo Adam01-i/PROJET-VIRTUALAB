@@ -165,7 +165,7 @@ export default function AllActivity() {
 
   return (
     <div className="mt-40">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Activités des élèves</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Historiques des Activites</h2>
 
       {/* Filtres */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">

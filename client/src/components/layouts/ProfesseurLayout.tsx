@@ -55,8 +55,6 @@ useEffect(() => {
   }
 }, [])
 
-
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isMobileMenuOpen && menuRef.current && !(menuRef.current as HTMLElement).contains(event.target as Node)) {
