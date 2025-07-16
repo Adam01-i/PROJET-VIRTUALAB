@@ -12,6 +12,10 @@ export default function AdminLayout() {
   const drawerRef = useRef(null)
 
   useEffect(() => {
+    toast.success("Bienvenue sur le tableau de bord administrateur 🧪")
+  }, [])
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
     }
@@ -29,9 +33,7 @@ export default function AdminLayout() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isDrawerOpen])
 
-  useEffect(() => {
-    toast.success("Bienvenue sur le tableau de bord administrateur 🧪")
-  }, [])
+
 
   const navItems = [
     { path: "/admin/AdminDashboard", icon: LayoutDashboard, label: "Dashboard Administrateur" },
@@ -89,8 +91,7 @@ export default function AdminLayout() {
               to={path}
               onClick={() => setIsDrawerOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 text-sm py-2 px-3 rounded-md transition-all ${
-                  isActive ? "bg-indigo-100 text-indigo-700 font-semibold" : "text-gray-700 hover:bg-gray-100"
+                `flex items-center gap-3 text-sm py-2 px-3 rounded-md transition-all ${isActive ? "bg-indigo-100 text-indigo-700 font-semibold" : "text-gray-700 hover:bg-gray-100"
                 }`
               }
             >
@@ -111,10 +112,9 @@ export default function AdminLayout() {
                 to={path}
                 className={({ isActive }) =>
                   `text-sm font-medium px-2 pb-1 border-b-2 transition-all flex items-center gap-1.5
-                  ${
-                    isActive
-                      ? "text-indigo-700 border-indigo-600"
-                      : "text-gray-500 border-transparent hover:text-indigo-500 hover:border-indigo-300"
+                  ${isActive
+                    ? "text-indigo-700 border-indigo-600"
+                    : "text-gray-500 border-transparent hover:text-indigo-500 hover:border-indigo-300"
                   }`
                 }
               >
