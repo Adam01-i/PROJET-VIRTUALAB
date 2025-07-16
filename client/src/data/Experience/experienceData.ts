@@ -2,6 +2,51 @@ import type { Experience } from "../../types/Experience/experience";
 
 export const experienceData: Experience[] = [
   {
+    id: "titrage-3d",
+    classe_id: "",
+    titre: "Titrage Acido-Basique Immersif 3D",
+    description:
+      "Expérience immersive de titrage acido-basique dans un environnement 3D réaliste. Manipulez les équipements virtuels, observez les réactions en temps réel et maîtrisez les techniques de laboratoire dans un cadre sécurisé et interactif.",
+    duree: "40 min",
+    niveau: "Première",
+    image:
+      "/assets/simulations/sim-titrage-3d.png",
+    simulationPath: "TitrageAcidoBasiqueAmélioré",
+    objectifs: [
+      "Manipuler une burette et un erlenmeyer dans un environnement 3D",
+      "Observer en temps réel les changements de pH et de couleur",
+      "Identifier précisément le point d'équivalence",
+      "Analyser la courbe de titrage interactive",
+      "Utiliser les outils de mesure virtuelle (pH-mètre, balance)",
+      "Comprendre l'impact de l'agitation sur la réaction",
+      "Calculer la concentration avec les outils intégrés",
+      "Maîtriser les contrôles 3D et la navigation dans l'espace"
+    ],
+    materiel: [
+      "Environnement 3D de laboratoire complet",
+      "Burette automatique avec graduations 3D",
+      "Erlenmeyer interactif avec agitation magnétique",
+      "pH-mètre numérique avec affichage couleur",
+      "Balance de précision virtuelle",
+      "Support universel manipulable",
+      "Graphique de titrage en temps réel",
+      "Contrôles de température et vitesse",
+      "Outils de mesure et calcul intégrés",
+      "Interface tactile et intuitive"
+    ],
+    resultatsAttendus: [
+      "Manipulation fluide des équipements 3D",
+      "Observation claire du changement de couleur rouge → orange → vert → bleu",
+      "Identification précise du point d'équivalence à 25,0 ± 0,1 mL",
+      "Courbe de titrage complète avec saut de pH visible",
+      "Calcul automatique de la concentration avec 98% de précision",
+      "Visualisation des effets de l'agitation sur l'homogénéité",
+      "Progression suivie avec objectifs interactifs",
+      "Rapport détaillé généré automatiquement",
+      "Expérience immersive et engagement étudiant maximal"
+    ],
+  },
+  {
     id: "1",
     classe_id: "",
     titre: "Réactions d'oxydo-réduction avec le fer",
