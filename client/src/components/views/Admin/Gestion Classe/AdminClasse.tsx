@@ -84,6 +84,10 @@ const AdminClasse: React.FC = () => {
   }, []);
 
   const handleDeleteClasse = async (id: string) => {
+    const confirmDelete = confirm(
+      "Êtes-vous sûr de vouloir supprimer cette classe ? Cette action est irréversible."
+    );
+    if (!confirmDelete) return;
     const { error } = await supabase.from("classes").delete().eq("id", id);
     if (error) {
       toast.error("Suppression impossible", { description: error.message });
