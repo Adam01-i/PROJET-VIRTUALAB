@@ -104,7 +104,7 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
   };
 
   const SimulationContainer = ({ height }: { height: string }) => (
-    <div className={`relative w-full ${height} bg-blue-900 flex items-center justify-center`}>
+    <div className={`relative w-full ${height} bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center overflow-hidden rounded-b-md`}>
       {renderSimulation()}
     </div>
   );
