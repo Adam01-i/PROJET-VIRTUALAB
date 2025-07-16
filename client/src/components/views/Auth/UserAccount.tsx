@@ -15,6 +15,7 @@ export default function UserAccount() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -118,7 +119,7 @@ export default function UserAccount() {
   }[role] || 'Utilisateur';
 
   return (
-    <div className="max-w-4xl mx-auto bg-white text-gray-800 shadow-lg rounded-lg p-6 sm:p-10 mt-8 space-y-6">
+    <div className="max-w-2xl mx-auto bg-white text-gray-800 shadow-lg rounded-lg p-6 sm:p-10 mt-8 space-y-6">
       <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700">Mon Profil ({roleLabel})</h2>
       <p className="text-sm text-gray-500">Visualisez et mettez à jour vos informations personnelles.</p>
 
@@ -179,16 +180,31 @@ export default function UserAccount() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+        <div className='relative'>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Laisser vide pour ne pas modifier"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2"
           />
-          <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-2 top-2 text-gray-500 hover:text-indigo-600"
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10a10.05 10.05 0 01.175-1.875M9.88 9.88a3 3 0 014.24 4.24M6.1 6.1l11.8 11.8" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
 

@@ -48,7 +48,7 @@ export default function ForgotPassword() {
         <h2 className="text-xl font-bold text-indigo-700 mb-4">🔑 Réinitialisation</h2>
         <p className="text-sm text-gray-600 mb-4">
           Entrez votre email pour recevoir un lien de réinitialisation. 
-          <br /> Veuillez verifier si le message ne se trouve pas dans vos messages Spam
+          <br /> Veuillez verifier si le message ne se trouve pas dans vos messages Spam.
         </p>
         <input
           type="email"

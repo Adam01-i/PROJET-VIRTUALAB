@@ -146,6 +146,7 @@ export default function Login() {
                 className="mt-1 w-full p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
+
             <div className="relative">
               <label className="block text-sm font-medium text-gray-600">Mot de passe</label>
               <input
@@ -174,6 +175,7 @@ export default function Login() {
                 )}
               </button>
             </div>
+            
             <div className="text-right mt-1">
               <Link
                 to="/forgot-password"
