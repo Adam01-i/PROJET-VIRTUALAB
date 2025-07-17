@@ -16,13 +16,13 @@ export default function AdminUser() {
         >
           <TabsTrigger
             value="professeurs"
-            className="text-sm md:text-base px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+            className="text-sm md:text-base px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
           >
             Professeurs
           </TabsTrigger>
           <TabsTrigger
             value="eleves"
-            className="text-sm md:text-base px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+            className="text-sm md:text-base px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
           >
             Élèves
           </TabsTrigger>

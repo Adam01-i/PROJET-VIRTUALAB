@@ -32,7 +32,7 @@ router.post("/import-eleves", async (req, res) => {
     if (existingUser) {
       if (existingUser.identities === null) {
         return res.status(400).json({
-          error: "Utilisateur corrompu. Supprime-le manuellement via Supabase.",
+          error: "Profile d'utilisateur existe deja!",
           user_id: existingUser.id,
         });
       }
