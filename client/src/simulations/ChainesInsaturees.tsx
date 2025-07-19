@@ -3,19 +3,7 @@
 import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Cylinder, Box, Sphere, Text } from "@react-three/drei"
-import {
-  ChevronDown,
-  RotateCcw,
-  BookOpen,
-  Info,
-  BeakerIcon,
-  Calculator,
-  Award,
-  FileText,
-  Eye,
-  AlertTriangle,
-  CheckCircle,
-} from "lucide-react"
+import { ChevronDown, RotateCcw, BookOpen, Info, BeakerIcon, Calculator, Award, FileText, Eye, AlertTriangle, CheckCircle } from 'lucide-react'
 import * as THREE from "three"
 
 // ===================================
@@ -393,7 +381,7 @@ class UnsaturatedChemistryCalculator {
 const LabTable = () => (
   <group>
     <Box args={[8, 0.2, 4]} position={[0, -1, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color="#4f46ee" roughness={0.3} metalness={0.1} />
+      <meshStandardMaterial color="#059669" roughness={0.3} metalness={0.1} />
     </Box>
     {[
       [-3.5, -2, -1.5],
@@ -413,18 +401,18 @@ const LabEnvironment = () => (
   <group>
     {/* Murs du laboratoire */}
     <Box args={[20, 8, 0.2]} position={[0, 2, -8]} receiveShadow>
-      <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+      <meshStandardMaterial color="#e0f2fe" roughness={0.8} />
     </Box>
     <Box args={[0.2, 8, 16]} position={[-10, 2, 0]} receiveShadow>
-      <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+      <meshStandardMaterial color="#e0f2fe" roughness={0.8} />
     </Box>
     <Box args={[0.2, 8, 16]} position={[10, 2, 0]} receiveShadow>
-      <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+      <meshStandardMaterial color="#e0f2fe" roughness={0.8} />
     </Box>
 
     {/* Sol du laboratoire */}
     <Box args={[20, 0.1, 16]} position={[0, -2.1, 0]} receiveShadow>
-      <meshStandardMaterial color="#e5e7eb" roughness={0.9} />
+      <meshStandardMaterial color="#f0fdf4" roughness={0.9} />
     </Box>
 
     {/* Étagères murales */}
@@ -903,6 +891,80 @@ const useUnsaturatedLabSimulation = () => {
   const [reagentMenu, setReagentMenu] = useState(false)
   const [experiments, setExperiments] = useState<ExperimentData[]>([])
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
+  const [sectionVisibility, setSectionVisibility] = useState({
+    controls: true,
+    results: true,
+    guide: true,
+    formula: true
+  })
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [quizCompleted, setQuizCompleted] = useState(false)
+  const [correctAnswers, setCorrectAnswers] = useState(0)
+
+  const toggleSectionVisibility = useCallback((section: keyof typeof sectionVisibility) => {
+    setSectionVisibility(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
+  }, [])
+
+  const handleQuizAnswer = useCallback((answer: string) => {
+    setSelectedAnswer(answer)
+    setShowExplanation(true)
+    
+    const questions = [
+      {
+        id: 'q1',
+        question: "Que signifie la décoloration de l'eau de brome lors du test ?",
+        options: [
+          { id: 'saturation', text: 'Le composé est saturé' },
+          { id: 'insaturation', text: 'Le composé contient des insaturations' },
+          { id: 'acidite', text: 'Le composé est acide' },
+          { id: 'basicite', text: 'Le composé est basique' }
+        ],
+        correct: 'insaturation',
+        explanation: "La décoloration de l'eau de brome indique la présence d'insaturations (doubles ou triples liaisons) car le brome s'additionne sur ces liaisons, consommant ainsi le réactif coloré."
+      },
+      {
+        id: 'q2',
+        question: "Quel type de mécanisme se produit entre un alcène et le dibrome ?",
+        options: [
+          { id: 'substitution', text: 'Substitution radicalaire' },
+          { id: 'addition', text: 'Addition électrophile' },
+          { id: 'elimination', text: 'Élimination' },
+          { id: 'oxydation', text: 'Oxydation-réduction' }
+        ],
+        correct: 'addition',
+        explanation: "L'addition électrophile est le mécanisme principal : le dibrome, électrophile, attaque la double liaison riche en électrons de l'alcène pour former un produit d'addition."
+      }
+    ]
+    
+    if (answer === questions[currentQuestionIndex].correct) {
+      setCorrectAnswers(prev => prev + 1)
+    }
+  }, [currentQuestionIndex, correctAnswers])
+
+  const nextQuestion = useCallback(() => {
+    if (currentQuestionIndex < 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+      setSelectedAnswer(null)
+      setShowExplanation(false)
+    } else {
+      setQuizCompleted(true)
+    }
+  }, [currentQuestionIndex])
+
+  const resetQuiz = useCallback(() => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswer(null)
+    setShowExplanation(false)
+    setQuizCompleted(false)
+    setCorrectAnswers(0)
+    setShowQuiz(false)
+  }, [])
 
   // Reset automatique
   useEffect(() => {
@@ -947,6 +1009,9 @@ const useUnsaturatedLabSimulation = () => {
         setTimeout(() => {
           setReactionComplete(true)
         }, 1000)
+        setTimeout(() => {
+          setShowQuiz(true)
+        }, 2000)
       }, 2000)
 
       return () => clearTimeout(timer)
@@ -1041,8 +1106,62 @@ const useUnsaturatedLabSimulation = () => {
     getChemicalEquation,
     getDetailedResult,
     setShowResult,
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    sectionVisibility,
+    toggleSectionVisibility,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
   }
 }
+
+// Boutons de démasquage flottants
+const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility, showFormula }: any) => (
+  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
+    {!sectionVisibility.controls && (
+      <button
+        onClick={() => toggleSectionVisibility('controls')}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher les contrôles"
+      >
+        <BeakerIcon size={16} />
+      </button>
+    )}
+    {!sectionVisibility.results && (
+      <button
+        onClick={() => toggleSectionVisibility('results')}
+        className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher les observations"
+      >
+        <Eye size={16} />
+      </button>
+    )}
+    {!sectionVisibility.guide && (
+      <button
+        onClick={() => toggleSectionVisibility('guide')}
+        className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher le guide"
+      >
+        <Info size={16} />
+      </button>
+    )}
+    {!sectionVisibility.formula && showFormula && (
+      <button
+        onClick={() => toggleSectionVisibility('formula')}
+        className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher la formule"
+      >
+        <BookOpen size={16} />
+      </button>
+    )}
+  </div>
+)
 
 // ===================================
 // COMPOSANTS UI (simplifiés sans chauffage)
@@ -1062,12 +1181,23 @@ const UIControls = ({
   showFormula,
   setShowResult,
   reactionComplete,
+  toggleSectionVisibility,
+  sectionVisibility,
 }: any) => (
-  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl">
-    <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
-      <BeakerIcon className="mr-2 text-indigo-600" size={18} />
-      Test des Chaînes Insaturées
-    </h3>
+  <div className={`absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl ${sectionVisibility.controls ? '' : 'hidden'}`}>
+    <div className="flex items-center justify-between mb-3">
+      <h3 className="text-gray-800 font-semibold flex items-center">
+        <BeakerIcon className="mr-2 text-indigo-600" size={18} />
+        Test des Chaînes Insaturées
+      </h3>
+      <button
+        onClick={() => toggleSectionVisibility('controls')}
+        className="p-1 hover:bg-gray-100 rounded"
+        title="Masquer/Afficher les contrôles"
+      >
+        <Eye size={14} className="text-gray-500" />
+      </button>
+    </div>
 
     <div className="space-y-3 mb-4">
       <div className="relative">
@@ -1151,13 +1281,15 @@ const UIControls = ({
       </div>
 
       {reactionComplete && (
-        <button
-          onClick={() => setShowResult(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-colors mt-2"
-        >
-          <Calculator size={16} />
-          Analyser résultats
-        </button>
+        <div className="space-y-2">
+          <button
+            onClick={() => setShowResult(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
+          >
+            <Calculator size={16} />
+            Analyser résultats
+          </button>
+        </div>
       )}
     </div>
 
@@ -1186,15 +1318,24 @@ const UIControls = ({
   </div>
 )
 
-const UIResults = ({ hydrocarbonAdded, reagentAdded, reactionComplete, getStatusMessage, getDetailedResult }: any) => {
+const UIResults = ({ hydrocarbonAdded, reagentAdded, reactionComplete, getStatusMessage, getDetailedResult, toggleSectionVisibility, sectionVisibility }: any) => {
   const detailedResult = getDetailedResult()
 
   return (
-    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-xl">
-      <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
-        <Eye className="mr-2 text-indigo-600" size={16} />
-        Observations
-      </h3>
+    <div className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-xl ${sectionVisibility.results ? '' : 'hidden'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-gray-800 font-semibold flex items-center text-sm">
+          <Eye className="mr-2 text-indigo-600" size={16} />
+          Observations
+        </h3>
+        <button
+          onClick={() => toggleSectionVisibility('results')}
+          className="p-1 hover:bg-gray-100 rounded"
+          title="Masquer/Afficher les observations"
+        >
+          <Eye size={14} className="text-gray-500" />
+        </button>
+      </div>
 
       <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
         <p className="text-xs text-blue-800 font-medium">{getStatusMessage()}</p>
@@ -1507,6 +1648,165 @@ const ResultsModal = ({
   )
 }
 
+const QuizModal = ({ 
+  showQuiz, 
+  setShowQuiz, 
+  currentQuestionIndex, 
+  selectedAnswer, 
+  showExplanation, 
+  quizCompleted, 
+  correctAnswers,
+  handleQuizAnswer, 
+  nextQuestion, 
+  resetQuiz 
+}: any) => {
+  if (!showQuiz) return null
+
+  const questions = [
+    {
+      id: 'q1',
+      question: "Que signifie la décoloration de l'eau de brome lors du test ?",
+      options: [
+        { id: 'saturation', text: 'Le composé est saturé' },
+        { id: 'insaturation', text: 'Le composé contient des insaturations' },
+        { id: 'acidite', text: 'Le composé est acide' },
+        { id: 'basicite', text: 'Le composé est basique' }
+      ],
+      correct: 'insaturation',
+      explanation: "La décoloration de l'eau de brome indique la présence d'insaturations (doubles ou triples liaisons) car le brome s'additionne sur ces liaisons, consommant ainsi le réactif coloré."
+    },
+    {
+      id: 'q2',
+      question: "Quel type de mécanisme se produit entre un alcène et le dibrome ?",
+      options: [
+        { id: 'substitution', text: 'Substitution radicalaire' },
+        { id: 'addition', text: 'Addition électrophile' },
+        { id: 'elimination', text: 'Élimination' },
+        { id: 'oxydation', text: 'Oxydation-réduction' }
+      ],
+      correct: 'addition',
+      explanation: "L'addition électrophile est le mécanisme principal : le dibrome, électrophile, attaque la double liaison riche en électrons de l'alcène pour former un produit d'addition."
+    }
+  ]
+
+  const currentQuestion = questions[currentQuestionIndex]
+
+  if (quizCompleted) {
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-md">
+          <div className="text-center">
+            <Award className="mx-auto mb-4 text-yellow-500" size={48} />
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Quiz Terminé !</h2>
+            <div className="mb-4">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {correctAnswers}/2
+              </div>
+              <div className="text-gray-600">
+                {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez les tests d'insaturation !" :
+                 correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les mécanismes !" :
+                 "📚 Révisez les tests de caractérisation des insaturations !"}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={resetQuiz}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Recommencer
+              </button>
+              <button
+                onClick={() => setShowQuiz(false)}
+                className="flex-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors px-4 py-2"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-lg">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <Award className="mr-2 text-blue-500" size={24} />
+            Quiz - Question {currentQuestionIndex + 1}/2
+          </h2>
+          <button
+            onClick={() => setShowQuiz(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="font-semibold text-gray-800 mb-4 text-lg">
+            {currentQuestion.question}
+          </h3>
+          
+          <div className="space-y-3">
+            {currentQuestion.options.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => !showExplanation && handleQuizAnswer(option.id)}
+                disabled={showExplanation}
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                  showExplanation
+                    ? option.id === currentQuestion.correct
+                      ? 'bg-green-100 border-green-500 text-green-800'
+                      : option.id === selectedAnswer && option.id !== currentQuestion.correct
+                      ? 'bg-red-100 border-red-500 text-red-800'
+                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                    : selectedAnswer === option.id
+                    ? 'bg-blue-100 border-blue-500'
+                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{option.text}</span>
+                  {showExplanation && option.id === currentQuestion.correct && (
+                    <CheckCircle className="text-green-600" size={20} />
+                  )}
+                  {showExplanation && option.id === selectedAnswer && option.id !== currentQuestion.correct && (
+                    <AlertTriangle className="text-red-600" size={20} />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {showExplanation && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-blue-800 mb-2">
+              {selectedAnswer === currentQuestion.correct ? "✅ Correct !" : "❌ Incorrect"}
+            </h4>
+            <p className="text-blue-700 text-sm">
+              {currentQuestion.explanation}
+            </p>
+          </div>
+        )}
+
+        {showExplanation && (
+          <div className="flex justify-end">
+            <button
+              onClick={nextQuestion}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              {currentQuestionIndex < 1 ? 'Question suivante' : 'Voir les résultats'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ===================================
 // COMPOSANT PRINCIPAL
 // ===================================
@@ -1538,6 +1838,18 @@ export default function ChainesInsaturees3D() {
     getChemicalEquation,
     getDetailedResult,
     setShowResult,
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    sectionVisibility,
+    toggleSectionVisibility,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
   } = useUnsaturatedLabSimulation()
 
   return (
@@ -1563,6 +1875,12 @@ export default function ChainesInsaturees3D() {
         </Suspense>
       </Canvas>
 
+      <FloatingToggleButtons 
+        sectionVisibility={sectionVisibility}
+        toggleSectionVisibility={toggleSectionVisibility}
+        showFormula={showFormula}
+      />
+
       <UIControls
         selectedHydrocarbon={selectedHydrocarbon}
         selectedReagent={selectedReagent}
@@ -1577,6 +1895,8 @@ export default function ChainesInsaturees3D() {
         showFormula={showFormula}
         setShowResult={setShowResult}
         reactionComplete={reactionComplete}
+        toggleSectionVisibility={toggleSectionVisibility}
+        sectionVisibility={sectionVisibility}
       />
 
       <UIResults
@@ -1585,6 +1905,8 @@ export default function ChainesInsaturees3D() {
         reactionComplete={reactionComplete}
         getStatusMessage={getStatusMessage}
         getDetailedResult={getDetailedResult}
+        toggleSectionVisibility={toggleSectionVisibility}
+        sectionVisibility={sectionVisibility}
       />
 
       <ResultsModal
@@ -1597,7 +1919,7 @@ export default function ChainesInsaturees3D() {
       />
 
       {showFormula && (
-        <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl">
+        <div className={`absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl ${sectionVisibility.formula ? '' : 'hidden'}`}>
           <h4 className="text-gray-800 font-semibold mb-2 flex items-center">
             <BookOpen className="mr-2 text-indigo-600" size={16} />
             Équation chimique équilibrée:
@@ -1608,10 +1930,19 @@ export default function ChainesInsaturees3D() {
         </div>
       )}
 
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
-        <div className="flex items-center mb-2">
-          <Info className="mr-2 text-indigo-600" size={14} />
-          <span className="font-medium text-gray-700 text-sm">Guide</span>
+      <div className={`absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm ${sectionVisibility.guide ? '' : 'hidden'}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <Info className="mr-2 text-indigo-600" size={14} />
+            <span className="font-medium text-gray-700 text-sm">Guide</span>
+          </div>
+          <button
+            onClick={() => toggleSectionVisibility('guide')}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Masquer/Afficher le guide"
+          >
+            <Eye size={14} className="text-gray-500" />
+          </button>
         </div>
         <div className="text-xs text-gray-600 space-y-1">
           <p>
@@ -1628,6 +1959,19 @@ export default function ChainesInsaturees3D() {
           </p>
         </div>
       </div>
+
+      <QuizModal
+        showQuiz={showQuiz}
+        setShowQuiz={setShowQuiz}
+        currentQuestionIndex={currentQuestionIndex}
+        selectedAnswer={selectedAnswer}
+        showExplanation={showExplanation}
+        quizCompleted={quizCompleted}
+        correctAnswers={correctAnswers}
+        handleQuizAnswer={handleQuizAnswer}
+        nextQuestion={nextQuestion}
+        resetQuiz={resetQuiz}
+      />
     </div>
   )
 }
