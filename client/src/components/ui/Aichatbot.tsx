@@ -5,6 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./AiCard"
 import { MessageCircle, X, Send, Bot, User } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 interface ChatbotProps {
   className?: string
 }
@@ -21,26 +23,32 @@ export function Chatbot({ className }: ChatbotProps) {
     e.preventDefault()
     if (!input.trim()) return
     setLoading(true)
+
     const newMessages = [...messages, { role: "user", content: input }]
     setMessages(newMessages)
     setInput("")
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: newMessages }),
-    });
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
+      })
 
-    if (!res.ok) {
-      const error = await res.json();
-      setMessages([...newMessages, { role: "assistant", content: error.error || "Erreur" }]);
-      setLoading(false);
-      return;
+      if (!res.ok) {
+        const error = await res.json()
+        setMessages([...newMessages, { role: "assistant", content: error.error || "Erreur du serveur." }])
+        setLoading(false)
+        return
+      }
+
+      const data = await res.json()
+      setMessages([...newMessages, { role: "assistant", content: data.message }])
+    } catch (err: any) {
+      console.error("❌ Erreur de requête API :", err)
+      setMessages([...newMessages, { role: "assistant", content: "Impossible de contacter le serveur." }])
     }
 
-    const data = await res.json();
-
-    setMessages([...newMessages, { role: "assistant", content: data.message }])
     setLoading(false)
   }
 
@@ -86,16 +94,14 @@ export function Chatbot({ className }: ChatbotProps) {
                   >
                     <div className={`flex gap-2 max-w-[80%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
-                          }`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"}`}
                       >
                         {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                       </div>
                       <div
                         className={`p-3 rounded-lg ${msg.role === "user"
-                            ? "bg-blue-600 text-white rounded-br-sm"
-                            : "bg-gray-100 text-gray-800 rounded-bl-sm"
-                          }`}
+                          ? "bg-blue-600 text-white rounded-br-sm"
+                          : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
