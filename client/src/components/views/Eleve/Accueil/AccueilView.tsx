@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../../../lib/supabaseClient';
 import { motion } from 'framer-motion';
 import HeroSection from '../../../../components/ui/HeroSection';
+import { Chatbot } from '../../../../components/ui/Aichatbot';  
+  
 
 
 const commentairesFictifs = [
@@ -88,6 +90,8 @@ export default function AccueilView() {
 
   return (
     <div>
+                  <Chatbot />
+      
       {/* ✅ Hero Section avec image de fond et contenu centré */}
       <div className="relative">
         <HeroSection images={["/assets/bg/baniere.png"]}>

@@ -8,6 +8,7 @@ import type { QuizWithClasse, QuizQuestion } from "../../../../types/Quiz/quiz"
 import QuizCard from "./QuizCard"
 import QuizSession from "./QuizSession"
 import { trackQuizStart } from "../../../../utils/eleveActivityTracker"
+import { Chatbot } from '../../../../components/ui/Aichatbot'
 
 
 const ITEMS_PER_PAGE = 3
@@ -180,10 +181,12 @@ export default function QuizView() {
 
   return (
     <>
-      <HeroSection images={["/assets/bg/quiz1.png", "/assets/bg/quiz2.png","/assets/bg/quiz3.png"]}>
-      {/* Overlay sombre pour améliorer contraste */}
+      <Chatbot />
+
+      <HeroSection images={["/assets/bg/quiz1.png", "/assets/bg/quiz2.png", "/assets/bg/quiz3.png"]}>
+        {/* Overlay sombre pour améliorer contraste */}
         <div className="absolute inset-0 bg-black/40 z-0" />
-        
+
         <div className="text-center max-w-3xl mx-auto">
           <PenTool size={48} className="text-purple-300 mx-auto mb-6" />
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
@@ -239,11 +242,10 @@ export default function QuizView() {
                     <button
                       key={pageNum}
                       onClick={() => goToPage(pageNum)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                        currentPage === pageNum
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
                           ? "bg-indigo-600 text-white"
                           : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>

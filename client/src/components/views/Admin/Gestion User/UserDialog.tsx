@@ -75,6 +75,21 @@ const UserDialog: React.FC<Props> = ({
     }
   };
 
+  const checkIfClassAlreadyHasProf = async (classeId: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from("professeurs_classes")
+      .select("id")
+      .eq("classe_id", classeId);
+
+    if (error) {
+      toast.error("Erreur vérification classe", { description: error.message });
+      return true; // Par précaution, bloquer l'action
+    }
+
+    return data.length > 0;
+  };
+
+
   React.useEffect(() => {
     fetchClasses();
     if (!isNew) fetchAssignedClasses();
@@ -82,6 +97,15 @@ const UserDialog: React.FC<Props> = ({
 
   const assignClasse = async () => {
     if (!selectedClassId || !user) return;
+
+    // ✅ Vérification spécifique aux professeurs
+    if (role === "professeur") {
+      const alreadyAssigned = await checkIfClassAlreadyHasProf(selectedClassId);
+      if (alreadyAssigned) {
+        toast.error("Cette classe a déjà un professeur assigné.");
+        return;
+      }
+    }
 
     const table = role === "eleve" ? "eleves_classes" : "professeurs_classes";
     const idKey = role === "eleve" ? "eleve_id" : "professeur_id";
@@ -104,6 +128,7 @@ const UserDialog: React.FC<Props> = ({
     }
     setLoading(false);
   };
+
 
   const removeClasse = async (classeId: string) => {
     if (!user) return;

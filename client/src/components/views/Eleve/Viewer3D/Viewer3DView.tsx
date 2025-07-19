@@ -11,6 +11,7 @@ import GLBViewer from "./GLBViewer"
 import { supabase } from "../../../../lib/supabaseClient"
 import type { lab_items } from "../../../../types/Viewer3D/lab_items"
 import { trackObject3DView } from "../../../../utils/eleveActivityTracker"
+import { Chatbot } from '../../../../components/ui/Aichatbot'
 
 type ViewMode = "molecules" | "equipment"
 
@@ -237,6 +238,8 @@ export default function Viewer3DView() {
             </button>
           </div>
         </div>
+                    <Chatbot />
+        
       </div>
     </>
   )

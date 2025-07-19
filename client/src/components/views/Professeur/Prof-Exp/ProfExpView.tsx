@@ -11,6 +11,7 @@ import {
   trackExperienceUpdate,
   trackExperienceDelete,
 } from "../../../../utils/profActivityTracker"
+import { Chatbot } from '../../../../components/ui/Aichatbot'
 
 const DUREE_OPTIONS = ["15 min", "30 min", "45 min", "60 min"]
 const NIVEAU_OPTIONS = ["Débutant", "Intermédiaire", "Avancé"]
@@ -187,6 +188,7 @@ export default function ProfExpView() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <Chatbot />
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-indigo-800">Mes Simulations</h1>
         <button

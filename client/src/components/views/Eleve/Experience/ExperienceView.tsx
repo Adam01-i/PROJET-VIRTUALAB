@@ -8,6 +8,7 @@ import ExperienceDetailView from "./ExperienceDetailView"
 import { supabase } from "../../../../lib/supabaseClient"
 import { experienceData } from "../../../../data/Experience/experienceData"
 import { trackSimulationStart } from "../../../../utils/eleveActivityTracker"
+import { Chatbot } from '../../../../components/ui/Aichatbot'
 
 const ITEMS_PER_PAGE = 3
 
@@ -228,6 +229,8 @@ export default function ExperienceView() {
           </>
         )}
       </div>
+            <Chatbot />
+
     </div>
     </>
   )

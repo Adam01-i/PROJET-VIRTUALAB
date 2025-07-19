@@ -6,7 +6,7 @@ import { FlaskRoundIcon as Flask, Brain, CuboidIcon as Cube, Book, LogIn } from 
 import UserMenu from "../../components/ui/UserMenu"
 import { supabase } from "../../lib/supabaseClient"
 import { trackLogin } from "../../utils/eleveActivityTracker"
-import { Chatbot } from '../../components/ui/Aichatbot';
+// import { Chatbot } from '../../components/ui/Aichatbot';
 // 
 export default function EleveLayout() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -179,7 +179,6 @@ export default function EleveLayout() {
           © {new Date().getFullYear()} VirtuaLaB. Tous droits réservés.
         </div>
       </footer>
-      <Chatbot />
     </div>
   )
 }
