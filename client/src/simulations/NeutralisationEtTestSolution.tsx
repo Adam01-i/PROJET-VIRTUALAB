@@ -923,7 +923,7 @@ const useSimulationChimie = () => {
   const handleQuizAnswer = useCallback((answer: string) => {
     setSelectedAnswer(answer)
     setShowExplanation(true)
-    
+
     const questions = [
       {
         id: 'q1',
@@ -950,7 +950,7 @@ const useSimulationChimie = () => {
         explanation: "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2)."
       }
     ]
-    
+
     if (answer === questions[currentQuestionIndex].correct) {
       setCorrectAnswers(prev => prev + 1)
     }
@@ -1252,13 +1252,12 @@ const PanneauControle = ({
         <div className="mt-1 text-xs text-gray-600 flex items-center justify-between">
           <span>{solution1.concentration}</span>
           <span
-            className={`px-2 py-1 rounded text-xs font-bold ${
-              solution1.securite === "eleve"
+            className={`px-2 py-1 rounded text-xs font-bold ${solution1.securite === "eleve"
                 ? "bg-red-100 text-red-800"
                 : solution1.securite === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-green-100 text-green-800"
-            }`}
+              }`}
           >
             {solution1.securite === "eleve" ? "⚠️ Danger" : solution1.securite === "moyen" ? "⚡ Attention" : "✅ Sûr"}
           </span>
@@ -1297,13 +1296,12 @@ const PanneauControle = ({
         <div className="mt-1 text-xs text-gray-600 flex items-center justify-between">
           <span>{solution2.concentration}</span>
           <span
-            className={`px-2 py-1 rounded text-xs font-bold ${
-              solution2.securite === "eleve"
+            className={`px-2 py-1 rounded text-xs font-bold ${solution2.securite === "eleve"
                 ? "bg-red-100 text-red-800"
                 : solution2.securite === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-green-100 text-green-800"
-            }`}
+              }`}
           >
             {solution2.securite === "eleve" ? "⚠️ Danger" : solution2.securite === "moyen" ? "⚡ Attention" : "✅ Sûr"}
           </span>
@@ -1331,13 +1329,12 @@ const PanneauControle = ({
         </div>
         <div className="flex items-center gap-2">
           <span
-            className={`px-2 py-1 rounded text-xs font-bold ${
-              reactionData.niveau === "facile"
+            className={`px-2 py-1 rounded text-xs font-bold ${reactionData.niveau === "facile"
                 ? "bg-green-100 text-green-800"
                 : reactionData.niveau === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-red-100 text-red-800"
-            }`}
+              }`}
           >
             {reactionData.niveau === "facile"
               ? "🟢 Facile"
@@ -1377,12 +1374,12 @@ const PanneauControle = ({
   </div>
 )
 
-const PanneauObservations = ({ 
-  observations, 
-  etape, 
+const PanneauObservations = ({
+  observations,
+  etape,
   setShowResultats,
   toggleSectionVisibility,
-  sectionVisibility 
+  sectionVisibility
 }: any) => (
   <div className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 w-64 border border-gray-200 shadow-xl ${sectionVisibility.observations ? '' : 'hidden'}`}>
     <div className="flex items-center justify-between mb-2">
@@ -1433,9 +1430,8 @@ const PanneauObservations = ({
       ].map(({ label, active, icon }) => (
         <div
           key={label}
-          className={`text-center text-xs p-1 rounded border ${
-            active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-          }`}
+          className={`text-center text-xs p-1 rounded border ${active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+            }`}
         >
           <div className="text-xs mb-1">{icon}</div>
           <div className="font-bold text-xs">{label}</div>
@@ -1445,17 +1441,17 @@ const PanneauObservations = ({
   </div>
 )
 
-const QuizModal = ({ 
-  showQuiz, 
-  setShowQuiz, 
-  currentQuestionIndex, 
-  selectedAnswer, 
-  showExplanation, 
-  quizCompleted, 
+const QuizModal = ({
+  showQuiz,
+  setShowQuiz,
+  currentQuestionIndex,
+  selectedAnswer,
+  showExplanation,
+  quizCompleted,
   correctAnswers,
-  handleQuizAnswer, 
-  nextQuestion, 
-  resetQuiz 
+  handleQuizAnswer,
+  nextQuestion,
+  resetQuiz
 }: any) => {
   if (!showQuiz) return null
 
@@ -1501,8 +1497,8 @@ const QuizModal = ({
               </div>
               <div className="text-gray-600">
                 {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez les réactions chimiques !" :
-                 correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les réactions !" :
-                 "📚 Révisez les concepts de neutralisation et d'indicateurs !"}
+                  correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les réactions !" :
+                    "📚 Révisez les concepts de neutralisation et d'indicateurs !"}
               </div>
             </div>
             <div className="flex gap-3">
@@ -1545,24 +1541,23 @@ const QuizModal = ({
           <h3 className="font-semibold text-gray-800 mb-4 text-lg">
             {currentQuestion.question}
           </h3>
-          
+
           <div className="space-y-3">
             {currentQuestion.options.map((option) => (
               <button
                 key={option.id}
                 onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                 disabled={showExplanation}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  showExplanation
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${showExplanation
                     ? option.id === currentQuestion.correct
                       ? 'bg-green-100 border-green-500 text-green-800'
                       : option.id === selectedAnswer && option.id !== currentQuestion.correct
-                      ? 'bg-red-100 border-red-500 text-red-800'
-                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                        ? 'bg-red-100 border-red-500 text-red-800'
+                        : 'bg-gray-100 border-gray-300 text-gray-600'
                     : selectedAnswer === option.id
-                    ? 'bg-blue-100 border-blue-500'
-                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
-                }`}
+                      ? 'bg-blue-100 border-blue-500'
+                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span>{option.text}</span>
@@ -1766,7 +1761,7 @@ export default function LaboratoireReactionsChimiques() {
         </div>
       </div>
 
-      <FloatingToggleButtons 
+      <FloatingToggleButtons
         sectionVisibility={sectionVisibility}
         toggleSectionVisibility={toggleSectionVisibility}
       />

@@ -1073,13 +1073,12 @@ const PanneauControleFusionne = ({
       </div>
       <div className="flex items-center justify-between">
         <span
-          className={`text-xs px-2 py-1 rounded ${
-            defiActuel.difficulte === "facile"
+          className={`text-xs px-2 py-1 rounded ${defiActuel.difficulte === "facile"
               ? "bg-green-900/50 text-green-300 border border-green-500/30"
               : defiActuel.difficulte === "moyen"
                 ? "bg-yellow-900/50 text-yellow-300 border border-yellow-500/30"
                 : "bg-red-900/50 text-red-300 border border-red-500/30"
-          }`}
+            }`}
         >
           {defiActuel.difficulte === "facile"
             ? "🟢 Facile"
@@ -1156,11 +1155,10 @@ const PanneauControleFusionne = ({
       <button
         onClick={verifierMolecule}
         disabled={atomesConstruction.length === 0}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-          atomesConstruction.length > 0
+        className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${atomesConstruction.length > 0
             ? "bg-blue-600 hover:bg-blue-700 text-white"
             : "bg-gray-700 text-gray-400 cursor-not-allowed"
-        }`}
+          }`}
       >
         <CheckCircle size={16} />
         Analyser la molécule
@@ -1353,11 +1351,10 @@ export default function LaboratoireSyntheseVertical() {
             </div>
 
             <div
-              className={`p-4 rounded-lg mb-4 ${
-                dernierResultat.estCorrecte
+              className={`p-4 rounded-lg mb-4 ${dernierResultat.estCorrecte
                   ? "bg-green-900/30 border border-green-500/30"
                   : "bg-orange-900/30 border border-orange-500/30"
-              }`}
+                }`}
             >
               <p className={`text-sm mb-2 ${dernierResultat.estCorrecte ? "text-green-300" : "text-orange-300"}`}>
                 {dernierResultat.feedback}
@@ -1497,13 +1494,12 @@ export default function LaboratoireSyntheseVertical() {
                   <div className="bg-gray-800/50 p-3 rounded border border-gray-600">
                     <div className="font-semibold text-yellow-400 mb-1">Niveau de difficulté:</div>
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-bold ${
-                        defiActuel.difficulte === "facile"
+                      className={`px-3 py-1 rounded-full text-sm font-bold ${defiActuel.difficulte === "facile"
                           ? "bg-green-900/50 text-green-300 border border-green-500/30"
                           : defiActuel.difficulte === "moyen"
                             ? "bg-yellow-900/50 text-yellow-300 border border-yellow-500/30"
                             : "bg-red-900/50 text-red-300 border border-red-500/30"
-                      }`}
+                        }`}
                     >
                       {defiActuel.difficulte === "facile"
                         ? "🟢 Facile - Niveau 1ère S"

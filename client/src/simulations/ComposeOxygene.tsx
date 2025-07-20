@@ -1027,7 +1027,7 @@ const useLabSimulation = () => {
   const handleQuizAnswer = useCallback((answer: string) => {
     setSelectedAnswer(answer)
     setShowExplanation(true)
-    
+
     const questions = [
       {
         id: 'q1',
@@ -1054,7 +1054,7 @@ const useLabSimulation = () => {
         explanation: "Le réactif de Tollens est spécifique aux aldéhydes. Les alcools secondaires s'oxydent en cétones, pas en aldéhydes, donc ils ne peuvent pas réduire les ions Ag⁺ du réactif de Tollens."
       }
     ]
-    
+
     if (answer === questions[currentQuestionIndex].correct) {
       setCorrectAnswers(prev => prev + 1)
     }
@@ -1446,10 +1446,10 @@ const UIControls = ({
         onClick={toggleHeating}
         disabled={!(alcoholAdded && oxidantAdded && autoHeatingComplete)}
         className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${alcoholAdded && oxidantAdded && autoHeatingComplete
-            ? heating
-              ? "bg-red-500 hover:bg-red-600 text-white"
-              : "bg-orange-500 hover:bg-orange-600 text-white"
-            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          ? heating
+            ? "bg-red-500 hover:bg-red-600 text-white"
+            : "bg-orange-500 hover:bg-orange-600 text-white"
+          : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
       >
         {heating ? <Pause size={16} /> : <Flame size={16} />}
@@ -1586,16 +1586,16 @@ const UIResults = ({
               </span>
               <span
                 className={`font-medium text-xs ${special === "heating"
+                  ? value
+                    ? "text-orange-600"
+                    : "text-gray-500"
+                  : special === "reaction"
                     ? value
-                      ? "text-orange-600"
+                      ? "text-green-600"
                       : "text-gray-500"
-                    : special === "reaction"
-                      ? value
-                        ? "text-green-600"
-                        : "text-gray-500"
-                      : value
-                        ? "text-green-600"
-                        : "text-gray-500"
+                    : value
+                      ? "text-green-600"
+                      : "text-gray-500"
                   }`}
               >
                 {value ? "✓" : "✗"}
@@ -1859,17 +1859,17 @@ const ResultsModal = ({
   )
 }
 
-const QuizModal = ({ 
-  showQuiz, 
-  setShowQuiz, 
-  currentQuestionIndex, 
-  selectedAnswer, 
-  showExplanation, 
-  quizCompleted, 
+const QuizModal = ({
+  showQuiz,
+  setShowQuiz,
+  currentQuestionIndex,
+  selectedAnswer,
+  showExplanation,
+  quizCompleted,
   correctAnswers,
-  handleQuizAnswer, 
-  nextQuestion, 
-  resetQuiz 
+  handleQuizAnswer,
+  nextQuestion,
+  resetQuiz
 }: any) => {
   if (!showQuiz) return null
 
@@ -1915,8 +1915,8 @@ const QuizModal = ({
               </div>
               <div className="text-gray-600">
                 {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez l'oxydation des alcools !" :
-                 correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les mécanismes d'oxydation !" :
-                 "📚 Révisez les réactions d'oxydation des composés oxygénés !"}
+                  correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les mécanismes d'oxydation !" :
+                    "📚 Révisez les réactions d'oxydation des composés oxygénés !"}
               </div>
             </div>
             <div className="flex gap-3">
@@ -1959,24 +1959,23 @@ const QuizModal = ({
           <h3 className="font-semibold text-gray-800 mb-4 text-lg">
             {currentQuestion.question}
           </h3>
-          
+
           <div className="space-y-3">
             {currentQuestion.options.map((option) => (
               <button
                 key={option.id}
                 onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                 disabled={showExplanation}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  showExplanation
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${showExplanation
                     ? option.id === currentQuestion.correct
                       ? 'bg-green-100 border-green-500 text-green-800'
                       : option.id === selectedAnswer && option.id !== currentQuestion.correct
-                      ? 'bg-red-100 border-red-500 text-red-800'
-                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                        ? 'bg-red-100 border-red-500 text-red-800'
+                        : 'bg-gray-100 border-gray-300 text-gray-600'
                     : selectedAnswer === option.id
-                    ? 'bg-blue-100 border-blue-500'
-                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
-                }`}
+                      ? 'bg-blue-100 border-blue-500'
+                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span>{option.text}</span>
@@ -2093,7 +2092,7 @@ export default function ComposesOxygenes3D() {
         </Suspense>
       </Canvas>
 
-      <FloatingToggleButtons 
+      <FloatingToggleButtons
         sectionVisibility={sectionVisibility}
         toggleSectionVisibility={toggleSectionVisibility}
         showFormula={showFormula}

@@ -916,7 +916,7 @@ const useUnsaturatedLabSimulation = () => {
   const handleQuizAnswer = useCallback((answer: string) => {
     setSelectedAnswer(answer)
     setShowExplanation(true)
-    
+
     const questions = [
       {
         id: 'q1',
@@ -943,7 +943,7 @@ const useUnsaturatedLabSimulation = () => {
         explanation: "L'addition électrophile est le mécanisme principal : le dibrome, électrophile, attaque la double liaison riche en électrons de l'alcène pour former un produit d'addition."
       }
     ]
-    
+
     if (answer === questions[currentQuestionIndex].correct) {
       setCorrectAnswers(prev => prev + 1)
     }
@@ -1650,17 +1650,17 @@ const ResultsModal = ({
   )
 }
 
-const QuizModal = ({ 
-  showQuiz, 
-  setShowQuiz, 
-  currentQuestionIndex, 
-  selectedAnswer, 
-  showExplanation, 
-  quizCompleted, 
+const QuizModal = ({
+  showQuiz,
+  setShowQuiz,
+  currentQuestionIndex,
+  selectedAnswer,
+  showExplanation,
+  quizCompleted,
   correctAnswers,
-  handleQuizAnswer, 
-  nextQuestion, 
-  resetQuiz 
+  handleQuizAnswer,
+  nextQuestion,
+  resetQuiz
 }: any) => {
   if (!showQuiz) return null
 
@@ -1706,13 +1706,13 @@ const QuizModal = ({
               </div>
               <div className="text-gray-600">
                 {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez les tests d'insaturation !" :
-                 correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les mécanismes !" :
-                 "📚 Révisez les tests de caractérisation des insaturations !"}
+                  correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les mécanismes !" :
+                    "📚 Révisez les tests de caractérisation des insaturations !"}
               </div>
             </div>
             <div className="flex gap-3">
               <button
-                onClick= {resetQuiz}
+                onClick={resetQuiz}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Recommencer
@@ -1750,24 +1750,23 @@ const QuizModal = ({
           <h3 className="font-semibold text-gray-600 mb-4 text-lg">
             {currentQuestion.question}
           </h3>
-          
+
           <div className="space-y-3">
             {currentQuestion.options.map((option) => (
               <button
                 key={option.id}
                 onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                 disabled={showExplanation}
-                className={`w-full text-left p-3 rounded-lg border transition-colors text-gray-600 ${
-                  showExplanation
+                className={`w-full text-left p-3 rounded-lg border transition-colors text-gray-600 ${showExplanation
                     ? option.id === currentQuestion.correct
                       ? 'bg-green-100 border-green-500 text-green-800'
                       : option.id === selectedAnswer && option.id !== currentQuestion.correct
-                      ? 'bg-red-100 border-red-500 text-red-800'
-                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                        ? 'bg-red-100 border-red-500 text-red-800'
+                        : 'bg-gray-100 border-gray-300 text-gray-600'
                     : selectedAnswer === option.id
-                    ? 'bg-blue-100 border-blue-500'
-                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
-                }`}
+                      ? 'bg-blue-100 border-blue-500'
+                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span>{option.text}</span>
@@ -1877,7 +1876,7 @@ export default function ChainesInsaturees3D() {
         </Suspense>
       </Canvas>
 
-      <FloatingToggleButtons 
+      <FloatingToggleButtons
         sectionVisibility={sectionVisibility}
         toggleSectionVisibility={toggleSectionVisibility}
         showFormula={showFormula}

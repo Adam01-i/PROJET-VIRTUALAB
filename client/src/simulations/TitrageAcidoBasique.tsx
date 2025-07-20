@@ -1025,10 +1025,10 @@ export default function TitrageAcidoBasique() {
                             onClick={toggleTitrage}
                             disabled={!isSystemValid()}
                             className={`flex-1 px-4 py-2 rounded-md text-white font-medium text-sm transition-colors flex items-center justify-center gap-1 ${titrageState.isRunning
-                                    ? "bg-red-500 hover:bg-red-600"
-                                    : isSystemValid()
-                                        ? "bg-indigo-500 hover:bg-indigo-600"
-                                        : "bg-gray-400 cursor-not-allowed"
+                                ? "bg-red-500 hover:bg-red-600"
+                                : isSystemValid()
+                                    ? "bg-indigo-500 hover:bg-indigo-600"
+                                    : "bg-gray-400 cursor-not-allowed"
                                 }`}
                         >
                             {titrageState.isRunning ? (
@@ -1201,10 +1201,10 @@ export default function TitrageAcidoBasique() {
                                         <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                                             <div
                                                 className={`h-2 rounded-full transition-all duration-1000 ${currentExperiment.precision < 0.5
-                                                        ? "bg-green-600"
-                                                        : currentExperiment.precision < 1.0
-                                                            ? "bg-orange-600"
-                                                            : "bg-red-600"
+                                                    ? "bg-green-600"
+                                                    : currentExperiment.precision < 1.0
+                                                        ? "bg-orange-600"
+                                                        : "bg-red-600"
                                                     }`}
                                                 style={{ width: `${Math.max(10, 100 - currentExperiment.precision * 50)}%` }}
                                             />

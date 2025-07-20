@@ -1452,8 +1452,7 @@ export default function RedoxReaction() {
                   key={option.id}
                   onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                   disabled={showExplanation}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                    showExplanation
+                  className={`w-full text-left p-3 rounded-lg border transition-colors ${showExplanation
                       ? option.id === currentQuestion.correct
                         ? "bg-green-100 border-green-500 text-green-800"
                         : option.id === selectedAnswer && option.id !== currentQuestion.correct
@@ -1462,7 +1461,7 @@ export default function RedoxReaction() {
                       : selectedAnswer === option.id
                         ? "bg-blue-100 border-blue-500"
                         : "bg-gray-50 border-gray-300 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{option.text}</span>
@@ -1583,9 +1582,8 @@ export default function RedoxReaction() {
 
           {/* Prédiction théorique */}
           <div
-            className={`p-3 rounded-lg border ${
-              selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-            }`}
+            className={`p-3 rounded-lg border ${selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+              }`}
           >
             <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
               {selectedReactant.canReact ? (
@@ -1693,15 +1691,14 @@ export default function RedoxReaction() {
 
           {/* Phase actuelle */}
           <div
-            className={`p-2 rounded border text-xs ${
-              phaseInfo.phase === "Terminé"
+            className={`p-2 rounded border text-xs ${phaseInfo.phase === "Terminé"
                 ? "bg-green-50 border-green-200 text-gray-800"
                 : phaseInfo.phase === "Réaction"
                   ? "bg-orange-50 border-orange-200 text-gray-800"
                   : phaseInfo.phase === "Incomplète"
                     ? "bg-yellow-50 border-yellow-200 text-gray-800"
                     : "bg-blue-50 border-blue-200 text-gray-800"
-            }`}
+              }`}
           >
             <div className="font-semibold">{phaseInfo.phase}</div>
             <div className="text-gray-600">{phaseInfo.description}</div>
@@ -1992,13 +1989,12 @@ export default function RedoxReaction() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-1000 ${
-                          currentExperiment.reactionType === "complete"
+                        className={`h-2 rounded-full transition-all duration-1000 ${currentExperiment.reactionType === "complete"
                             ? "bg-green-600"
                             : currentExperiment.reactionType === "incomplete"
                               ? "bg-orange-600"
                               : "bg-red-600"
-                        }`}
+                          }`}
                         style={{ width: `${Math.max(5, currentExperiment.results.efficiency)}%` }}
                       />
                     </div>
