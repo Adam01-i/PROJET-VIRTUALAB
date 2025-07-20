@@ -3,20 +3,7 @@
 import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Cylinder, Box, Sphere, Text, Html, Environment } from "@react-three/drei"
-import {
-  RotateCcw,
-  Beaker,
-  Eye,
-  Info,
-  Lightbulb,
-  BookOpen,
-  Award,
-  AlertTriangle,
-  Zap,
-  Droplets,
-  Sparkles,
-  FlaskConical,
-} from "lucide-react"
+import { RotateCcw, Eye, Info, BookOpen, Award, AlertTriangle, Droplets, Sparkles, FlaskConical, CheckCircle } from 'lucide-react'
 import * as THREE from "three"
 
 // ===================================
@@ -287,6 +274,38 @@ const REACTIONS: Record<string, ReactionChimique> = {
 // ===================================
 // COMPOSANTS 3D AMÉLIORÉS
 // ===================================
+
+const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility }: any) => (
+  <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
+    {!sectionVisibility.controls && (
+      <button
+        onClick={() => toggleSectionVisibility('controls')}
+        className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher les contrôles"
+      >
+        <FlaskConical size={16} />
+      </button>
+    )}
+    {!sectionVisibility.observations && (
+      <button
+        onClick={() => toggleSectionVisibility('observations')}
+        className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher les observations"
+      >
+        <Eye size={16} />
+      </button>
+    )}
+    {!sectionVisibility.guide && (
+      <button
+        onClick={() => toggleSectionVisibility('guide')}
+        className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher le guide"
+      >
+        <Info size={16} />
+      </button>
+    )}
+  </div>
+)
 
 function LabEnvironmentChimie() {
   return (
@@ -881,6 +900,80 @@ const useSimulationChimie = () => {
   const [observations, setObservations] = useState<string[]>([])
   const [showResultats, setShowResultats] = useState(false)
   const [progressReaction, setProgressReaction] = useState(0)
+  const [sectionVisibility, setSectionVisibility] = useState({
+    controls: true,
+    observations: true,
+    guide: true,
+    results: true
+  })
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [quizCompleted, setQuizCompleted] = useState(false)
+  const [correctAnswers, setCorrectAnswers] = useState(0)
+
+  const toggleSectionVisibility = useCallback((section: keyof typeof sectionVisibility) => {
+    setSectionVisibility(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
+  }, [])
+
+  const handleQuizAnswer = useCallback((answer: string) => {
+    setSelectedAnswer(answer)
+    setShowExplanation(true)
+    
+    const questions = [
+      {
+        id: 'q1',
+        question: "Que se passe-t-il lors d'une réaction de neutralisation acide-base ?",
+        options: [
+          { id: 'formation_sel', text: 'Formation d\'un sel et d\'eau' },
+          { id: 'formation_gaz', text: 'Formation d\'un gaz' },
+          { id: 'formation_precipite', text: 'Formation d\'un précipité coloré' },
+          { id: 'aucun_changement', text: 'Aucun changement visible' }
+        ],
+        correct: 'formation_sel',
+        explanation: "Lors d'une neutralisation acide-base, l'acide et la base réagissent pour former un sel et de l'eau selon la réaction générale : Acide + Base → Sel + H₂O"
+      },
+      {
+        id: 'q2',
+        question: "Pourquoi la phénolphtaléine devient-elle rose en milieu basique ?",
+        options: [
+          { id: 'temperature', text: 'À cause de la température' },
+          { id: 'changement_ph', text: 'À cause du changement de pH' },
+          { id: 'concentration', text: 'À cause de la concentration' },
+          { id: 'precipitation', text: 'À cause d\'une précipitation' }
+        ],
+        correct: 'changement_ph',
+        explanation: "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2)."
+      }
+    ]
+    
+    if (answer === questions[currentQuestionIndex].correct) {
+      setCorrectAnswers(prev => prev + 1)
+    }
+  }, [currentQuestionIndex])
+
+  const nextQuestion = useCallback(() => {
+    if (currentQuestionIndex < 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+      setSelectedAnswer(null)
+      setShowExplanation(false)
+    } else {
+      setQuizCompleted(true)
+    }
+  }, [currentQuestionIndex])
+
+  const resetQuiz = useCallback(() => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswer(null)
+    setShowExplanation(false)
+    setQuizCompleted(false)
+    setCorrectAnswers(0)
+    setShowQuiz(false)
+  }, [])
 
   // Calcul des propriétés de la réaction
   const reactionData = useMemo(() => {
@@ -975,16 +1068,22 @@ const useSimulationChimie = () => {
 
   const demarrerReaction = useCallback(() => {
     if (!reactionData) {
-      setObservations((prev) => [...prev, "⚠️ Ces solutions ne réagissent pas ensemble"])
+      setObservations((prev) => {
+        const newObs = "⚠️ Ces solutions ne réagissent pas ensemble"
+        return prev.includes(newObs) ? prev : [...prev, newObs]
+      })
       return
     }
 
     setEnReaction(true)
     setReactionActive(reactionData)
-    setObservations((prev) => [...prev, `🧪 Début de la réaction: ${reactionData.nom}`])
+    setObservations((prev) => {
+      const newObs = `🧪 Début de la réaction: ${reactionData.nom}`
+      return prev.includes(newObs) ? prev : [...prev, newObs]
+    })
     setProgressReaction(0)
 
-    const dureeReaction = 5000 // 5 secondes
+    const dureeReaction = 5000
     const startTime = Date.now()
 
     const updateReaction = () => {
@@ -998,7 +1097,18 @@ const useSimulationChimie = () => {
         setEnReaction(false)
         setReactionTerminee(true)
         setEtape(3)
-        setObservations((prev) => [...prev, `🎯 ${reactionData.observation}`, `📚 ${reactionData.explication}`])
+        setObservations((prev) => {
+          const obs1 = `🎯 ${reactionData.observation}`
+          const obs2 = `📚 ${reactionData.explication}`
+          const newObservations = []
+          if (!prev.includes(obs1)) newObservations.push(obs1)
+          if (!prev.includes(obs2)) newObservations.push(obs2)
+          return [...prev, ...newObservations]
+        })
+        // Déclencher le quiz après 2 secondes
+        setTimeout(() => {
+          setShowQuiz(true)
+        }, 2000)
       }
     }
 
@@ -1061,6 +1171,18 @@ const useSimulationChimie = () => {
     verserSolution2: () => verserSolution(2),
     obtenirMessageStatut,
     reinitialiser,
+    sectionVisibility,
+    toggleSectionVisibility,
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
   }
 }
 
@@ -1079,18 +1201,22 @@ const PanneauControle = ({
   obtenirMessageStatut,
   progressReaction,
   enReaction,
+  toggleSectionVisibility,
+  sectionVisibility,
 }: any) => (
-  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 w-80 border border-gray-200 shadow-xl">
-    <div className="flex items-center justify-between mb-4">
+  <div className={`absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 w-80 border border-gray-200 shadow-xl ${sectionVisibility.controls ? '' : 'hidden'}`}>
+    <div className="flex items-center justify-between mb-3">
       <h3 className="text-gray-800 font-bold text-lg flex items-center">
         <FlaskConical className="mr-2 text-blue-600" size={20} />
         Réactifs
       </h3>
-      <div className="flex items-center gap-1">
-        <div className={`w-2 h-2 rounded-full ${etape > 0 ? "bg-green-500" : "bg-gray-300"}`} />
-        <div className={`w-2 h-2 rounded-full ${etape > 1 ? "bg-green-500" : "bg-gray-300"}`} />
-        <div className={`w-2 h-2 rounded-full ${etape > 2 ? "bg-green-500" : "bg-gray-300"}`} />
-      </div>
+      <button
+        onClick={() => toggleSectionVisibility('controls')}
+        className="p-1 hover:bg-gray-100 rounded"
+        title="Masquer/Afficher les contrôles"
+      >
+        <Eye size={14} className="text-gray-500" />
+      </button>
     </div>
 
     <div className="space-y-4">
@@ -1251,51 +1377,54 @@ const PanneauControle = ({
   </div>
 )
 
-const PanneauObservations = ({ observations, etape, reactionData, setShowResultats }: any) => (
-  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 w-72 border border-gray-200 shadow-xl">
-    <div className="flex items-center justify-between mb-3">
-      <h3 className="text-gray-800 font-bold text-lg flex items-center">
-        <Eye className="mr-2 text-green-600" size={20} />
+const PanneauObservations = ({ 
+  observations, 
+  etape, 
+  setShowResultats,
+  toggleSectionVisibility,
+  sectionVisibility 
+}: any) => (
+  <div className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 w-64 border border-gray-200 shadow-xl ${sectionVisibility.observations ? '' : 'hidden'}`}>
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="text-gray-800 font-bold text-sm flex items-center">
+        <Eye className="mr-2 text-green-600" size={16} />
         Observations
       </h3>
-      {etape >= 3 && (
+      <div className="flex gap-1">
+        {etape >= 3 && (
+          <button
+            onClick={() => setShowResultats(true)}
+            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs font-medium transition-all"
+          >
+            <BookOpen size={10} />
+            Analyse
+          </button>
+        )}
         <button
-          onClick={() => setShowResultats(true)}
-          className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-all"
+          onClick={() => toggleSectionVisibility('observations')}
+          className="p-1 hover:bg-gray-100 rounded"
+          title="Masquer/Afficher les observations"
         >
-          <BookOpen size={12} />
-          Analyse
+          <Eye size={12} className="text-gray-500" />
         </button>
-      )}
+      </div>
     </div>
 
-    <div className="space-y-2 max-h-64 overflow-y-auto">
+    <div className="space-y-1 max-h-48 overflow-y-auto">
       {observations.length === 0 ? (
-        <div className="text-gray-500 text-sm italic text-center py-4">
-          Aucune observation pour le moment...
-          <br />
+        <div className="text-gray-500 text-xs italic text-center py-3">
           Commencez l'expérience !
         </div>
       ) : (
-        observations.map((obs: string, i: number) => (
-          <div key={i} className="bg-gray-50 p-2 rounded border-l-4 border-blue-500 text-sm text-gray-700">
+        observations.slice(-3).map((obs: string, i: number) => (
+          <div key={i} className="bg-gray-50 p-2 rounded border-l-2 border-blue-500 text-xs text-gray-700">
             {obs}
           </div>
         ))
       )}
     </div>
 
-    {reactionData && etape >= 1 && (
-      <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-        <div className="flex items-center mb-2">
-          <Lightbulb className="mr-2 text-yellow-600" size={16} />
-          <span className="font-semibold text-yellow-800 text-sm">À observer:</span>
-        </div>
-        <div className="text-yellow-700 text-sm">{reactionData.description}</div>
-      </div>
-    )}
-
-    <div className="mt-4 grid grid-cols-4 gap-1">
+    <div className="mt-3 grid grid-cols-4 gap-1">
       {[
         { label: "Prep", active: etape >= 0, icon: "🧪" },
         { label: "Mix", active: etape >= 1, icon: "⚗️" },
@@ -1304,175 +1433,172 @@ const PanneauObservations = ({ observations, etape, reactionData, setShowResulta
       ].map(({ label, active, icon }) => (
         <div
           key={label}
-          className={`text-center text-xs p-2 rounded border ${
+          className={`text-center text-xs p-1 rounded border ${
             active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
           }`}
         >
-          <div className="text-sm mb-1">{icon}</div>
-          <div className="font-bold">{label}</div>
+          <div className="text-xs mb-1">{icon}</div>
+          <div className="font-bold text-xs">{label}</div>
         </div>
       ))}
     </div>
   </div>
 )
 
-const ModalResultats = ({ showResultats, setShowResultats, reactionData, solution1, solution2 }: any) => {
-  if (!showResultats || !reactionData) return null
+const QuizModal = ({ 
+  showQuiz, 
+  setShowQuiz, 
+  currentQuestionIndex, 
+  selectedAnswer, 
+  showExplanation, 
+  quizCompleted, 
+  correctAnswers,
+  handleQuizAnswer, 
+  nextQuestion, 
+  resetQuiz 
+}: any) => {
+  if (!showQuiz) return null
+
+  const questions = [
+    {
+      id: 'q1',
+      question: "Que se passe-t-il lors d'une réaction de neutralisation acide-base ?",
+      options: [
+        { id: 'formation_sel', text: 'Formation d\'un sel et d\'eau' },
+        { id: 'formation_gaz', text: 'Formation d\'un gaz' },
+        { id: 'formation_precipite', text: 'Formation d\'un précipité coloré' },
+        { id: 'aucun_changement', text: 'Aucun changement visible' }
+      ],
+      correct: 'formation_sel',
+      explanation: "Lors d'une neutralisation acide-base, l'acide et la base réagissent pour former un sel et de l'eau selon la réaction générale : Acide + Base → Sel + H₂O"
+    },
+    {
+      id: 'q2',
+      question: "Pourquoi la phénolphtaléine devient-elle rose en milieu basique ?",
+      options: [
+        { id: 'temperature', text: 'À cause de la température' },
+        { id: 'changement_ph', text: 'À cause du changement de pH' },
+        { id: 'concentration', text: 'À cause de la concentration' },
+        { id: 'precipitation', text: 'À cause d\'une précipitation' }
+      ],
+      correct: 'changement_ph',
+      explanation: "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2)."
+    }
+  ]
+
+  const currentQuestion = questions[currentQuestionIndex]
+
+  if (quizCompleted) {
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-md">
+          <div className="text-center">
+            <Award className="mx-auto mb-4 text-yellow-500" size={48} />
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Quiz Terminé !</h2>
+            <div className="mb-4">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {correctAnswers}/2
+              </div>
+              <div className="text-gray-600">
+                {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez les réactions chimiques !" :
+                 correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les réactions !" :
+                 "📚 Révisez les concepts de neutralisation et d'indicateurs !"}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={resetQuiz}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Recommencer
+              </button>
+              <button
+                onClick={() => setShowQuiz(false)}
+                className="flex-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors px-4 py-2 text-gray-600"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white/98 backdrop-blur-sm rounded-2xl p-6 max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
+      <div className="bg-white rounded-2xl p-6 max-w-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <Award className="mr-3 text-yellow-500" size={28} />
-            Analyse de la Réaction Chimique
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <Award className="mr-2 text-blue-500" size={24} />
+            Quiz - Question {currentQuestionIndex + 1}/2
           </h2>
           <button
-            onClick={() => setShowResultats(false)}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+            onClick={() => setShowQuiz(false)}
+            className="text-gray-500 hover:text-gray-700"
           >
-            Fermer
+            ✕
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Informations sur la réaction */}
-          <div className="bg-blue-50 p-5 rounded-xl border border-blue-200">
-            <h3 className="text-xl font-bold mb-4 text-blue-800 flex items-center">
-              <Zap className="mr-2" size={20} />
-              Réaction Étudiée
-            </h3>
-            <div className="space-y-3">
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-blue-700 mb-1">Nom:</div>
-                <div className="text-blue-600 font-medium">{reactionData.nom}</div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-blue-700 mb-1">Équation chimique:</div>
-                <div className="font-mono text-blue-600 bg-blue-50 p-2 rounded text-sm">{reactionData.equation}</div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-blue-700 mb-1">Type de réaction:</div>
-                <div className="text-blue-600 capitalize">{reactionData.type}</div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-blue-700 mb-1">Niveau de difficulté:</div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-bold ${
-                    reactionData.niveau === "facile"
-                      ? "bg-green-100 text-green-800"
-                      : reactionData.niveau === "moyen"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {reactionData.niveau === "facile"
-                    ? "🟢 Facile"
-                    : reactionData.niveau === "moyen"
-                      ? "🟡 Moyen"
-                      : "🔴 Difficile"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Observations et explications */}
-          <div className="bg-green-50 p-5 rounded-xl border border-green-200">
-            <h3 className="text-xl font-bold mb-4 text-green-800 flex items-center">
-              <Eye className="mr-2" size={20} />
-              Observations
-            </h3>
-            <div className="space-y-3">
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-green-700 mb-1">Ce qu'on observe:</div>
-                <div className="text-green-600">{reactionData.observation}</div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-green-700 mb-1">Explication scientifique:</div>
-                <div className="text-green-600">{reactionData.explication}</div>
-              </div>
-              {reactionData.precipite && (
-                <div className="bg-white p-3 rounded border">
-                  <div className="font-semibold text-green-700 mb-1">Formation de précipité:</div>
-                  <div className="text-green-600">Un solide se forme au fond du récipient</div>
+        <div className="mb-6 text-gray-800">
+          <h3 className="font-semibold text-gray-800 mb-4 text-lg">
+            {currentQuestion.question}
+          </h3>
+          
+          <div className="space-y-3">
+            {currentQuestion.options.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => !showExplanation && handleQuizAnswer(option.id)}
+                disabled={showExplanation}
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                  showExplanation
+                    ? option.id === currentQuestion.correct
+                      ? 'bg-green-100 border-green-500 text-green-800'
+                      : option.id === selectedAnswer && option.id !== currentQuestion.correct
+                      ? 'bg-red-100 border-red-500 text-red-800'
+                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                    : selectedAnswer === option.id
+                    ? 'bg-blue-100 border-blue-500'
+                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{option.text}</span>
+                  {showExplanation && option.id === currentQuestion.correct && (
+                    <CheckCircle className="text-green-600" size={20} />
+                  )}
+                  {showExplanation && option.id === selectedAnswer && option.id !== currentQuestion.correct && (
+                    <AlertTriangle className="text-red-600" size={20} />
+                  )}
                 </div>
-              )}
-              {reactionData.bulles && (
-                <div className="bg-white p-3 rounded border">
-                  <div className="font-semibold text-green-700 mb-1">Dégagement gazeux:</div>
-                  <div className="text-green-600">Formation de bulles de gaz</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Réactifs utilisés */}
-          <div className="bg-purple-50 p-5 rounded-xl border border-purple-200">
-            <h3 className="text-xl font-bold mb-4 text-purple-800 flex items-center">
-              <Beaker className="mr-2" size={20} />
-              Réactifs Utilisés
-            </h3>
-            <div className="space-y-3">
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-purple-700 mb-2">Solution A:</div>
-                <div className="text-purple-600">
-                  <div className="font-medium">{solution1.nom}</div>
-                  <div className="text-sm">
-                    {solution1.formule} - {solution1.concentration}
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">{solution1.description}</div>
-                </div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-purple-700 mb-2">Solution B:</div>
-                <div className="text-purple-600">
-                  <div className="font-medium">{solution2.nom}</div>
-                  <div className="text-sm">
-                    {solution2.formule} - {solution2.concentration}
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">{solution2.description}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Conseils pédagogiques */}
-          <div className="bg-yellow-50 p-5 rounded-xl border border-yellow-200">
-            <h3 className="text-xl font-bold mb-4 text-yellow-800 flex items-center">
-              <Lightbulb className="mr-2" size={20} />
-              Points Clés à Retenir
-            </h3>
-            <div className="space-y-2">
-              <div className="bg-white p-3 rounded border">
-                <div className="text-yellow-700 text-sm">
-                  <strong>🔬 Méthode scientifique:</strong> Observer, formuler une hypothèse, expérimenter, conclure
-                </div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="text-yellow-700 text-sm">
-                  <strong>⚖️ Conservation de la matière:</strong> Les atomes se réarrangent mais ne disparaissent pas
-                </div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="text-yellow-700 text-sm">
-                  <strong>🎨 Indicateurs colorés:</strong> Permettent de visualiser les changements chimiques
-                </div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="text-yellow-700 text-sm">
-                  <strong>⚠️ Sécurité:</strong> Toujours porter des équipements de protection en laboratoire
-                </div>
-              </div>
-            </div>
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Expérience réalisée le {new Date().toLocaleString()} • Laboratoire de Réactions Chimiques Virtuel - Niveau
-            1ère S
-          </p>
-        </div>
+        {showExplanation && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-blue-800 mb-2">
+              {selectedAnswer === currentQuestion.correct ? "✅ Correct !" : "❌ Incorrect"}
+            </h4>
+            <p className="text-blue-700 text-sm">
+              {currentQuestion.explanation}
+            </p>
+          </div>
+        )}
+
+        {showExplanation && (
+          <div className="flex justify-end">
+            <button
+              onClick={nextQuestion}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              {currentQuestionIndex < 1 ? 'Question suivante' : 'Voir les résultats'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1511,6 +1637,18 @@ export default function LaboratoireReactionsChimiques() {
     verserSolution2,
     obtenirMessageStatut,
     reinitialiser,
+    sectionVisibility,
+    toggleSectionVisibility,
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
   } = useSimulationChimie()
 
   return (
@@ -1558,6 +1696,8 @@ export default function LaboratoireReactionsChimiques() {
         obtenirMessageStatut={obtenirMessageStatut}
         progressReaction={progressReaction}
         enReaction={enReaction}
+        toggleSectionVisibility={toggleSectionVisibility}
+        sectionVisibility={sectionVisibility}
       />
 
       <PanneauObservations
@@ -1566,15 +1706,10 @@ export default function LaboratoireReactionsChimiques() {
         reactionData={reactionData}
         showResultats={showResultats}
         setShowResultats={setShowResultats}
+        toggleSectionVisibility={toggleSectionVisibility}
+        sectionVisibility={sectionVisibility}
       />
 
-      <ModalResultats
-        showResultats={showResultats}
-        setShowResultats={setShowResultats}
-        reactionData={reactionData}
-        solution1={solution1}
-        solution2={solution2}
-      />
 
       {enReaction && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-sm rounded-xl p-6 text-center">
@@ -1590,10 +1725,19 @@ export default function LaboratoireReactionsChimiques() {
         </div>
       )}
 
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
-        <div className="flex items-center mb-2">
-          <Info className="mr-2 text-blue-600" size={14} />
-          <span className="font-medium text-gray-700 text-sm">Guide d'utilisation</span>
+      <div className={`absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm ${sectionVisibility.guide ? '' : 'hidden'}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <Info className="mr-2 text-blue-600" size={14} />
+            <span className="font-medium text-gray-700 text-sm">Guide d'utilisation</span>
+          </div>
+          <button
+            onClick={() => toggleSectionVisibility('guide')}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Masquer/Afficher le guide"
+          >
+            <Eye size={12} className="text-gray-500" />
+          </button>
         </div>
         <div className="text-xs text-gray-600 space-y-1">
           <p>
@@ -1621,6 +1765,24 @@ export default function LaboratoireReactionsChimiques() {
           <p>🥽 Lunettes, gants et blouse obligatoires</p>
         </div>
       </div>
+
+      <FloatingToggleButtons 
+        sectionVisibility={sectionVisibility}
+        toggleSectionVisibility={toggleSectionVisibility}
+      />
+
+      <QuizModal
+        showQuiz={showQuiz}
+        setShowQuiz={setShowQuiz}
+        currentQuestionIndex={currentQuestionIndex}
+        selectedAnswer={selectedAnswer}
+        showExplanation={showExplanation}
+        quizCompleted={quizCompleted}
+        correctAnswers={correctAnswers}
+        handleQuizAnswer={handleQuizAnswer}
+        nextQuestion={nextQuestion}
+        resetQuiz={resetQuiz}
+      />
     </div>
   )
 }

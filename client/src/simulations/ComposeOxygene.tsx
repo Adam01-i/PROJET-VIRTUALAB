@@ -3,21 +3,7 @@
 import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Cylinder, Box, Sphere, Text } from "@react-three/drei"
-import {
-  Flame,
-  ChevronDown,
-  RotateCcw,
-  BookOpen,
-  Info,
-  BeakerIcon,
-  Pause,
-  Calculator,
-  Award,
-  FileText,
-  Eye,
-  AlertTriangle,
-  CheckCircle,
-} from "lucide-react"
+import { Flame, ChevronDown, RotateCcw, BookOpen, Info, BeakerIcon, Pause, Calculator, Award, FileText, Eye, AlertTriangle, CheckCircle } from 'lucide-react'
 import * as THREE from "three"
 
 // ===================================
@@ -1018,6 +1004,81 @@ const useLabSimulation = () => {
   const [autoHeatingComplete, setAutoHeatingComplete] = useState(false)
   const [sectionsHidden, setSectionsHidden] = useState(false)
 
+  const [sectionVisibility, setSectionVisibility] = useState({
+    controls: true,
+    results: true,
+    guide: true,
+    formula: true
+  })
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [quizCompleted, setQuizCompleted] = useState(false)
+  const [correctAnswers, setCorrectAnswers] = useState(0)
+
+  const toggleSectionVisibility = useCallback((section: keyof typeof sectionVisibility) => {
+    setSectionVisibility(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
+  }, [])
+
+  const handleQuizAnswer = useCallback((answer: string) => {
+    setSelectedAnswer(answer)
+    setShowExplanation(true)
+    
+    const questions = [
+      {
+        id: 'q1',
+        question: "Quel est le produit principal de l'oxydation d'un alcool primaire par un oxydant fort ?",
+        options: [
+          { id: 'cetone', text: 'Une cétone' },
+          { id: 'aldehyde_acide', text: 'Un aldéhyde puis un acide carboxylique' },
+          { id: 'ether', text: 'Un éther' },
+          { id: 'ester', text: 'Un ester' }
+        ],
+        correct: 'aldehyde_acide',
+        explanation: "L'oxydation d'un alcool primaire par un oxydant fort se fait en deux étapes : d'abord formation d'un aldéhyde, puis oxydation de l'aldéhyde en acide carboxylique."
+      },
+      {
+        id: 'q2',
+        question: "Pourquoi les alcools secondaires ne réagissent-ils pas avec le réactif de Tollens ?",
+        options: [
+          { id: 'trop_stable', text: 'Ils sont trop stables' },
+          { id: 'pas_aldehyde', text: 'Ils ne forment pas d\'aldéhyde' },
+          { id: 'reaction_lente', text: 'La réaction est trop lente' },
+          { id: 'temperature_basse', text: 'La température est trop basse' }
+        ],
+        correct: 'pas_aldehyde',
+        explanation: "Le réactif de Tollens est spécifique aux aldéhydes. Les alcools secondaires s'oxydent en cétones, pas en aldéhydes, donc ils ne peuvent pas réduire les ions Ag⁺ du réactif de Tollens."
+      }
+    ]
+    
+    if (answer === questions[currentQuestionIndex].correct) {
+      setCorrectAnswers(prev => prev + 1)
+    }
+  }, [currentQuestionIndex, correctAnswers])
+
+  const nextQuestion = useCallback(() => {
+    if (currentQuestionIndex < 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+      setSelectedAnswer(null)
+      setShowExplanation(false)
+    } else {
+      setQuizCompleted(true)
+    }
+  }, [currentQuestionIndex])
+
+  const resetQuiz = useCallback(() => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswer(null)
+    setShowExplanation(false)
+    setQuizCompleted(false)
+    setCorrectAnswers(0)
+    setShowQuiz(false)
+  }, [])
+
   // Reset automatique optimisé
   useEffect(() => {
     const resetState = () => {
@@ -1079,6 +1140,9 @@ const useLabSimulation = () => {
 
       setTimeout(() => {
         setReactionComplete(true)
+        setTimeout(() => {
+          setShowQuiz(true)
+        }, 2000)
       }, 1000)
     }, 4000)
 
@@ -1216,8 +1280,61 @@ const useLabSimulation = () => {
     setShowResult,
     sectionsHidden,
     toggleSections,
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    sectionVisibility,
+    toggleSectionVisibility,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
   }
 }
+
+const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility, showFormula }: any) => (
+  <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
+    {!sectionVisibility.controls && (
+      <button
+        onClick={() => toggleSectionVisibility('controls')}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher les contrôles"
+      >
+        <BeakerIcon size={16} />
+      </button>
+    )}
+    {!sectionVisibility.results && (
+      <button
+        onClick={() => toggleSectionVisibility('results')}
+        className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher les observations"
+      >
+        <Eye size={16} />
+      </button>
+    )}
+    {!sectionVisibility.guide && (
+      <button
+        onClick={() => toggleSectionVisibility('guide')}
+        className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher le guide"
+      >
+        <Info size={16} />
+      </button>
+    )}
+    {!sectionVisibility.formula && showFormula && (
+      <button
+        onClick={() => toggleSectionVisibility('formula')}
+        className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg transition-colors"
+        title="Afficher la formule"
+      >
+        <BookOpen size={16} />
+      </button>
+    )}
+  </div>
+)
 
 // ===================================
 // COMPOSANTS UI OPTIMISÉS
@@ -1244,12 +1361,23 @@ const UIControls = ({
   autoHeatingComplete,
   toggleSections,
   sectionsHidden,
+  toggleSectionVisibility,
+  sectionVisibility,
 }: any) => (
-  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl">
-    <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
-      <BeakerIcon className="mr-2 text-indigo-600" size={18} />
-      Contrôles de l'Expérience
-    </h3>
+  <div className={`absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 w-80 border border-gray-200 shadow-xl ${sectionVisibility.controls ? '' : 'hidden'}`}>
+    <div className="flex items-center justify-between mb-3">
+      <h3 className="text-gray-800 font-semibold flex items-center">
+        <BeakerIcon className="mr-2 text-indigo-600" size={18} />
+        Contrôles de l'Expérience
+      </h3>
+      <button
+        onClick={() => toggleSectionVisibility('controls')}
+        className="p-1 hover:bg-gray-100 rounded"
+        title="Masquer/Afficher les contrôles"
+      >
+        <Eye size={14} className="text-gray-500" />
+      </button>
+    </div>
 
     <div className="space-y-3 mb-4">
       <div className="relative">
@@ -1396,15 +1524,26 @@ const UIResults = ({
   reactionComplete,
   getStatusMessage,
   getDetailedResult,
+  toggleSectionVisibility,
+  sectionVisibility,
 }: any) => {
   const detailedResult = getDetailedResult()
 
   return (
-    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-xl">
-      <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
-        <Eye className="mr-2 text-indigo-600" size={16} />
-        Observations
-      </h3>
+    <div className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-xl ${sectionVisibility.results ? '' : 'hidden'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-gray-800 font-semibold flex items-center text-sm">
+          <Eye className="mr-2 text-indigo-600" size={16} />
+          Observations
+        </h3>
+        <button
+          onClick={() => toggleSectionVisibility('results')}
+          className="p-1 hover:bg-gray-100 rounded"
+          title="Masquer/Afficher les observations"
+        >
+          <Eye size={14} className="text-gray-500" />
+        </button>
+      </div>
 
       <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
         <p className="text-xs text-blue-800 font-medium">{getStatusMessage()}</p>
@@ -1493,7 +1632,7 @@ const ResultsModal = ({
           <div className="flex gap-2">
             <button
               onClick={() => setShowResult(false)}
-              className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+              className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors "
             >
               Fermer
             </button>
@@ -1720,6 +1859,165 @@ const ResultsModal = ({
   )
 }
 
+const QuizModal = ({ 
+  showQuiz, 
+  setShowQuiz, 
+  currentQuestionIndex, 
+  selectedAnswer, 
+  showExplanation, 
+  quizCompleted, 
+  correctAnswers,
+  handleQuizAnswer, 
+  nextQuestion, 
+  resetQuiz 
+}: any) => {
+  if (!showQuiz) return null
+
+  const questions = [
+    {
+      id: 'q1',
+      question: "Quel est le produit principal de l'oxydation d'un alcool primaire par un oxydant fort ?",
+      options: [
+        { id: 'cetone', text: 'Une cétone' },
+        { id: 'aldehyde_acide', text: 'Un aldéhyde puis un acide carboxylique' },
+        { id: 'ether', text: 'Un éther' },
+        { id: 'ester', text: 'Un ester' }
+      ],
+      correct: 'aldehyde_acide',
+      explanation: "L'oxydation d'un alcool primaire par un oxydant fort se fait en deux étapes : d'abord formation d'un aldéhyde, puis oxydation de l'aldéhyde en acide carboxylique."
+    },
+    {
+      id: 'q2',
+      question: "Pourquoi les alcools secondaires ne réagissent-ils pas avec le réactif de Tollens ?",
+      options: [
+        { id: 'trop_stable', text: 'Ils sont trop stables' },
+        { id: 'pas_aldehyde', text: 'Ils ne forment pas d\'aldéhyde' },
+        { id: 'reaction_lente', text: 'La réaction est trop lente' },
+        { id: 'temperature_basse', text: 'La température est trop basse' }
+      ],
+      correct: 'pas_aldehyde',
+      explanation: "Le réactif de Tollens est spécifique aux aldéhydes. Les alcools secondaires s'oxydent en cétones, pas en aldéhydes, donc ils ne peuvent pas réduire les ions Ag⁺ du réactif de Tollens."
+    }
+  ]
+
+  const currentQuestion = questions[currentQuestionIndex]
+
+  if (quizCompleted) {
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-md">
+          <div className="text-center">
+            <Award className="mx-auto mb-4 text-yellow-500" size={48} />
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Quiz Terminé !</h2>
+            <div className="mb-4">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {correctAnswers}/2
+              </div>
+              <div className="text-gray-600">
+                {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez l'oxydation des alcools !" :
+                 correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les mécanismes d'oxydation !" :
+                 "📚 Révisez les réactions d'oxydation des composés oxygénés !"}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={resetQuiz}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Recommencer
+              </button>
+              <button
+                onClick={() => setShowQuiz(false)}
+                className="flex-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors px-4 py-2 text-gray-800"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-lg">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <Award className="mr-2 text-blue-500" size={24} />
+            Quiz - Question {currentQuestionIndex + 1}/2
+          </h2>
+          <button
+            onClick={() => setShowQuiz(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mb-6 text-gray-800">
+          <h3 className="font-semibold text-gray-800 mb-4 text-lg">
+            {currentQuestion.question}
+          </h3>
+          
+          <div className="space-y-3">
+            {currentQuestion.options.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => !showExplanation && handleQuizAnswer(option.id)}
+                disabled={showExplanation}
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                  showExplanation
+                    ? option.id === currentQuestion.correct
+                      ? 'bg-green-100 border-green-500 text-green-800'
+                      : option.id === selectedAnswer && option.id !== currentQuestion.correct
+                      ? 'bg-red-100 border-red-500 text-red-800'
+                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                    : selectedAnswer === option.id
+                    ? 'bg-blue-100 border-blue-500'
+                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{option.text}</span>
+                  {showExplanation && option.id === currentQuestion.correct && (
+                    <CheckCircle className="text-green-600" size={20} />
+                  )}
+                  {showExplanation && option.id === selectedAnswer && option.id !== currentQuestion.correct && (
+                    <AlertTriangle className="text-red-600" size={20} />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {showExplanation && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-blue-800 mb-2">
+              {selectedAnswer === currentQuestion.correct ? "✅ Correct !" : "❌ Incorrect"}
+            </h4>
+            <p className="text-blue-700 text-sm">
+              {currentQuestion.explanation}
+            </p>
+          </div>
+        )}
+
+        {showExplanation && (
+          <div className="flex justify-end">
+            <button
+              onClick={nextQuestion}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              {currentQuestionIndex < 1 ? 'Question suivante' : 'Voir les résultats'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ===================================
 // COMPOSANT PRINCIPAL OPTIMISÉ
 // ===================================
@@ -1756,6 +2054,18 @@ export default function ComposesOxygenes3D() {
     autoHeatingComplete,
     sectionsHidden,
     toggleSections,
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    sectionVisibility,
+    toggleSectionVisibility,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
   } = useLabSimulation()
 
   return (
@@ -1783,42 +2093,48 @@ export default function ComposesOxygenes3D() {
         </Suspense>
       </Canvas>
 
-      {!sectionsHidden && (
-        <>
-          <UIControls
-            selectedAlcohol={selectedAlcohol}
-            selectedOxidant={selectedOxidant}
-            alcoholMenu={alcoholMenu}
-            oxidantMenu={oxidantMenu}
-            alcoholAdded={alcoholAdded}
-            oxidantAdded={oxidantAdded}
-            heating={heating}
-            setSelectedAlcohol={setSelectedAlcohol}
-            setSelectedOxidant={setSelectedOxidant}
-            setAlcoholMenu={setAlcoholMenu}
-            setOxidantMenu={setOxidantMenu}
-            toggleHeating={toggleHeating}
-            handleReset={handleReset}
-            setShowFormula={setShowFormula}
-            showFormula={showFormula}
-            setShowResult={setShowResult}
-            reactionComplete={reactionComplete}
-            autoHeatingComplete={autoHeatingComplete}
-            toggleSections={toggleSections}
-            sectionsHidden={sectionsHidden}
-          />
+      <FloatingToggleButtons 
+        sectionVisibility={sectionVisibility}
+        toggleSectionVisibility={toggleSectionVisibility}
+        showFormula={showFormula}
+      />
 
-          <UIResults
-            showResult={showResult}
-            alcoholAdded={alcoholAdded}
-            oxidantAdded={oxidantAdded}
-            heating={heating}
-            reactionComplete={reactionComplete}
-            getStatusMessage={getStatusMessage}
-            getDetailedResult={getDetailedResult}
-          />
-        </>
-      )}
+      <UIControls
+        selectedAlcohol={selectedAlcohol}
+        selectedOxidant={selectedOxidant}
+        alcoholMenu={alcoholMenu}
+        oxidantMenu={oxidantMenu}
+        alcoholAdded={alcoholAdded}
+        oxidantAdded={oxidantAdded}
+        heating={heating}
+        setSelectedAlcohol={setSelectedAlcohol}
+        setSelectedOxidant={setSelectedOxidant}
+        setAlcoholMenu={setAlcoholMenu}
+        setOxidantMenu={setOxidantMenu}
+        toggleHeating={toggleHeating}
+        handleReset={handleReset}
+        setShowFormula={setShowFormula}
+        showFormula={showFormula}
+        setShowResult={setShowResult}
+        reactionComplete={reactionComplete}
+        autoHeatingComplete={autoHeatingComplete}
+        toggleSections={toggleSections}
+        sectionsHidden={sectionsHidden}
+        toggleSectionVisibility={toggleSectionVisibility}
+        sectionVisibility={sectionVisibility}
+      />
+
+      <UIResults
+        showResult={showResult}
+        alcoholAdded={alcoholAdded}
+        oxidantAdded={oxidantAdded}
+        heating={heating}
+        reactionComplete={reactionComplete}
+        getStatusMessage={getStatusMessage}
+        getDetailedResult={getDetailedResult}
+        toggleSectionVisibility={toggleSectionVisibility}
+        sectionVisibility={sectionVisibility}
+      />
 
       <ResultsModal
         showResult={showResult}
@@ -1830,7 +2146,7 @@ export default function ComposesOxygenes3D() {
       />
 
       {showFormula && (
-        <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl">
+        <div className={`absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl ${sectionVisibility.formula ? '' : 'hidden'}`}>
           <h4 className="text-gray-800 font-semibold mb-2 flex items-center">
             <BookOpen className="mr-2 text-indigo-600" size={16} />
             Équation chimique équilibrée:
@@ -1841,10 +2157,19 @@ export default function ComposesOxygenes3D() {
         </div>
       )}
 
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm">
-        <div className="flex items-center mb-2">
-          <Info className="mr-2 text-indigo-600" size={14} />
-          <span className="font-medium text-gray-700 text-sm">Guide</span>
+      <div className={`absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm ${sectionVisibility.guide ? '' : 'hidden'}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <Info className="mr-2 text-indigo-600" size={14} />
+            <span className="font-medium text-gray-700 text-sm">Guide</span>
+          </div>
+          <button
+            onClick={() => toggleSectionVisibility('guide')}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Masquer/Afficher le guide"
+          >
+            <Eye size={14} className="text-gray-500" />
+          </button>
         </div>
         <div className="text-xs text-gray-600 space-y-1">
           <p>
@@ -1861,15 +2186,19 @@ export default function ComposesOxygenes3D() {
           </p>
         </div>
       </div>
-      {sectionsHidden && (
-        <button
-          onClick={toggleSections}
-          className="absolute top-4 left-4 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-colors z-50"
-          title="Afficher les sections"
-        >
-          <Eye size={20} />
-        </button>
-      )}
+
+      <QuizModal
+        showQuiz={showQuiz}
+        setShowQuiz={setShowQuiz}
+        currentQuestionIndex={currentQuestionIndex}
+        selectedAnswer={selectedAnswer}
+        showExplanation={showExplanation}
+        quizCompleted={quizCompleted}
+        correctAnswers={correctAnswers}
+        handleQuizAnswer={handleQuizAnswer}
+        nextQuestion={nextQuestion}
+        resetQuiz={resetQuiz}
+      />
     </div>
   )
 }

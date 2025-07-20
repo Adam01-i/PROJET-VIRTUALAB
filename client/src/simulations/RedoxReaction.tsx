@@ -613,8 +613,6 @@ const ImprovedBeaker3D = React.memo(
             transmission={0.9}
             thickness={0.12}
           />
-
-
         </mesh>
 
         {/* Bec verseur */}
@@ -935,6 +933,18 @@ export default function RedoxReaction() {
   const [experiments, setExperiments] = useState<ExperimentData[]>([])
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentData | null>(null)
   const [showEquation, setShowEquation] = useState(false)
+  const [sectionVisibility, setSectionVisibility] = useState({
+    controls: true,
+    observations: true,
+    guide: true,
+    equation: true,
+  })
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [quizCompleted, setQuizCompleted] = useState(false)
+  const [correctAnswers, setCorrectAnswers] = useState(0)
 
   const controlsRef = useRef<any>(null)
 
@@ -969,6 +979,73 @@ export default function RedoxReaction() {
   const reactionTimerRef = useRef<NodeJS.Timeout>()
   const insertTimerRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<number>(0)
+
+  const toggleSectionVisibility = useCallback((section: keyof typeof sectionVisibility) => {
+    setSectionVisibility((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }))
+  }, [])
+
+  const handleQuizAnswer = useCallback(
+    (answer: string) => {
+      setSelectedAnswer(answer)
+      setShowExplanation(true)
+
+      const questions = [
+        {
+          id: "q1",
+          question: "Dans une réaction redox, que se passe-t-il au niveau des électrons ?",
+          options: [
+            { id: "creation", text: "Des électrons sont créés" },
+            { id: "transfert", text: "Il y a transfert d'électrons entre espèces" },
+            { id: "destruction", text: "Des électrons sont détruits" },
+            { id: "immobilite", text: "Les électrons restent immobiles" },
+          ],
+          correct: "transfert",
+          explanation:
+            "Dans une réaction redox, il y a toujours un transfert d'électrons : une espèce perd des électrons (oxydation) tandis qu'une autre en gagne (réduction). C'est le principe fondamental des réactions d'oxydoréduction.",
+        },
+        {
+          id: "q2",
+          question: "Pourquoi le fer ne peut-il pas réduire les ions Zn²⁺ ?",
+          options: [
+            { id: "temperature", text: "La température est trop basse" },
+            { id: "concentration", text: "La concentration est insuffisante" },
+            { id: "potentiel", text: "Le zinc est plus réactif que le fer" },
+            { id: "vitesse", text: "La réaction est trop lente" },
+          ],
+          correct: "potentiel",
+          explanation:
+            "Le fer ne peut pas réduire les ions Zn²⁺ car le zinc est plus réactif que le fer dans la série électrochimique (E°(Zn²⁺/Zn) = -0.76V < E°(Fe²⁺/Fe) = -0.44V). Seuls les métaux plus réactifs peuvent réduire les ions des métaux moins réactifs.",
+        },
+      ]
+
+      if (answer === questions[currentQuestionIndex].correct) {
+        setCorrectAnswers((prev) => prev + 1)
+      }
+    },
+    [currentQuestionIndex, correctAnswers],
+  )
+
+  const nextQuestion = useCallback(() => {
+    if (currentQuestionIndex < 1) {
+      setCurrentQuestionIndex((prev) => prev + 1)
+      setSelectedAnswer(null)
+      setShowExplanation(false)
+    } else {
+      setQuizCompleted(true)
+    }
+  }, [currentQuestionIndex])
+
+  const resetQuiz = useCallback(() => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswer(null)
+    setShowExplanation(false)
+    setQuizCompleted(false)
+    setCorrectAnswers(0)
+    setShowQuiz(false)
+  }, [])
 
   // Fonction de reset complète et corrigée
   const handleReset = useCallback(() => {
@@ -1151,6 +1228,11 @@ export default function RedoxReaction() {
       console.log("📊 Expérience créée:", experiment)
       setCurrentExperiment(experiment)
       setExperiments((prev) => [experiment, ...prev.slice(0, 9)])
+
+      // Déclencher le quiz automatiquement après 2 secondes
+      setTimeout(() => {
+        setShowQuiz(true)
+      }, 2000)
     },
     [reactantType, elapsedTime, reactionProgress, copperDeposit, selectedReactant],
   )
@@ -1165,7 +1247,6 @@ export default function RedoxReaction() {
     },
     [handleReset],
   )
-
 
   // État de l'expérience pour la scène
   const experimentState = useMemo(
@@ -1226,14 +1307,239 @@ export default function RedoxReaction() {
 
   const phaseInfo = getPhaseInfo()
 
+  const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility, showEquation }: any) => (
+    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
+      {!sectionVisibility.controls && (
+        <button
+          onClick={() => toggleSectionVisibility("controls")}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-full shadow-lg transition-colors"
+          title="Afficher les contrôles"
+        >
+          <Settings size={16} />
+        </button>
+      )}
+      {!sectionVisibility.observations && (
+        <button
+          onClick={() => toggleSectionVisibility("observations")}
+          className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors"
+          title="Afficher les observations"
+        >
+          <Eye size={16} />
+        </button>
+      )}
+      {!sectionVisibility.guide && (
+        <button
+          onClick={() => toggleSectionVisibility("guide")}
+          className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-colors"
+          title="Afficher le guide"
+        >
+          <Info size={16} />
+        </button>
+      )}
+      {!sectionVisibility.equation && showEquation && (
+        <button
+          onClick={() => toggleSectionVisibility("equation")}
+          className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg transition-colors"
+          title="Afficher l'équation"
+        >
+          <BookOpen size={16} />
+        </button>
+      )}
+    </div>
+  )
+
+  const QuizModal = ({
+    showQuiz,
+    setShowQuiz,
+    currentQuestionIndex,
+    selectedAnswer,
+    showExplanation,
+    quizCompleted,
+    correctAnswers,
+    handleQuizAnswer,
+    nextQuestion,
+    resetQuiz,
+  }: any) => {
+    if (!showQuiz) return null
+
+    const questions = [
+      {
+        id: "q1",
+        question: "Dans une réaction redox, que se passe-t-il au niveau des électrons ?",
+        options: [
+          { id: "creation", text: "Des électrons sont créés" },
+          { id: "transfert", text: "Il y a transfert d'électrons entre espèces" },
+          { id: "destruction", text: "Des électrons sont détruits" },
+          { id: "immobilite", text: "Les électrons restent immobiles" },
+        ],
+        correct: "transfert",
+        explanation:
+          "Dans une réaction redox, il y a toujours un transfert d'électrons : une espèce perd des électrons (oxydation) tandis qu'une autre en gagne (réduction). C'est le principe fondamental des réactions d'oxydoréduction.",
+      },
+      {
+        id: "q2",
+        question: "Pourquoi le fer ne peut-il pas réduire les ions Zn²⁺ ?",
+        options: [
+          { id: "temperature", text: "La température est trop basse" },
+          { id: "concentration", text: "La concentration est insuffisante" },
+          { id: "potentiel", text: "Le zinc est plus réactif que le fer" },
+          { id: "vitesse", text: "La réaction est trop lente" },
+        ],
+        correct: "potentiel",
+        explanation:
+          "Le fer ne peut pas réduire les ions Zn²⁺ car le zinc est plus réactif que le fer dans la série électrochimique (E°(Zn²⁺/Zn) = -0.76V < E°(Fe²⁺/Fe) = -0.44V). Seuls les métaux plus réactifs peuvent réduire les ions des métaux moins réactifs.",
+      },
+    ]
+
+    const currentQuestion = questions[currentQuestionIndex]
+
+    if (quizCompleted) {
+      return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md">
+            <div className="text-center">
+              <Award className="mx-auto mb-4 text-yellow-500" size={48} />
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Quiz Terminé !</h2>
+              <div className="mb-4">
+                <div className="text-3xl font-bold text-blue-600 mb-2">{correctAnswers}/2</div>
+                <div className="text-gray-600">
+                  {correctAnswers === 2
+                    ? "🏆 Parfait ! Vous maîtrisez les réactions redox !"
+                    : correctAnswers === 1
+                      ? "👍 Bien ! Continuez à étudier l'électrochimie !"
+                      : "📚 Révisez les concepts d'oxydoréduction et la série électrochimique!"}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={resetQuiz}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Recommencer
+                </button>
+                <button
+                  onClick={() => setShowQuiz(false)}
+                  className="flex-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors px-4 py-2 text-gray-700"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-lg">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+              <Award className="mr-2 text-blue-500" size={24} />
+              Quiz - Question {currentQuestionIndex + 1}/2
+            </h2>
+            <button onClick={() => setShowQuiz(false)} className="text-gray-500 hover:text-gray-700">
+              ✕
+            </button>
+          </div>
+
+          <div className="mb-6 text-gray-600">
+            <h3 className="font-semibold text-gray-800 mb-4 text-lg">{currentQuestion.question}</h3>
+
+            <div className="space-y-3">
+              {currentQuestion.options.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => !showExplanation && handleQuizAnswer(option.id)}
+                  disabled={showExplanation}
+                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                    showExplanation
+                      ? option.id === currentQuestion.correct
+                        ? "bg-green-100 border-green-500 text-green-800"
+                        : option.id === selectedAnswer && option.id !== currentQuestion.correct
+                          ? "bg-red-100 border-red-500 text-red-800"
+                          : "bg-gray-100 border-gray-300 text-gray-600"
+                      : selectedAnswer === option.id
+                        ? "bg-blue-100 border-blue-500"
+                        : "bg-gray-50 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{option.text}</span>
+                    {showExplanation && option.id === currentQuestion.correct && (
+                      <CheckCircle className="text-green-600" size={20} />
+                    )}
+                    {showExplanation && option.id === selectedAnswer && option.id !== currentQuestion.correct && (
+                      <AlertTriangle className="text-red-600" size={20} />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {showExplanation && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2">
+                {selectedAnswer === currentQuestion.correct ? "✅ Correct !" : "❌ Incorrect"}
+              </h4>
+              <p className="text-blue-700 text-sm">{currentQuestion.explanation}</p>
+            </div>
+          )}
+
+          {showExplanation && (
+            <div className="flex justify-end">
+              <button
+                onClick={nextQuestion}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                {currentQuestionIndex < 1 ? "Question suivante" : "Voir les résultats"}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full h-full relative bg-gradient-to-br from-gray-100 via-white to-gray-50">
+      <FloatingToggleButtons
+        sectionVisibility={sectionVisibility}
+        toggleSectionVisibility={toggleSectionVisibility}
+        showEquation={showEquation}
+      />
+
+      <QuizModal
+        showQuiz={showQuiz}
+        setShowQuiz={setShowQuiz}
+        currentQuestionIndex={currentQuestionIndex}
+        selectedAnswer={selectedAnswer}
+        showExplanation={showExplanation}
+        quizCompleted={quizCompleted}
+        correctAnswers={correctAnswers}
+        handleQuizAnswer={handleQuizAnswer}
+        nextQuestion={nextQuestion}
+        resetQuiz={resetQuiz}
+      />
+
       {/* Configuration de l'Expérience - GAUCHE - Largeur réduite */}
-      <div className="absolute top-4 left-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-xl w-64 border border-gray-200">
-        <h2 className="text-gray-800 font-semibold mb-3 flex items-center gap-2">
-          <Settings className="w-5 h-5 text-indigo-600" />
-          Configuration
-        </h2>
+      <div
+        className={`absolute top-4 left-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-xl w-64 border border-gray-200 ${sectionVisibility.controls ? "" : "hidden"}`}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-gray-800 font-semibold flex items-center gap-2">
+            <Settings className="w-5 h-5 text-indigo-600" />
+            Configuration
+          </h2>
+          <button
+            onClick={() => toggleSectionVisibility("controls")}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Masquer/Afficher les contrôles"
+          >
+            <Eye size={14} className="text-gray-500" />
+          </button>
+        </div>
 
         <div className="space-y-3">
           {/* Sélection du réactif */}
@@ -1277,8 +1583,9 @@ export default function RedoxReaction() {
 
           {/* Prédiction théorique */}
           <div
-            className={`p-3 rounded-lg border ${selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-              }`}
+            className={`p-3 rounded-lg border ${
+              selectedReactant.canReact ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+            }`}
           >
             <h4 className="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-1">
               {selectedReactant.canReact ? (
@@ -1298,11 +1605,22 @@ export default function RedoxReaction() {
       </div>
 
       {/* Observations en Temps Réel - DROITE - Largeur réduite */}
-      <div className="absolute top-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-64 border border-gray-200 shadow-xl">
-        <h3 className="text-gray-800 font-semibold mb-2 flex items-center text-sm">
-          <Eye className="mr-2 text-indigo-600" size={16} />
-          Observations
-        </h3>
+      <div
+        className={`absolute top-4 right-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-64 border border-gray-200 shadow-xl ${sectionVisibility.observations ? "" : "hidden"}`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-gray-800 font-semibold flex items-center text-sm">
+            <Eye className="mr-2 text-indigo-600" size={16} />
+            Observations
+          </h3>
+          <button
+            onClick={() => toggleSectionVisibility("observations")}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Masquer/Afficher les observations"
+          >
+            <Eye size={14} className="text-gray-500" />
+          </button>
+        </div>
 
         <div className="space-y-3">
           {/* État actuel */}
@@ -1375,14 +1693,15 @@ export default function RedoxReaction() {
 
           {/* Phase actuelle */}
           <div
-            className={`p-2 rounded border text-xs ${phaseInfo.phase === "Terminé"
+            className={`p-2 rounded border text-xs ${
+              phaseInfo.phase === "Terminé"
                 ? "bg-green-50 border-green-200 text-gray-800"
                 : phaseInfo.phase === "Réaction"
                   ? "bg-orange-50 border-orange-200 text-gray-800"
                   : phaseInfo.phase === "Incomplète"
                     ? "bg-yellow-50 border-yellow-200 text-gray-800"
                     : "bg-blue-50 border-blue-200 text-gray-800"
-              }`}
+            }`}
           >
             <div className="font-semibold">{phaseInfo.phase}</div>
             <div className="text-gray-600">{phaseInfo.description}</div>
@@ -1442,18 +1761,29 @@ export default function RedoxReaction() {
 
       {/* Équation Chimique - BAS GAUCHE - z-index élevé */}
       {showEquation && (
-        <div className="absolute bottom-4 left-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl max-w-md">
+        <div
+          className={`absolute bottom-4 left-4 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-xl max-w-md ${sectionVisibility.equation ? "" : "hidden"}`}
+        >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-bold text-gray-800 flex items-center">
               <BookOpen className="mr-2 text-purple-600" size={20} />
               Équation Chimique
             </h3>
-            <button
-              onClick={() => setShowEquation(false)}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm transition-colors"
-            >
-              ×
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => toggleSectionVisibility("equation")}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Masquer/Afficher l'équation"
+              >
+                <Eye size={14} className="text-gray-500" />
+              </button>
+              <button
+                onClick={() => setShowEquation(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm transition-colors"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -1501,10 +1831,21 @@ export default function RedoxReaction() {
       )}
 
       {/* Instructions et Guide - BAS DROITE - z-index élevé */}
-      <div className="absolute bottom-2 right-2 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg w-50">
-        <div className="flex items-center mb-2">
-          <Info className="mr-2 text-indigo-600" size={14} />
-          <span className="font-medium text-gray-700 text-sm">Guide d'Utilisation</span>
+      <div
+        className={`absolute bottom-2 right-2 z-50 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg w-50 ${sectionVisibility.guide ? "" : "hidden"}`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <Info className="mr-2 text-indigo-600" size={14} />
+            <span className="font-medium text-gray-700 text-sm">Guide d'Utilisation</span>
+          </div>
+          <button
+            onClick={() => toggleSectionVisibility("guide")}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Masquer/Afficher le guide"
+          >
+            <Eye size={14} className="text-gray-500" />
+          </button>
         </div>
         <div className="text-xs text-gray-600 space-y-1">
           <p>
@@ -1651,12 +1992,13 @@ export default function RedoxReaction() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-1000 ${currentExperiment.reactionType === "complete"
+                        className={`h-2 rounded-full transition-all duration-1000 ${
+                          currentExperiment.reactionType === "complete"
                             ? "bg-green-600"
                             : currentExperiment.reactionType === "incomplete"
                               ? "bg-orange-600"
                               : "bg-red-600"
-                          }`}
+                        }`}
                         style={{ width: `${Math.max(5, currentExperiment.results.efficiency)}%` }}
                       />
                     </div>

@@ -6,6 +6,7 @@ import { OrbitControls, Cylinder, Box, Sphere, Text } from "@react-three/drei"
 import { ChevronDown, RotateCcw, BookOpen, Info, BeakerIcon, Calculator, Award, FileText, Eye, AlertTriangle, CheckCircle } from 'lucide-react'
 import * as THREE from "three"
 
+
 // ===================================
 // TYPES ET INTERFACES
 // ===================================
@@ -174,6 +175,7 @@ class UnsaturatedChemistryCalculator {
   ): string {
     if (!hydrocarbonAdded && !reagentAdded) return "#ffffff"
     if (hydrocarbonAdded && !reagentAdded) return selectedHydrocarbon.colorHex
+    if (!hydrocarbonAdded && reagentAdded) return selectedReagent.colorHex
     if (hydrocarbonAdded && reagentAdded && !reactionComplete) {
       return selectedReagent.colorHex
     }
@@ -1123,7 +1125,7 @@ const useUnsaturatedLabSimulation = () => {
 
 // Boutons de démasquage flottants
 const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility, showFormula }: any) => (
-  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
+  <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
     {!sectionVisibility.controls && (
       <button
         onClick={() => toggleSectionVisibility('controls')}
@@ -1710,14 +1712,14 @@ const QuizModal = ({
             </div>
             <div className="flex gap-3">
               <button
-                onClick={resetQuiz}
+                onClick= {resetQuiz}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Recommencer
               </button>
               <button
                 onClick={() => setShowQuiz(false)}
-                className="flex-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors px-4 py-2"
+                className="flex-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors px-4 py-2 text-gray-600"
               >
                 Fermer
               </button>
@@ -1745,7 +1747,7 @@ const QuizModal = ({
         </div>
 
         <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-4 text-lg">
+          <h3 className="font-semibold text-gray-600 mb-4 text-lg">
             {currentQuestion.question}
           </h3>
           
@@ -1755,7 +1757,7 @@ const QuizModal = ({
                 key={option.id}
                 onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                 disabled={showExplanation}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                className={`w-full text-left p-3 rounded-lg border transition-colors text-gray-600 ${
                   showExplanation
                     ? option.id === currentQuestion.correct
                       ? 'bg-green-100 border-green-500 text-green-800'
