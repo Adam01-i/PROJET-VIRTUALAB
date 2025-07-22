@@ -8,15 +8,16 @@ import {
   Book,
   ListChecks,
 } from "lucide-react";
-import { useCallback, useRef, useState, lazy, Suspense } from "react";
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import type { Experience } from "../../../../types/Experience/experience";
+import { trackSimulationStart } from "../../../../utils/eleveActivityTracker";
+import ExperienceCard from "./ExperienceCard";
 
 const simulationModules = import.meta.glob("../../../../simulations/*.tsx");
 
 const loadSimulationComponent = (fileName: string) => {
   const modulePath = `../../../../simulations/${fileName}.tsx`;
   const importer = simulationModules[modulePath];
-
   if (!importer) throw new Error(`Fichier simulation non trouvé : ${modulePath}`);
   return lazy(importer as any);
 };
@@ -24,13 +25,28 @@ const loadSimulationComponent = (fileName: string) => {
 type ExperienceDetailViewProps = {
   experience: Experience;
   onBack: () => void;
+  onSelectExperience: (id: string) => void;
+  allExperiences: Experience[];
 };
 
-export default function ExperienceDetailView({ experience, onBack }: ExperienceDetailViewProps) {
+export default function ExperienceDetailView({
+  experience,
+  onBack,
+  onSelectExperience,
+  allExperiences,
+}: ExperienceDetailViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // ✅ Scroll top et tracking
+  useEffect(() => {
+    window.scrollTo({ top: 5, behavior: "smooth" });
+    if (experience?.id && experience?.titre) {
+      trackSimulationStart(experience.id, experience.titre);
+    }
+  }, [experience?.id, experience?.titre]);
 
   const toggleFullscreen = useCallback(async () => {
     const elem = containerRef.current;
@@ -52,12 +68,7 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
       await requestFullscreen.call(elem);
       setIsFullscreen(true);
 
-      // 🎯 Orientation paysage sur Chrome Android
-      if (
-        isMobile &&
-        screen.orientation &&
-        (screen.orientation as any).lock
-      ) {
+      if (isMobile && screen.orientation && (screen.orientation as any).lock) {
         try {
           await (screen.orientation as any).lock("landscape");
         } catch (err) {
@@ -68,7 +79,6 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
       await exitFullscreen.call(document);
       setIsFullscreen(false);
 
-      // 🔁 Revenir à l'orientation portrait
       if (isMobile && screen.orientation && screen.orientation.unlock) {
         try {
           screen.orientation.unlock();
@@ -109,7 +119,10 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
     </div>
   );
 
-  // ✅ Mode plein écran
+  const supabaseExperiences = allExperiences.filter(
+    (exp) => !exp.id.startsWith("local-") && exp.id !== experience.id
+  );
+
   if (isFullscreen) {
     return (
       <div ref={containerRef} className="fixed inset-0 z-50 bg-white overflow-hidden">
@@ -121,7 +134,6 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
             Exit X
           </button>
         </div>
-
         <SimulationContainer height="h-full" />
       </div>
     );
@@ -133,7 +145,6 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
         <button onClick={onBack} className="text-indigo-600 hover:text-indigo-800 mt-1">
           <ArrowLeft size={20} />
         </button>
-
         <div>
           <h2 className="text-lg font-bold text-gray-900">{experience.titre}</h2>
           <div className="flex flex-wrap items-center gap-3 text-gray-500 text-sm mt-1">
@@ -145,7 +156,6 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
           </div>
         </div>
       </div>
-
       <button
         onClick={toggleFullscreen}
         className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-sm border border-indigo-200 flex items-center gap-2"
@@ -217,6 +227,21 @@ export default function ExperienceDetailView({ experience, onBack }: ExperienceD
               ))}
             </ul>
           </div>
+        </div>
+      </div>
+
+      {/* Expériences Supabase uniquement */}
+      <div className="pt-10 px-14">
+        <h3 className="text-1g font-bold text-gray-800 mb-4">Explorer d'autres expériences</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {supabaseExperiences.slice(0, 6).map((exp) => (
+            <ExperienceCard
+              key={exp.id}
+              experience={exp}
+              onStart={() => onSelectExperience(exp.id)}
+              isLocal={false}
+            />
+          ))}
         </div>
       </div>
     </div>

@@ -126,7 +126,14 @@ export default function ExperienceView() {
   }
 
   if (currentExperience) {
-    return <ExperienceDetailView experience={currentExperience} onBack={() => setActiveExperience(null)} />
+    return <ExperienceDetailView
+      experience={currentExperience}
+      onBack={() => setActiveExperience(null)}
+      onSelectExperience={(id) => setActiveExperience(id)}
+      allExperiences={filteredExperiences}
+    />
+
+
   }
 
   return (
@@ -141,7 +148,7 @@ export default function ExperienceView() {
       ]}>
         {/* Overlay sombre pour améliorer contraste */}
         <div className="absolute inset-0 bg-black/40 z-0" />
-        
+
         <div className="text-center max-w-3xl mx-auto">
           <FlaskConical size={48} className="text-purple-300 mx-auto mb-6" />
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
@@ -155,83 +162,83 @@ export default function ExperienceView() {
 
       <div className="max-w-[1280px] mx-auto md:px-26  space-y-10">
 
-      {/* ✅ Contenu centré */}
+        {/* ✅ Contenu centré */}
         <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-12 space-y-10">
-        <h2 className="text-2xl font-bold text-gray-800">
-          {prenom ? `Mes Expériences disponibles` : "Expériences disponibles (mode invité)"}
-        </h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {prenom ? `Mes Expériences disponibles` : "Expériences disponibles (mode invité)"}
+          </h2>
 
-        {!prenom && (
-          <div className="flex gap-3 flex-wrap">
-            {["all", "supabase", "local"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFiltre(f as any)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${filtre === f
+          {!prenom && (
+            <div className="flex gap-3 flex-wrap">
+              {["all", "supabase", "local"].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFiltre(f as any)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${filtre === f
                     ? "bg-purple-600 text-white border-purple-600"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
-              >
-                {f === "all" ? "Toutes" : f === "supabase" ? "Supabase" : "Locales"}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {filteredExperiences.length === 0 ? (
-          <div className="text-gray-500 text-center py-12">Aucune expérience disponible pour le moment.</div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentData.map((experience) => (
-                <ExperienceCard
-                  key={experience.id}
-                  experience={experience}
-                  onStart={handleStartExperience}
-                  isLocal={localIds.has(experience.id)}
-                />
+                    }`}
+                >
+                  {f === "all" ? "Toutes" : f === "supabase" ? "Supabase" : "Locales"}
+                </button>
               ))}
             </div>
+          )}
 
-            <div className="flex items-center justify-center gap-3 mt-6">
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
-              >
-                <ChevronLeft size={16} />
-              </button>
+          {filteredExperiences.length === 0 ? (
+            <div className="text-gray-500 text-center py-12">Aucune expérience disponible pour le moment.</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentData.map((experience) => (
+                  <ExperienceCard
+                    key={experience.id}
+                    experience={experience}
+                    onStart={handleStartExperience}
+                    isLocal={localIds.has(experience.id)}
+                  />
+                ))}
+              </div>
 
-              {[...Array(totalPages)].map((_, index) => {
-                const pageNum = index + 1
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => goToPage(pageNum)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
+              <div className="flex items-center justify-center gap-3 mt-6">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {[...Array(totalPages)].map((_, index) => {
+                  const pageNum = index + 1
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
                         ? "bg-indigo-600 text-white"
                         : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                      }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
 
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </>
-        )}
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+        <Chatbot />
+
       </div>
-            <Chatbot />
-
-    </div>
     </>
   )
 }

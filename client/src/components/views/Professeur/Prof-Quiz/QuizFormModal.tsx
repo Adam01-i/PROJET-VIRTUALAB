@@ -78,8 +78,10 @@ export default function QuizFormModal({
               </label>
             ))}
           </div>
-
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
+   <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 w-1/4 px-1 py-2 rounded border border-gray-300 hover:bg-gray-200">
+            📂 importer image
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </label>
           {formData.image && (
             <img src={formData.image} className="rounded border w-full mt-2" alt="quiz cover" />
           )}

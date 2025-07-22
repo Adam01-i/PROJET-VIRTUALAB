@@ -65,9 +65,11 @@ export default function Prof3DFormModal({
           />
 
           <Label className="block">Structure (.glb)</Label>
-          <input type="file" accept=".glb" onChange={handleFileUpload} className="text-sm" />
-
-          <div className="space-y-1">
+          <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 w-1/3 px-1 py-2 rounded border border-gray-300 hover:bg-gray-200">
+            📂 importer Structure (.glb)
+          <input type="file" accept=".glb" onChange={handleFileUpload} className="hidden" />
+          </label>
+            <div className="space-y-1">
             <p className="text-sm font-semibold">Classes assignées :</p>
             {classes.map((cl) => (
               <label key={cl.id} className="block text-sm">

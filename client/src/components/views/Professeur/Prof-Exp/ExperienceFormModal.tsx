@@ -102,18 +102,19 @@ export default function ExperienceFormModal({
             ))}
           </div>
 
-          <input type="file" onChange={handleFileUpload} className="text-sm" />
-          {formData.simulationPath && (
-            <a href={formData.simulationPath} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm block">
-              Voir simulation
-            </a>
-          )}
+          <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 w-1/2 px-1 py-2 rounded border border-gray-300 hover:bg-gray-200">
+            📂 importer fichier de simulation
+            <input type="file" onChange={handleFileUpload} className="hidden" />
+          </label>
 
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
+          <label className="cursor-pointer flex items-center gap-2 text-sm bg-gray-100 w-1/4 px-1 py-2 rounded border border-gray-300 hover:bg-gray-200">
+            📂 importer image
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          </label>
+
           {formData.image && (
             <img src={formData.image} className="rounded border w-full mt-2" alt="preview" />
           )}
-
           {['objectifs', 'materiel', 'resultatsAttendus'].map((field) => (
             <div key={field}>
               <label className="text-sm block capitalize">{field}</label>
