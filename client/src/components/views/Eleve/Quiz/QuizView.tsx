@@ -243,8 +243,8 @@ export default function QuizView() {
                       key={pageNum}
                       onClick={() => goToPage(pageNum)}
                       className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
-                          ? "bg-indigo-600 text-white"
-                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                         }`}
                     >
                       {pageNum}

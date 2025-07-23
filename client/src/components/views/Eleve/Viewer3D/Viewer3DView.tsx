@@ -123,8 +123,8 @@ export default function Viewer3DView() {
   return (
     <>
       <HeroSection images={["/assets/bg/3d1.png", "/assets/bg/3d2.png"]}>
-      
-      {/* Overlay sombre pour améliorer contraste */}
+
+        {/* Overlay sombre pour améliorer contraste */}
         <div className="absolute inset-0 bg-black/40 z-0" />
 
         <div className="text-center max-w-3xl mx-auto">
@@ -146,22 +146,20 @@ export default function Viewer3DView() {
           <div className="flex space-x-2">
             <button
               onClick={() => setViewMode("molecules")}
-              className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
-                viewMode === "molecules"
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
+              className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${viewMode === "molecules"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
             >
               <Flask size={18} />
               <span>Molécules</span>
             </button>
             <button
               onClick={() => setViewMode("equipment")}
-              className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${
-                viewMode === "equipment"
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
+              className={`px-4 py-2 rounded-md flex items-center space-x-2 text-sm border ${viewMode === "equipment"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
             >
               <Tool size={18} />
               <span>Matériel</span>
@@ -238,8 +236,8 @@ export default function Viewer3DView() {
             </button>
           </div>
         </div>
-                    <Chatbot />
-        
+        <Chatbot />
+
       </div>
     </>
   )

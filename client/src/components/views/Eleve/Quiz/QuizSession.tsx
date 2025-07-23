@@ -94,45 +94,45 @@ export default function QuizSession({ quiz, onComplete, onExit }: QuizSessionPro
     });
   };
 
-const handleNext = () => {
-  if (progress.currentQuestion === quiz.questions.length - 1) {
-    const finalizeQuiz = async () => {
-      setFinalizing(true);
-      const finalScore = progress.score;
+  const handleNext = () => {
+    if (progress.currentQuestion === quiz.questions.length - 1) {
+      const finalizeQuiz = async () => {
+        setFinalizing(true);
+        const finalScore = progress.score;
 
-      const { data: session } = await supabase.auth.getSession();
-      const user = session?.session?.user;
+        const { data: session } = await supabase.auth.getSession();
+        const user = session?.session?.user;
 
-      // Enregistrement si l'utilisateur est connecté
-      if (user) {
-        await supabase.from('quiz_results').insert({
-          eleve_id: user.id,
-          quiz_id: quiz.id,
-          score: finalScore,
-          total: quiz.questions.length,
-        });
+        // Enregistrement si l'utilisateur est connecté
+        if (user) {
+          await supabase.from('quiz_results').insert({
+            eleve_id: user.id,
+            quiz_id: quiz.id,
+            score: finalScore,
+            total: quiz.questions.length,
+          });
 
-        await logActivity();
-      }
+          await logActivity();
+        }
 
-      // Marquer comme terminé, même si non connecté
+        // Marquer comme terminé, même si non connecté
+        setProgress(prev => ({
+          ...prev,
+          completed: true,
+        }));
+
+        setFinalizing(false);
+      };
+
+      finalizeQuiz();
+    } else {
       setProgress(prev => ({
         ...prev,
-        completed: true,
+        currentQuestion: prev.currentQuestion + 1,
+        showExplanation: false,
       }));
-
-      setFinalizing(false);
-    };
-
-    finalizeQuiz();
-  } else {
-    setProgress(prev => ({
-      ...prev,
-      currentQuestion: prev.currentQuestion + 1,
-      showExplanation: false,
-    }));
-  }
-};
+    }
+  };
 
 
 

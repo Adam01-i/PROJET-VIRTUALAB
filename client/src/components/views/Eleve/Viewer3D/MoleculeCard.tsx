@@ -13,8 +13,8 @@ export default function MoleculeCard({ molecule, isSelected, onSelect }: Molecul
     <button
       onClick={() => onSelect(molecule)}
       className={`w-full p-4 rounded-md border transition-all duration-200 text-left text-sm shadow-sm ${isSelected
-          ? 'bg-indigo-100 border-indigo-400 text-indigo-800'
-          : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
+        ? 'bg-indigo-100 border-indigo-400 text-indigo-800'
+        : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
         }`}
     >
       <div className="flex items-start justify-between">

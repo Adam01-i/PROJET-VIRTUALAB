@@ -20,40 +20,38 @@ export default function ProfesseurLayout() {
     { path: "/professeur/3D", icon: Cube, label: "Gestion 3D" },
   ]
 
-useEffect(() => {
-  let mounted = true
+  useEffect(() => {
 
-  const trackOnce = async () => {
-    const { data } = await supabase.auth.getSession()
-    const isAuthenticated = !!data.session
+    const trackOnce = async () => {
+      const { data } = await supabase.auth.getSession()
+      const isAuthenticated = !!data.session
 
-    if (isAuthenticated && !hasTrackedLogin.current) {
-      hasTrackedLogin.current = true // ✅ bloquer toute double exécution
-      await trackLogin()
-      console.log("✅ Connexion professeur trackée (session)")
-    }
-  }
-
-  trackOnce()
-
-  const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
-    if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
-      hasTrackedLogin.current = true
-      await trackLogin()
-      console.log("✅ Connexion professeur trackée (auth state)")
+      if (isAuthenticated && !hasTrackedLogin.current) {
+        hasTrackedLogin.current = true // ✅ bloquer toute double exécution
+        await trackLogin()
+        console.log("✅ Connexion professeur trackée (session)")
+      }
     }
 
-    if (event === "SIGNED_OUT") {
-      hasTrackedLogin.current = false
-      console.log("🚪 Déconnexion professeur")
-    }
-  })
+    trackOnce()
 
-  return () => {
-    mounted = false
-    listener.subscription.unsubscribe()
-  }
-}, [])
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "SIGNED_IN" && !hasTrackedLogin.current) {
+        hasTrackedLogin.current = true
+        await trackLogin()
+        console.log("✅ Connexion professeur trackée (auth state)")
+      }
+
+      if (event === "SIGNED_OUT") {
+        hasTrackedLogin.current = false
+        console.log("🚪 Déconnexion professeur")
+      }
+    })
+
+    return () => {
+      listener.subscription.unsubscribe()
+    }
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -87,10 +85,9 @@ useEffect(() => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group relative 
-                  ${
-                    isActive
-                      ? "bg-indigo-100 text-indigo-700 font-semibold before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-indigo-700 rounded-r-lg"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-indigo-600"
+                  ${isActive
+                    ? "bg-indigo-100 text-indigo-700 font-semibold before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-indigo-700 rounded-r-lg"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-indigo-600"
                   }`
                 }
               >

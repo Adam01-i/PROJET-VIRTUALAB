@@ -22,7 +22,7 @@ export default function RoleGuard({ children, allowedRole }: RoleGuardProps) {
 
       // Cas invité (non connecté)
       if (!user) {
-        if (allowedRole === 'eleve' ) {
+        if (allowedRole === 'eleve') {
           setAuthorized(true); // invité autorisé sur /
         } else {
           navigate('/'); // sinon redirection vers racine

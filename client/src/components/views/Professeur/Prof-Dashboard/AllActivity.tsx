@@ -272,15 +272,14 @@ export default function AllActivity() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          a.action === "complete"
+                        className={`px-2 py-1 rounded text-xs font-medium ${a.action === "complete"
                             ? "bg-green-100 text-green-700"
                             : a.action === "start"
                               ? "bg-blue-100 text-blue-700"
                               : a.action === "view"
                                 ? "bg-yellow-100 text-yellow-700"
                                 : "bg-gray-100 text-gray-700"
-                        }`}
+                          }`}
                       >
                         {getActionInFrench(a.action)}
                       </span>

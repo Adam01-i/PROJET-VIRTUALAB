@@ -132,54 +132,54 @@ export default function ProfesseurDashboard() {
     setParClasse(Object.values(classeAgg))
   }
 
-return (
-  <div className="p-4 md:p-6 max-w-screen-xl mx-auto">
-    {/* Titre principal */}
-    <h1 className="text-2xl md:text-3xl font-bold text-indigo-800 mb-6">
-      Tableau de bord Professeur
-    </h1>
+  return (
+    <div className="p-4 md:p-6 max-w-screen-xl mx-auto">
+      {/* Titre principal */}
+      <h1 className="text-2xl md:text-3xl font-bold text-indigo-800 mb-6">
+        Tableau de bord Professeur
+      </h1>
 
-    {/* Statistiques globales */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-      <CardStat
-        label="Mes classes"
-        count={classes.length}
-        icon={<AcademicCapIcon className="h-6 w-6" />}
-      />
-      <CardStat
-        label="Élèves suivis"
-        count={parEleve.length}
-        icon={<UserGroupIcon className="h-6 w-6" />}
-      />
-      <CardStat
-        label="Activités élèves"
-        count={totalActivities}
-        icon={<ChartBarIcon className="h-6 w-6" />}
-      />
-    </div>
+      {/* Statistiques globales */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        <CardStat
+          label="Mes classes"
+          count={classes.length}
+          icon={<AcademicCapIcon className="h-6 w-6" />}
+        />
+        <CardStat
+          label="Élèves suivis"
+          count={parEleve.length}
+          icon={<UserGroupIcon className="h-6 w-6" />}
+        />
+        <CardStat
+          label="Activités élèves"
+          count={totalActivities}
+          icon={<ChartBarIcon className="h-6 w-6" />}
+        />
+      </div>
 
-    {/* Graphique Activité par Classe */}
-    <div className="mb-10">
-      <GraphActivityByClasse data={parClasse} classes={classes} />
-    </div>
+      {/* Graphique Activité par Classe */}
+      <div className="mb-10">
+        <GraphActivityByClasse data={parClasse} classes={classes} />
+      </div>
 
-    {/* Graphique Activité par Élève */}
-    <div className="mb-10">
-      <GraphActivityParEleve
-        data={parEleve.map((e) => ({
-          ...e,
-          created_at: e.created_at ?? "",
-        }))}
-        classes={classes}
-        selectedClasse={selectedClasseEleve}
-        onClasseChange={setSelectedClasseEleve}
-      />
-    </div>
+      {/* Graphique Activité par Élève */}
+      <div className="mb-10">
+        <GraphActivityParEleve
+          data={parEleve.map((e) => ({
+            ...e,
+            created_at: e.created_at ?? "",
+          }))}
+          classes={classes}
+          selectedClasse={selectedClasseEleve}
+          onClasseChange={setSelectedClasseEleve}
+        />
+      </div>
 
-    {/* Activité complète */}
-    <div className="mb-10">
-      <AllActivity />
+      {/* Activité complète */}
+      <div className="mb-10">
+        <AllActivity />
+      </div>
     </div>
-  </div>
-)
+  )
 }

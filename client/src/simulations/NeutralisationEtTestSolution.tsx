@@ -3,7 +3,18 @@
 import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Cylinder, Box, Sphere, Text, Html, Environment } from "@react-three/drei"
-import { RotateCcw, Eye, Info, BookOpen, Award, AlertTriangle, Droplets, Sparkles, FlaskConical, CheckCircle } from 'lucide-react'
+import {
+  RotateCcw,
+  Eye,
+  Info,
+  BookOpen,
+  Award,
+  AlertTriangle,
+  Droplets,
+  Sparkles,
+  FlaskConical,
+  CheckCircle,
+} from "lucide-react"
 import * as THREE from "three"
 
 // ===================================
@@ -279,7 +290,7 @@ const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility }: a
   <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2 z-40">
     {!sectionVisibility.controls && (
       <button
-        onClick={() => toggleSectionVisibility('controls')}
+        onClick={() => toggleSectionVisibility("controls")}
         className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-colors"
         title="Afficher les contrôles"
       >
@@ -288,7 +299,7 @@ const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility }: a
     )}
     {!sectionVisibility.observations && (
       <button
-        onClick={() => toggleSectionVisibility('observations')}
+        onClick={() => toggleSectionVisibility("observations")}
         className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors"
         title="Afficher les observations"
       >
@@ -297,7 +308,7 @@ const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility }: a
     )}
     {!sectionVisibility.guide && (
       <button
-        onClick={() => toggleSectionVisibility('guide')}
+        onClick={() => toggleSectionVisibility("guide")}
         className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg transition-colors"
         title="Afficher le guide"
       >
@@ -310,37 +321,58 @@ const FloatingToggleButtons = ({ sectionVisibility, toggleSectionVisibility }: a
 function LabEnvironmentChimie() {
   return (
     <group>
-      {/* Sol de laboratoire */}
+      {/* Sol de laboratoire en carrelage gris clair */}
       <mesh position={[0, -3.5, 0]} receiveShadow>
         <boxGeometry args={[20, 0.1, 15]} />
-        <meshStandardMaterial color="#1f2937" roughness={0.8} />
+        <meshStandardMaterial color="#4338ca" roughness={0.3} />
       </mesh>
 
-      {/* Mur arrière avec tableau périodique */}
+      {/* Carrelage pattern en gris */}
+      {Array.from({ length: 10 }, (_, x) =>
+        Array.from({ length: 8 }, (_, z) => (
+          <mesh key={`${x}-${z}`} position={[x * 2 - 9, -3.45, z * 2 - 7]} receiveShadow>
+            <boxGeometry args={[1.9, 0.02, 1.9]} />
+            <meshStandardMaterial color="#6366f1" roughness={0.4} />
+          </mesh>
+        )),
+      )}
+
+      {/* Mur arrière laboratoire gris clair */}
       <mesh position={[0, 0, -7]} receiveShadow>
         <boxGeometry args={[20, 8, 0.2]} />
-        <meshStandardMaterial color="#374151" roughness={0.9} />
+        <meshStandardMaterial color="#312e81" roughness={0.8} />
       </mesh>
 
-      {/* Tableau périodique décoratif */}
-      <group position={[0, 1, -6.8]}>
+      {/* Tableau périodique avec fond gris */}
+      <group position={[0, 1.5, -6.8]}>
         <mesh>
-          <boxGeometry args={[6, 3, 0.1]} />
-          <meshStandardMaterial color="#ffffff" />
+          <boxGeometry args={[8, 4, 0.1]} />
+          <meshStandardMaterial color="#e0e7ff" />
         </mesh>
-        <Html position={[0, 0, 0.1]} transform scale={0.2}>
-          <div className="bg-white p-4 rounded border-2 border-blue-500">
-            <div className="text-center font-bold text-blue-800 mb-2">RÉACTIONS CHIMIQUES</div>
-            <div className="grid grid-cols-4 gap-1 text-xs">
+        <Html position={[0, 0, 0.1]} transform scale={0.25}>
+          <div className="bg-gray-100 p-6 rounded-lg border-4 border-slate-600 shadow-lg">
+            <div className="text-center font-bold text-slate-900 mb-4 text-lg">RÉACTIONS CHIMIQUES - 1ère S</div>
+            <div className="grid grid-cols-4 gap-2">
               {[
-                { symbol: "A+B", name: "Neutralisation", color: "bg-green-100" },
-                { symbol: "Ind", name: "Indicateurs", color: "bg-yellow-100" },
-                { symbol: "Ppt", name: "Précipitation", color: "bg-blue-100" },
-                { symbol: "pH", name: "Acidité", color: "bg-red-100" },
+                {
+                  symbol: "A+B→S",
+                  name: "Neutralisation",
+                  color: "bg-emerald-200 text-emerald-900",
+                  formula: "HCl+NaOH→NaCl+H₂O",
+                },
+                { symbol: "Ind", name: "Indicateurs", color: "bg-amber-200 text-amber-900", formula: "BBT, Phénol" },
+                {
+                  symbol: "Ppt↓",
+                  name: "Précipitation",
+                  color: "bg-sky-200 text-sky-900",
+                  formula: "AgNO₃+NaCl→AgCl↓",
+                },
+                { symbol: "pH", name: "Acidité/Base", color: "bg-rose-200 text-rose-900", formula: "pH = -log[H⁺]" },
               ].map((element, i) => (
-                <div key={i} className={`${element.color} border border-gray-400 p-2 text-center rounded`}>
-                  <div className="font-bold text-xs">{element.symbol}</div>
-                  <div className="text-xs">{element.name}</div>
+                <div key={i} className={`${element.color} border-2 border-slate-500 p-3 text-center rounded-lg`}>
+                  <div className="font-bold text-sm mb-1">{element.symbol}</div>
+                  <div className="text-xs font-semibold mb-1">{element.name}</div>
+                  <div className="text-xs font-mono">{element.formula}</div>
                 </div>
               ))}
             </div>
@@ -348,42 +380,52 @@ function LabEnvironmentChimie() {
         </Html>
       </group>
 
-      {/* Armoires de produits chimiques */}
+      {/* Armoires de laboratoire en gris foncé */}
       <group position={[-8, 0, -6]}>
         <mesh castShadow>
           <boxGeometry args={[2, 4, 1]} />
-          <meshStandardMaterial color="#374151" roughness={0.3} />
+          <meshStandardMaterial color="#3730a3" roughness={0.2} metalness={0.8} />
         </mesh>
-        <Html position={[0, 2.2, 0.6]} transform scale={0.1}>
-          <div className="bg-red-600 text-white px-2 py-1 rounded font-bold text-center">
+        <Html position={[0, 2.2, 0.6]} transform scale={0.12}>
+          <div className="bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-center border-2 border-white">
             ⚠️ RÉACTIFS
             <br />
             CHIMIQUES
+            <br />
+            DANGER
           </div>
         </Html>
       </group>
 
-      {/* Hotte aspirante */}
-      <group position={[0, 2, -6.5]}>
+      {/* Hotte aspirante en gris */}
+      <group position={[0, 2.5, -6.5]}>
         <mesh castShadow>
-          <boxGeometry args={[8, 2, 0.5]} />
-          <meshStandardMaterial color="#6b7280" transparent opacity={0.3} />
+          <boxGeometry args={[10, 2.5, 0.8]} />
+          <meshStandardMaterial color="#a5b4fc" transparent opacity={0.4} />
         </mesh>
-        <mesh position={[0, 1.2, 0]} castShadow>
-          <boxGeometry args={[8.2, 0.2, 0.7]} />
-          <meshStandardMaterial color="#374151" />
+        <mesh position={[0, 1.4, 0]} castShadow>
+          <boxGeometry args={[10.2, 0.3, 1]} />
+          <meshStandardMaterial color="#374151" metalness={0.7} roughness={0.3} />
         </mesh>
       </group>
 
-      {/* Éclairage de laboratoire */}
-      {[-3, 0, 3].map((x, i) => (
-        <group key={i} position={[x, 3.5, 0]}>
+      {/* Éclairage néon en blanc chaud */}
+      {[-4, -1, 2, 5].map((x, i) => (
+        <group key={i} position={[x, 3.8, 0]}>
           <mesh castShadow>
-            <boxGeometry args={[1.5, 0.1, 0.3]} />
-            <meshStandardMaterial color="#f3f4f6" emissive="#ffffff" emissiveIntensity={0.1} />
+            <boxGeometry args={[2, 0.15, 0.4]} />
+            <meshStandardMaterial color="#f1f5f9" emissive="#f1f5f9" emissiveIntensity={0.2} />
           </mesh>
         </group>
       ))}
+
+      {/* Paillasse de laboratoire en noir */}
+      <group position={[6, -2, -3]}>
+        <mesh castShadow>
+          <boxGeometry args={[4, 1.5, 2]} />
+          <meshStandardMaterial color="#0f172a" roughness={0.2} />
+        </mesh>
+      </group>
     </group>
   )
 }
@@ -392,19 +434,28 @@ function TableLaboratoire() {
   return (
     <group position={[0, -3.4, 0]}>
       <mesh receiveShadow castShadow>
-        <boxGeometry args={[10, 0.2, 5]} />
-        <meshStandardMaterial color="#1f2937" roughness={0.3} />
+        <boxGeometry args={[12, 0.3, 6]} />
+        <meshStandardMaterial color="#1e1b4b" roughness={0.1} metalness={0.3} />
       </mesh>
-      {/* Pieds de table */}
+      {/* Rebord de sécurité */}
+      <mesh position={[0, 0.2, 2.8]} castShadow>
+        <boxGeometry args={[12, 0.1, 0.4]} />
+        <meshStandardMaterial color="#312e81" />
+      </mesh>
+      <mesh position={[0, 0.2, -2.8]} castShadow>
+        <boxGeometry args={[12, 0.1, 0.4]} />
+        <meshStandardMaterial color="#312e81" />
+      </mesh>
+      {/* Pieds de table renforcés */}
       {[
-        [-4, -1, -2],
-        [4, -1, -2],
-        [-4, -1, 2],
-        [4, -1, 2],
+        [-5, -1.2, -2.5],
+        [5, -1.2, -2.5],
+        [-5, -1.2, 2.5],
+        [5, -1.2, 2.5],
       ].map((pos, i) => (
         <mesh key={i} position={pos as [number, number, number]} castShadow>
-          <boxGeometry args={[0.2, 2, 0.2]} />
-          <meshStandardMaterial color="#374151" />
+          <boxGeometry args={[0.3, 2.4, 0.3]} />
+          <meshStandardMaterial color="#4338ca" metalness={0.6} roughness={0.4} />
         </mesh>
       ))}
     </group>
@@ -618,133 +669,295 @@ const RecipientReaction = ({
   const solutionRef = useRef<THREE.Mesh>(null)
 
   useFrame((state) => {
-    // Animation des bulles
+    // Animation des bulles améliorée
     if (bubblesRef.current && bulles) {
       bubblesRef.current.children.forEach((bubble, i) => {
-        bubble.position.y += 0.02 + Math.sin(state.clock.elapsedTime + i) * 0.01
-        if (bubble.position.y > 1.5) {
-          bubble.position.y = -1
-          bubble.position.x = (Math.random() - 0.5) * 0.6
-          bubble.position.z = (Math.random() - 0.5) * 0.6
+        // Mouvement vertical avec oscillation
+        bubble.position.y += 0.015 + Math.sin(state.clock.elapsedTime * 2 + i) * 0.008
+        // Mouvement horizontal léger
+        bubble.position.x += Math.sin(state.clock.elapsedTime * 1.5 + i * 0.5) * 0.002
+        bubble.position.z += Math.cos(state.clock.elapsedTime * 1.2 + i * 0.3) * 0.002
+
+        // Reset position quand la bulle sort
+        if (bubble.position.y > 1.8) {
+          bubble.position.y = -1.4
+          bubble.position.x = (Math.random() - 0.5) * 0.8
+          bubble.position.z = (Math.random() - 0.5) * 0.8
         }
+
+        // Rotation des bulles
+        bubble.rotation.x += 0.01
+        bubble.rotation.y += 0.008
       })
     }
 
-    // Animation de la solution pendant la réaction
+    // Animation de la solution pendant la réaction - AMÉLIORÉE
     if (solutionRef.current && isReacting) {
-      const mat = solutionRef.current.material as THREE.MeshStandardMaterial
+      const mat = solutionRef.current.material as THREE.MeshPhysicalMaterial
       if (mat && "emissiveIntensity" in mat) {
-        mat.emissiveIntensity = 0.2 + Math.sin(state.clock.elapsedTime * 4) * 0.1
+        // Pulsation d'intensité plus dramatique
+        mat.emissiveIntensity = 0.6 + Math.sin(state.clock.elapsedTime * 6) * 0.4
+        // Changement subtil de couleur
+        const baseColor = new THREE.Color(mat.color)
+        const pulseColor = baseColor.clone().multiplyScalar(1.1 + Math.sin(state.clock.elapsedTime * 4) * 0.1)
+        mat.emissive = pulseColor
       }
+
+      // Rotation légère du récipient pendant la réaction
+      solutionRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.02
     }
   })
 
   return (
     <group position={[position[0], position[1] - 1.5, position[2]]}>
-      {/* Récipient principal */}
-      <Cylinder args={[1.0, 0.9, 2.5, 32]} position={[0, 0, 0]} castShadow>
+      {/* Récipient principal - PLUS CONTRASTÉ */}
+      <Cylinder args={[1.2, 1.0, 3.0, 32]} position={[0, 0, 0]} castShadow>
         <meshPhysicalMaterial
           color="#f8fafc"
           transparent
-          opacity={0.15}
-          roughness={0.02}
-          transmission={0.98}
-          thickness={0.05}
+          opacity={0.3}
+          roughness={0.01}
+          transmission={0.9}
+          thickness={0.08}
+          clearcoat={1.0}
+          clearcoatRoughness={0.1}
         />
       </Cylinder>
 
-      {/* Base du récipient */}
-      <Cylinder args={[0.9, 0.9, 0.1]} position={[0, -1.2, 0]} castShadow>
-        <meshStandardMaterial color="#e2e8f0" roughness={0.3} />
+      {/* Rebord du récipient plus visible */}
+      <Cylinder args={[1.25, 1.2, 0.15]} position={[0, 1.4, 0]} castShadow>
+        <meshPhysicalMaterial color="#64748b" roughness={0.2} metalness={0.8} />
       </Cylinder>
 
-      {/* Solution chimique */}
+      {/* Base du récipient plus contrastée */}
+      <Cylinder args={[1.0, 1.0, 0.2]} position={[0, -1.4, 0]} castShadow>
+        <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.6} />
+      </Cylinder>
+
+      {/* Solution chimique - RENDU ULTRA ATTRAYANT */}
       {fillLevel > 0 && (
         <group>
+          {/* Solution principale avec effet de profondeur */}
           <Cylinder
             ref={solutionRef}
-            args={[0.85, 0.8, fillLevel * 2.2]}
-            position={[0, -1.1 + (fillLevel * 2.2) / 2, 0]}
+            args={[1.0, 0.9, fillLevel * 2.6]}
+            position={[0, -1.3 + (fillLevel * 2.6) / 2, 0]}
           >
-            <meshStandardMaterial
+            <meshPhysicalMaterial
               color={couleurSolution}
               transparent={false}
               opacity={1.0}
-              roughness={0.1}
-              metalness={0.05}
+              roughness={0.02}
+              metalness={0.1}
               emissive={couleurSolution}
-              emissiveIntensity={isReacting ? 0.3 : 0.1}
+              emissiveIntensity={isReacting ? 0.8 : 0.4}
+              clearcoat={1.0}
+              clearcoatRoughness={0.0}
+              transmission={0.1}
+              thickness={0.5}
+              ior={1.4}
             />
           </Cylinder>
 
-          {/* Surface de la solution */}
-          <Cylinder args={[0.85, 0.85, 0.03]} position={[0, -1.1 + fillLevel * 2.2, 0]}>
-            <meshStandardMaterial
+          {/* Couches de profondeur pour effet visuel */}
+          <Cylinder args={[0.95, 0.85, fillLevel * 2.5]} position={[0, -1.25 + (fillLevel * 2.5) / 2, 0]}>
+            <meshPhysicalMaterial
               color={couleurSolution}
-              roughness={0.0}
-              metalness={0.3}
+              transparent={true}
+              opacity={0.6}
               emissive={couleurSolution}
               emissiveIntensity={0.2}
+              clearcoat={0.8}
             />
           </Cylinder>
 
-          {/* Précipité */}
+          {/* Surface de la solution ultra brillante avec ondulations */}
+          <Cylinder args={[1.0, 1.0, 0.08]} position={[0, -1.3 + fillLevel * 2.6, 0]}>
+            <meshPhysicalMaterial
+              color={couleurSolution}
+              roughness={0.0}
+              metalness={0.9}
+              emissive={couleurSolution}
+              emissiveIntensity={isReacting ? 0.9 : 0.6}
+              clearcoat={1.0}
+              clearcoatRoughness={0.0}
+              transmission={0.2}
+              thickness={0.1}
+              ior={1.5}
+            />
+          </Cylinder>
+
+          {/* Particules flottantes pour dynamisme */}
+          {isReacting &&
+            Array.from({ length: 12 }, (_, i) => (
+              <Sphere
+                key={`particle-${i}`}
+                args={[0.02 + Math.random() * 0.02]}
+                position={[
+                  (Math.random() - 0.5) * 0.8,
+                  -1.3 + Math.random() * fillLevel * 2.4,
+                  (Math.random() - 0.5) * 0.8,
+                ]}
+              >
+                <meshPhysicalMaterial
+                  color={couleurSolution}
+                  emissive={couleurSolution}
+                  emissiveIntensity={1.2}
+                  transparent={true}
+                  opacity={0.8}
+                  clearcoat={1.0}
+                />
+              </Sphere>
+            ))}
+
+          {/* Effet de tourbillon pendant la réaction */}
+          {isReacting && (
+            <group>
+              {Array.from({ length: 8 }, (_, i) => (
+                <Cylinder
+                  key={`swirl-${i}`}
+                  args={[0.05, 0.03, fillLevel * 0.8]}
+                  position={[
+                    Math.cos((i * Math.PI) / 4) * 0.3,
+                    -1.3 + (fillLevel * 2.6) / 2,
+                    Math.sin((i * Math.PI) / 4) * 0.3,
+                  ]}
+                  rotation={[0, (i * Math.PI) / 4, Math.PI / 6]}
+                >
+                  <meshPhysicalMaterial
+                    color={couleurSolution}
+                    transparent={true}
+                    opacity={0.4}
+                    emissive={couleurSolution}
+                    emissiveIntensity={0.8}
+                  />
+                </Cylinder>
+              ))}
+            </group>
+          )}
+
+          {/* Reflets lumineux sur les parois */}
+          {Array.from({ length: 6 }, (_, i) => (
+            <Cylinder
+              key={`reflection-${i}`}
+              args={[0.02, 0.01, fillLevel * 1.8]}
+              position={[
+                Math.cos((i * Math.PI) / 3) * 0.9,
+                -1.2 + (fillLevel * 1.8) / 2,
+                Math.sin((i * Math.PI) / 3) * 0.9,
+              ]}
+            >
+              <meshBasicMaterial color="#ffffff" transparent={true} opacity={isReacting ? 0.8 : 0.4} />
+            </Cylinder>
+          ))}
+
+          {/* Précipité amélioré avec animation */}
           {precipite && (
             <group>
-              <Cylinder args={[0.8, 0.75, 0.15]} position={[0, -2.0, 0]}>
-                <meshStandardMaterial color={couleurPrecipite} roughness={0.9} />
+              <Cylinder args={[0.9, 0.85, 0.3]} position={[0, -2.15, 0]}>
+                <meshPhysicalMaterial
+                  color={couleurPrecipite}
+                  roughness={0.6}
+                  emissive={couleurPrecipite}
+                  emissiveIntensity={0.3}
+                  clearcoat={0.5}
+                  transmission={0.1}
+                />
               </Cylinder>
-              {/* Particules de précipité en suspension */}
-              {Array.from({ length: 8 }, (_, i) => (
+
+              {/* Nuage de particules de précipité */}
+              {Array.from({ length: 25 }, (_, i) => (
                 <Sphere
-                  key={i}
-                  args={[0.02 + Math.random() * 0.02]}
-                  position={[(Math.random() - 0.5) * 0.6, -1.5 + Math.random() * 0.8, (Math.random() - 0.5) * 0.6]}
+                  key={`precipitate-${i}`}
+                  args={[0.02 + Math.random() * 0.04]}
+                  position={[(Math.random() - 0.5) * 0.9, -2.0 + Math.random() * 1.5, (Math.random() - 0.5) * 0.9]}
                 >
-                  <meshStandardMaterial color={couleurPrecipite} />
+                  <meshPhysicalMaterial
+                    color={couleurPrecipite}
+                    emissive={couleurPrecipite}
+                    emissiveIntensity={0.2}
+                    roughness={0.8}
+                    transparent={true}
+                    opacity={0.9}
+                  />
                 </Sphere>
               ))}
+
+              {/* Effet de sédimentation */}
+              <Cylinder args={[0.85, 0.8, 0.1]} position={[0, -2.25, 0]}>
+                <meshPhysicalMaterial
+                  color={couleurPrecipite}
+                  roughness={0.9}
+                  emissive={couleurPrecipite}
+                  emissiveIntensity={0.1}
+                />
+              </Cylinder>
             </group>
           )}
         </group>
       )}
 
-      {/* Bulles de gaz */}
+      {/* Bulles de gaz ultra réalistes */}
       {bulles && (
         <group ref={bubblesRef}>
-          {Array.from({ length: 12 }, (_, i) => (
+          {Array.from({ length: 30 }, (_, i) => (
             <Sphere
-              key={i}
-              args={[0.015 + Math.random() * 0.02]}
-              position={[(Math.random() - 0.5) * 0.6, -1.2 + Math.random() * 0.8, (Math.random() - 0.5) * 0.6]}
+              key={`bubble-${i}`}
+              args={[0.015 + Math.random() * 0.04]}
+              position={[(Math.random() - 0.5) * 0.8, -1.4 + Math.random() * 1.0, (Math.random() - 0.5) * 0.8]}
             >
-              <meshStandardMaterial
+              <meshPhysicalMaterial
                 color="#ffffff"
-                transparent
-                opacity={0.7}
+                transparent={true}
+                opacity={0.95}
                 emissive="#ffffff"
-                emissiveIntensity={0.2}
+                emissiveIntensity={0.6}
+                clearcoat={1.0}
+                clearcoatRoughness={0.0}
+                transmission={0.9}
+                thickness={0.1}
+                ior={1.33}
+              />
+            </Sphere>
+          ))}
+
+          {/* Bulles plus grosses qui éclatent */}
+          {Array.from({ length: 8 }, (_, i) => (
+            <Sphere
+              key={`big-bubble-${i}`}
+              args={[0.05 + Math.random() * 0.03]}
+              position={[(Math.random() - 0.5) * 0.6, -0.5 + Math.random() * 0.3, (Math.random() - 0.5) * 0.6]}
+            >
+              <meshPhysicalMaterial
+                color="#e0f7ff"
+                transparent={true}
+                opacity={0.8}
+                emissive="#ffffff"
+                emissiveIntensity={0.8}
+                clearcoat={1.0}
+                transmission={0.95}
+                thickness={0.05}
               />
             </Sphere>
           ))}
         </group>
       )}
 
-      {/* Étiquette du récipient */}
-      <Text position={[0, -2.8, 0]} fontSize={0.1} color="#1f2937" anchorX="center" anchorY="middle">
+      {/* Étiquette du récipient plus grande */}
+      <Text position={[0, -3.2, 0]} fontSize={0.15} color="#1f2937" anchorX="center" anchorY="middle">
         Récipient de Réaction
       </Text>
 
-      {/* Affichage de la réaction en cours */}
+      {/* Affichage de la réaction en cours plus visible */}
       {reaction && (
-        <group position={[1.2, 0, 0]}>
-          <Box args={[0.8, 0.6, 0.1]} castShadow>
-            <meshStandardMaterial color="#1f2937" />
+        <group position={[1.5, 0, 0]}>
+          <Box args={[1.2, 0.8, 0.15]} castShadow>
+            <meshStandardMaterial color="#1e293b" emissive="#1e293b" emissiveIntensity={0.1} />
           </Box>
-          <Html position={[0, 0, 0.06]} transform scale={0.08}>
-            <div className="bg-green-900 text-green-100 p-2 rounded text-center">
-              <div className="font-bold text-xs mb-1">{reaction.nom}</div>
-              <div className="text-xs font-mono">{reaction.equation}</div>
+          <Html position={[0, 0, 0.08]} transform scale={0.1}>
+            <div className="bg-green-800 text-green-100 p-3 rounded-lg text-center border-2 border-green-400">
+              <div className="font-bold text-sm mb-2">{reaction.nom}</div>
+              <div className="text-xs font-mono bg-black/20 p-1 rounded">{reaction.equation}</div>
             </div>
           </Html>
         </group>
@@ -803,32 +1016,33 @@ const SceneChimie = ({
 
   return (
     <>
-      {/* Éclairage optimisé pour la chimie */}
-      <ambientLight intensity={0.5} color="#f0f9ff" />
+      {/* Éclairage de laboratoire réaliste */}
+      <ambientLight intensity={0.6} color="#f8fafc" />
       <directionalLight
-        position={[10, 10, 5]}
-        intensity={1.0}
+        position={[8, 12, 6]}
+        intensity={1.2}
         color="#ffffff"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-far={50}
-        shadow-camera-left={-10}
-        shadow-camera-right={10}
-        shadow-camera-top={10}
-        shadow-camera-bottom={-10}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={15}
+        shadow-camera-bottom={-15}
       />
-      <pointLight position={[0, 6, 0]} intensity={0.4} color="#ffffff" distance={12} decay={2} />
-      <pointLight position={[-5, 4, 3]} intensity={0.3} color="#ddd6fe" distance={10} decay={2} />
-      <pointLight position={[5, 4, 3]} intensity={0.3} color="#ddd6fe" distance={10} decay={2} />
+      <pointLight position={[0, 8, 0]} intensity={0.6} color="#f0f9ff" distance={15} decay={2} />
+      <pointLight position={[-6, 5, 4]} intensity={0.4} color="#e0f2fe" distance={12} decay={2} />
+      <pointLight position={[6, 5, 4]} intensity={0.4} color="#e0f2fe" distance={12} decay={2} />
+      <rectAreaLight position={[0, 4, -6]} width={8} height={2} intensity={2} color="#ffffff" />
 
-      <color attach="background" args={["#0f172a"]} />
-      <fog attach="fog" args={["#0f172a", 12, 25]} />
+      <color attach="background" args={["#312e81"]} />
+      <fog attach="fog" args={["#312e81", 15, 30]} />
 
       <LabEnvironmentChimie />
       <TableLaboratoire />
 
-      {/* Béchers avec solutions */}
+      {/* Béchers avec solutions - RAPPROCHÉS */}
       <BecherChimique
         position={[-2, -2.2, 0]}
         solution={solution1}
@@ -904,7 +1118,7 @@ const useSimulationChimie = () => {
     controls: true,
     observations: true,
     guide: true,
-    results: true
+    results: true,
   })
   const [showQuiz, setShowQuiz] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -914,51 +1128,56 @@ const useSimulationChimie = () => {
   const [correctAnswers, setCorrectAnswers] = useState(0)
 
   const toggleSectionVisibility = useCallback((section: keyof typeof sectionVisibility) => {
-    setSectionVisibility(prev => ({
+    setSectionVisibility((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }))
   }, [])
 
-  const handleQuizAnswer = useCallback((answer: string) => {
-    setSelectedAnswer(answer)
-    setShowExplanation(true)
+  const handleQuizAnswer = useCallback(
+    (answer: string) => {
+      setSelectedAnswer(answer)
+      setShowExplanation(true)
 
-    const questions = [
-      {
-        id: 'q1',
-        question: "Que se passe-t-il lors d'une réaction de neutralisation acide-base ?",
-        options: [
-          { id: 'formation_sel', text: 'Formation d\'un sel et d\'eau' },
-          { id: 'formation_gaz', text: 'Formation d\'un gaz' },
-          { id: 'formation_precipite', text: 'Formation d\'un précipité coloré' },
-          { id: 'aucun_changement', text: 'Aucun changement visible' }
-        ],
-        correct: 'formation_sel',
-        explanation: "Lors d'une neutralisation acide-base, l'acide et la base réagissent pour former un sel et de l'eau selon la réaction générale : Acide + Base → Sel + H₂O"
-      },
-      {
-        id: 'q2',
-        question: "Pourquoi la phénolphtaléine devient-elle rose en milieu basique ?",
-        options: [
-          { id: 'temperature', text: 'À cause de la température' },
-          { id: 'changement_ph', text: 'À cause du changement de pH' },
-          { id: 'concentration', text: 'À cause de la concentration' },
-          { id: 'precipitation', text: 'À cause d\'une précipitation' }
-        ],
-        correct: 'changement_ph',
-        explanation: "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2)."
+      const questions = [
+        {
+          id: "q1",
+          question: "Que se passe-t-il lors d'une réaction de neutralisation acide-base ?",
+          options: [
+            { id: "formation_sel", text: "Formation d'un sel et d'eau" },
+            { id: "formation_gaz", text: "Formation d'un gaz" },
+            { id: "formation_precipite", text: "Formation d'un précipité coloré" },
+            { id: "aucun_changement", text: "Aucun changement visible" },
+          ],
+          correct: "formation_sel",
+          explanation:
+            "Lors d'une neutralisation acide-base, l'acide et la base réagissent pour former un sel et de l'eau selon la réaction générale : Acide + Base → Sel + H₂O",
+        },
+        {
+          id: "q2",
+          question: "Pourquoi la phénolphtaléine devient-elle rose en milieu basique ?",
+          options: [
+            { id: "temperature", text: "À cause de la température" },
+            { id: "changement_ph", text: "À cause du changement de pH" },
+            { id: "concentration", text: "À cause de la concentration" },
+            { id: "precipitation", text: "À cause d'une précipitation" },
+          ],
+          correct: "changement_ph",
+          explanation:
+            "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2).",
+        },
+      ]
+
+      if (answer === questions[currentQuestionIndex].correct) {
+        setCorrectAnswers((prev) => prev + 1)
       }
-    ]
-
-    if (answer === questions[currentQuestionIndex].correct) {
-      setCorrectAnswers(prev => prev + 1)
-    }
-  }, [currentQuestionIndex])
+    },
+    [currentQuestionIndex],
+  )
 
   const nextQuestion = useCallback(() => {
     if (currentQuestionIndex < 1) {
-      setCurrentQuestionIndex(prev => prev + 1)
+      setCurrentQuestionIndex((prev) => prev + 1)
       setSelectedAnswer(null)
       setShowExplanation(false)
     } else {
@@ -972,7 +1191,7 @@ const useSimulationChimie = () => {
     setShowExplanation(false)
     setQuizCompleted(false)
     setCorrectAnswers(0)
-    setShowQuiz(false)
+    // Ne pas fermer le quiz, juste le redémarrer
   }, [])
 
   // Calcul des propriétés de la réaction
@@ -990,6 +1209,7 @@ const useSimulationChimie = () => {
       return "#" + color1.lerp(color2, 0.5).getHexString()
     }
     if (solution1Ajoutee) return solution1.couleur
+    if (solution2Ajoutee) return solution2.couleur
     return "#f8fafc"
   }, [etape, solution1Ajoutee, solution2Ajoutee, reactionTerminee, reactionData])
 
@@ -1027,7 +1247,10 @@ const useSimulationChimie = () => {
             setVersementGauche(false)
             setNiveauBecher1(0.3)
             setEtape(1)
-            setObservations((prev) => [...prev, `✅ ${solution1.nom} ajouté au récipient`])
+            setObservations((prev) => {
+              const newObs = `✅ ${solution1.nom} ajouté au récipient`
+              return prev.includes(newObs) ? prev : [...prev, newObs]
+            })
           }, 2000)
         } else {
           setVersementDroite(true)
@@ -1036,7 +1259,10 @@ const useSimulationChimie = () => {
             setVersementDroite(false)
             setNiveauBecher2(0.3)
             setEtape(1)
-            setObservations((prev) => [...prev, `✅ ${solution2.nom} ajouté au récipient`])
+            setObservations((prev) => {
+              const newObs = `✅ ${solution2.nom} ajouté au récipient`
+              return prev.includes(newObs) ? prev : [...prev, newObs]
+            })
           }, 2000)
         }
       } else if (etape === 1) {
@@ -1048,6 +1274,10 @@ const useSimulationChimie = () => {
               setVersementGauche(false)
               setNiveauBecher1(0.3)
               setEtape(2)
+              setObservations((prev) => {
+                const newObs = `✅ ${solution1.nom} ajouté au récipient`
+                return prev.includes(newObs) ? prev : [...prev, newObs]
+              })
               demarrerReaction()
             }, 2000)
           } else {
@@ -1057,6 +1287,10 @@ const useSimulationChimie = () => {
               setVersementDroite(false)
               setNiveauBecher2(0.3)
               setEtape(2)
+              setObservations((prev) => {
+                const newObs = `✅ ${solution2.nom} ajouté au récipient`
+                return prev.includes(newObs) ? prev : [...prev, newObs]
+              })
               demarrerReaction()
             }, 2000)
           }
@@ -1204,32 +1438,34 @@ const PanneauControle = ({
   toggleSectionVisibility,
   sectionVisibility,
 }: any) => (
-  <div className={`absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 w-80 border border-gray-200 shadow-xl ${sectionVisibility.controls ? '' : 'hidden'}`}>
-    <div className="flex items-center justify-between mb-3">
-      <h3 className="text-gray-800 font-bold text-lg flex items-center">
-        <FlaskConical className="mr-2 text-blue-600" size={20} />
+  <div
+    className={`absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 w-72 border border-gray-200 shadow-lg ${sectionVisibility.controls ? "" : "hidden"}`}
+  >
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="text-gray-800 font-bold text-base flex items-center">
+        <FlaskConical className="mr-2 text-blue-600" size={18} />
         Réactifs
       </h3>
       <button
-        onClick={() => toggleSectionVisibility('controls')}
+        onClick={() => toggleSectionVisibility("controls")}
         className="p-1 hover:bg-gray-100 rounded"
         title="Masquer/Afficher les contrôles"
       >
-        <Eye size={14} className="text-gray-500" />
+        <Eye size={12} className="text-gray-500" />
       </button>
     </div>
 
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
-        <label className="text-sm text-gray-700 mb-2 block font-semibold flex items-center">
-          <Droplets className="mr-1 text-blue-500" size={14} />
+        <label className="text-xs text-gray-700 mb-1 block font-semibold flex items-center">
+          <Droplets className="mr-1 text-blue-500" size={12} />
           Solution A:
         </label>
         <select
           value={solution1.id}
           onChange={(e) => etape === 0 && setSolution1(SOLUTIONS[e.target.value])}
           disabled={etape !== 0}
-          className="w-full text-sm bg-gray-50 text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full text-xs bg-gray-50 text-gray-800 border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
         >
           <optgroup label="🔴 Acides">
             <option value="hcl">HCl - Acide chlorhydrique</option>
@@ -1252,28 +1488,29 @@ const PanneauControle = ({
         <div className="mt-1 text-xs text-gray-600 flex items-center justify-between">
           <span>{solution1.concentration}</span>
           <span
-            className={`px-2 py-1 rounded text-xs font-bold ${solution1.securite === "eleve"
+            className={`px-1 py-0.5 rounded text-xs font-bold ${
+              solution1.securite === "eleve"
                 ? "bg-red-100 text-red-800"
                 : solution1.securite === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-green-100 text-green-800"
-              }`}
+            }`}
           >
-            {solution1.securite === "eleve" ? "⚠️ Danger" : solution1.securite === "moyen" ? "⚡ Attention" : "✅ Sûr"}
+            {solution1.securite === "eleve" ? "⚠️" : solution1.securite === "moyen" ? "⚡" : "✅"}
           </span>
         </div>
       </div>
 
       <div>
-        <label className="text-sm text-gray-700 mb-2 block font-semibold flex items-center">
-          <Droplets className="mr-1 text-green-500" size={14} />
+        <label className="text-xs text-gray-700 mb-1 block font-semibold flex items-center">
+          <Droplets className="mr-1 text-green-500" size={12} />
           Solution B:
         </label>
         <select
           value={solution2.id}
           onChange={(e) => etape === 0 && setSolution2(SOLUTIONS[e.target.value])}
           disabled={etape !== 0}
-          className="w-full text-sm bg-gray-50 text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          className="w-full text-xs bg-gray-50 text-gray-800 border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-green-500 focus:border-green-500"
         >
           <optgroup label="🔴 Acides">
             <option value="hcl">HCl - Acide chlorhydrique</option>
@@ -1296,75 +1533,71 @@ const PanneauControle = ({
         <div className="mt-1 text-xs text-gray-600 flex items-center justify-between">
           <span>{solution2.concentration}</span>
           <span
-            className={`px-2 py-1 rounded text-xs font-bold ${solution2.securite === "eleve"
+            className={`px-1 py-0.5 rounded text-xs font-bold ${
+              solution2.securite === "eleve"
                 ? "bg-red-100 text-red-800"
                 : solution2.securite === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-green-100 text-green-800"
-              }`}
+            }`}
           >
-            {solution2.securite === "eleve" ? "⚠️ Danger" : solution2.securite === "moyen" ? "⚡ Attention" : "✅ Sûr"}
+            {solution2.securite === "eleve" ? "⚠️" : solution2.securite === "moyen" ? "⚡" : "✅"}
           </span>
         </div>
       </div>
 
       <button
         onClick={reinitialiser}
-        className="w-full flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+        className="w-full flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all"
       >
-        <RotateCcw size={16} />
+        <RotateCcw size={14} />
         Nouvelle expérience
       </button>
     </div>
 
     {reactionData ? (
-      <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-        <div className="flex items-center mb-2">
-          <Sparkles className="mr-2 text-purple-600" size={16} />
-          <span className="font-semibold text-purple-800 text-sm">Réaction possible:</span>
+      <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded border border-blue-200">
+        <div className="flex items-center mb-1">
+          <Sparkles className="mr-1 text-purple-600" size={14} />
+          <span className="font-semibold text-purple-800 text-xs">Réaction possible:</span>
         </div>
-        <div className="text-purple-700 text-sm mb-2">
+        <div className="text-purple-700 text-xs mb-1">
           <div className="font-bold">{reactionData.nom}</div>
           <div className="font-mono text-xs bg-white/50 p-1 rounded mt-1">{reactionData.equation}</div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <span
-            className={`px-2 py-1 rounded text-xs font-bold ${reactionData.niveau === "facile"
+            className={`px-1 py-0.5 rounded text-xs font-bold ${
+              reactionData.niveau === "facile"
                 ? "bg-green-100 text-green-800"
                 : reactionData.niveau === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-red-100 text-red-800"
-              }`}
+            }`}
           >
-            {reactionData.niveau === "facile"
-              ? "🟢 Facile"
-              : reactionData.niveau === "moyen"
-                ? "🟡 Moyen"
-                : "🔴 Difficile"}
+            {reactionData.niveau === "facile" ? "🟢" : reactionData.niveau === "moyen" ? "🟡" : "🔴"}
           </span>
           <span className="text-xs text-purple-600">{reactionData.type}</span>
         </div>
       </div>
     ) : (
-      <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
-        <div className="flex items-center mb-2">
-          <AlertTriangle className="mr-2 text-red-600" size={16} />
-          <span className="font-semibold text-red-800 text-sm">Aucune réaction</span>
+      <div className="mt-3 p-2 bg-red-50 rounded border border-red-200">
+        <div className="flex items-center mb-1">
+          <AlertTriangle className="mr-1 text-red-600" size={14} />
+          <span className="font-semibold text-red-800 text-xs">Aucune réaction</span>
         </div>
-        <div className="text-red-700 text-sm">
-          Ces solutions ne réagissent pas ensemble. Essayez d'autres combinaisons !
-        </div>
+        <div className="text-red-700 text-xs">Ces solutions ne réagissent pas ensemble.</div>
       </div>
     )}
 
-    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-      <div className="text-sm text-blue-800 font-medium mb-1">État:</div>
-      <div className="text-blue-700 text-sm">{obtenirMessageStatut()}</div>
+    <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+      <div className="text-xs text-blue-800 font-medium mb-1">État:</div>
+      <div className="text-blue-700 text-xs">{obtenirMessageStatut()}</div>
       {enReaction && (
-        <div className="mt-2">
-          <div className="w-full bg-blue-200 rounded-full h-2">
+        <div className="mt-1">
+          <div className="w-full bg-blue-200 rounded-full h-1.5">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${progressReaction * 100}%` }}
             />
           </div>
@@ -1379,49 +1612,40 @@ const PanneauObservations = ({
   etape,
   setShowResultats,
   toggleSectionVisibility,
-  sectionVisibility
+  sectionVisibility,
+  setShowQuiz,
+  reactionTerminee,
 }: any) => (
-  <div className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 w-64 border border-gray-200 shadow-xl ${sectionVisibility.observations ? '' : 'hidden'}`}>
+  <div
+    className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-2 w-56 border border-gray-200 shadow-lg ${sectionVisibility.observations ? "" : "hidden"}`}
+  >
     <div className="flex items-center justify-between mb-2">
       <h3 className="text-gray-800 font-bold text-sm flex items-center">
-        <Eye className="mr-2 text-green-600" size={16} />
+        <Eye className="mr-1 text-green-600" size={14} />
         Observations
       </h3>
-      <div className="flex gap-1">
-        {etape >= 3 && (
-          <button
-            onClick={() => setShowResultats(true)}
-            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs font-medium transition-all"
-          >
-            <BookOpen size={10} />
-            Analyse
-          </button>
-        )}
-        <button
-          onClick={() => toggleSectionVisibility('observations')}
-          className="p-1 hover:bg-gray-100 rounded"
-          title="Masquer/Afficher les observations"
-        >
-          <Eye size={12} className="text-gray-500" />
-        </button>
-      </div>
+      <button
+        onClick={() => toggleSectionVisibility("observations")}
+        className="p-1 hover:bg-gray-100 rounded"
+        title="Masquer/Afficher les observations"
+      >
+        <Eye size={10} className="text-gray-500" />
+      </button>
     </div>
 
-    <div className="space-y-1 max-h-48 overflow-y-auto">
+    <div className="space-y-1">
       {observations.length === 0 ? (
-        <div className="text-gray-500 text-xs italic text-center py-3">
-          Commencez l'expérience !
-        </div>
+        <div className="text-gray-500 text-xs italic text-center py-2">Commencez l'expérience !</div>
       ) : (
-        observations.slice(-3).map((obs: string, i: number) => (
-          <div key={i} className="bg-gray-50 p-2 rounded border-l-2 border-blue-500 text-xs text-gray-700">
+        observations.map((obs: string, i: number) => (
+          <div key={i} className="bg-gray-50 p-1.5 rounded border-l-2 border-blue-500 text-xs text-gray-700">
             {obs}
           </div>
         ))
       )}
     </div>
 
-    <div className="mt-3 grid grid-cols-4 gap-1">
+    <div className="mt-2 grid grid-cols-4 gap-1">
       {[
         { label: "Prep", active: etape >= 0, icon: "🧪" },
         { label: "Mix", active: etape >= 1, icon: "⚗️" },
@@ -1430,14 +1654,35 @@ const PanneauObservations = ({
       ].map(({ label, active, icon }) => (
         <div
           key={label}
-          className={`text-center text-xs p-1 rounded border ${active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-            }`}
+          className={`text-center text-xs p-1 rounded border ${
+            active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+          }`}
         >
-          <div className="text-xs mb-1">{icon}</div>
+          <div className="text-xs">{icon}</div>
           <div className="font-bold text-xs">{label}</div>
         </div>
       ))}
     </div>
+
+    {/* Boutons d'action après la fin de l'expérience */}
+    {reactionTerminee && (
+      <div className="mt-3 space-y-2">
+        <button
+          onClick={() => setShowResultats(true)}
+          className="w-full flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-2 py-1.5 rounded text-xs font-medium transition-all"
+        >
+          <BookOpen size={10} />
+          Analyse Résultats
+        </button>
+        <button
+          onClick={() => setShowQuiz(true)}
+          className="w-full flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded text-xs font-medium transition-all"
+        >
+          <Award size={10} />
+          Refaire le Quiz
+        </button>
+      </div>
+    )}
   </div>
 )
 
@@ -1451,35 +1696,37 @@ const QuizModal = ({
   correctAnswers,
   handleQuizAnswer,
   nextQuestion,
-  resetQuiz
+  resetQuiz,
 }: any) => {
   if (!showQuiz) return null
 
   const questions = [
     {
-      id: 'q1',
+      id: "q1",
       question: "Que se passe-t-il lors d'une réaction de neutralisation acide-base ?",
       options: [
-        { id: 'formation_sel', text: 'Formation d\'un sel et d\'eau' },
-        { id: 'formation_gaz', text: 'Formation d\'un gaz' },
-        { id: 'formation_precipite', text: 'Formation d\'un précipité coloré' },
-        { id: 'aucun_changement', text: 'Aucun changement visible' }
+        { id: "formation_sel", text: "Formation d'un sel et d'eau" },
+        { id: "formation_gaz", text: "Formation d'un gaz" },
+        { id: "formation_precipite", text: "Formation d'un précipité coloré" },
+        { id: "aucun_changement", text: "Aucun changement visible" },
       ],
-      correct: 'formation_sel',
-      explanation: "Lors d'une neutralisation acide-base, l'acide et la base réagissent pour former un sel et de l'eau selon la réaction générale : Acide + Base → Sel + H₂O"
+      correct: "formation_sel",
+      explanation:
+        "Lors d'une neutralisation acide-base, l'acide et la base réagissent pour former un sel et de l'eau selon la réaction générale : Acide + Base → Sel + H₂O",
     },
     {
-      id: 'q2',
+      id: "q2",
       question: "Pourquoi la phénolphtaléine devient-elle rose en milieu basique ?",
       options: [
-        { id: 'temperature', text: 'À cause de la température' },
-        { id: 'changement_ph', text: 'À cause du changement de pH' },
-        { id: 'concentration', text: 'À cause de la concentration' },
-        { id: 'precipitation', text: 'À cause d\'une précipitation' }
+        { id: "temperature", text: "À cause de la température" },
+        { id: "changement_ph", text: "À cause du changement de pH" },
+        { id: "concentration", text: "À cause de la concentration" },
+        { id: "precipitation", text: "À cause d'une précipitation" },
       ],
-      correct: 'changement_ph',
-      explanation: "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2)."
-    }
+      correct: "changement_ph",
+      explanation:
+        "La phénolphtaléine est un indicateur coloré qui change de couleur selon le pH : elle est incolore en milieu acide/neutre (pH < 8.2) et devient rose en milieu basique (pH > 8.2).",
+    },
   ]
 
   const currentQuestion = questions[currentQuestionIndex]
@@ -1492,13 +1739,13 @@ const QuizModal = ({
             <Award className="mx-auto mb-4 text-yellow-500" size={48} />
             <h2 className="text-xl font-bold text-gray-800 mb-4">Quiz Terminé !</h2>
             <div className="mb-4">
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {correctAnswers}/2
-              </div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{correctAnswers}/2</div>
               <div className="text-gray-600">
-                {correctAnswers === 2 ? "🏆 Parfait ! Vous maîtrisez les réactions chimiques !" :
-                  correctAnswers === 1 ? "👍 Bien ! Continuez à étudier les réactions !" :
-                    "📚 Révisez les concepts de neutralisation et d'indicateurs !"}
+                {correctAnswers === 2
+                  ? "🏆 Parfait ! Vous maîtrisez les réactions chimiques !"
+                  : correctAnswers === 1
+                    ? "👍 Bien ! Continuez à étudier les réactions !"
+                    : "📚 Révisez les concepts de neutralisation et d'indicateurs !"}
               </div>
             </div>
             <div className="flex gap-3">
@@ -1529,18 +1776,13 @@ const QuizModal = ({
             <Award className="mr-2 text-blue-500" size={24} />
             Quiz - Question {currentQuestionIndex + 1}/2
           </h2>
-          <button
-            onClick={() => setShowQuiz(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={() => setShowQuiz(false)} className="text-gray-500 hover:text-gray-700">
             ✕
           </button>
         </div>
 
         <div className="mb-6 text-gray-800">
-          <h3 className="font-semibold text-gray-800 mb-4 text-lg">
-            {currentQuestion.question}
-          </h3>
+          <h3 className="font-semibold text-gray-800 mb-4 text-lg">{currentQuestion.question}</h3>
 
           <div className="space-y-3">
             {currentQuestion.options.map((option) => (
@@ -1548,16 +1790,17 @@ const QuizModal = ({
                 key={option.id}
                 onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                 disabled={showExplanation}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${showExplanation
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                  showExplanation
                     ? option.id === currentQuestion.correct
-                      ? 'bg-green-100 border-green-500 text-green-800'
+                      ? "bg-green-100 border-green-500 text-green-800"
                       : option.id === selectedAnswer && option.id !== currentQuestion.correct
-                        ? 'bg-red-100 border-red-500 text-red-800'
-                        : 'bg-gray-100 border-gray-300 text-gray-600'
+                        ? "bg-red-100 border-red-500 text-red-800"
+                        : "bg-gray-100 border-gray-300 text-gray-600"
                     : selectedAnswer === option.id
-                      ? 'bg-blue-100 border-blue-500'
-                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
-                  }`}
+                      ? "bg-blue-100 border-blue-500"
+                      : "bg-gray-50 border-gray-300 hover:bg-gray-100"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span>{option.text}</span>
@@ -1578,9 +1821,7 @@ const QuizModal = ({
             <h4 className="font-semibold text-blue-800 mb-2">
               {selectedAnswer === currentQuestion.correct ? "✅ Correct !" : "❌ Incorrect"}
             </h4>
-            <p className="text-blue-700 text-sm">
-              {currentQuestion.explanation}
-            </p>
+            <p className="text-blue-700 text-sm">{currentQuestion.explanation}</p>
           </div>
         )}
 
@@ -1590,10 +1831,81 @@ const QuizModal = ({
               onClick={nextQuestion}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
-              {currentQuestionIndex < 1 ? 'Question suivante' : 'Voir les résultats'}
+              {currentQuestionIndex < 1 ? "Question suivante" : "Voir les résultats"}
             </button>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+const AnalyseResultatsModal = ({ showResultats, setShowResultats, reactionData }: any) => {
+  if (!showResultats || !reactionData) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <BookOpen className="mr-2 text-green-500" size={24} />
+            Analyse des Résultats
+          </h2>
+          <button onClick={() => setShowResultats(false)} className="text-gray-500 hover:text-gray-700">
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 className="font-bold text-blue-800 mb-2">Réaction Observée</h3>
+            <p className="text-blue-700 text-sm mb-2">{reactionData.nom}</p>
+            <div className="bg-white p-2 rounded font-mono text-sm">{reactionData.equation}</div>
+          </div>
+
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            <h3 className="font-bold text-green-800 mb-2">Observations</h3>
+            <p className="text-green-700 text-sm">{reactionData.observation}</p>
+          </div>
+
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <h3 className="font-bold text-purple-800 mb-2">Explication Scientifique</h3>
+            <p className="text-purple-700 text-sm">{reactionData.explication}</p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="font-bold text-gray-800 mb-2">Informations Complémentaires</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-semibold">Type de réaction:</span>
+                <span className="ml-2 text-gray-600">{reactionData.type}</span>
+              </div>
+              <div>
+                <span className="font-semibold">Niveau de difficulté:</span>
+                <span
+                  className={`ml-2 px-2 py-1 rounded text-xs font-bold ${
+                    reactionData.niveau === "facile"
+                      ? "bg-green-100 text-green-800"
+                      : reactionData.niveau === "moyen"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {reactionData.niveau}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={() => setShowResultats(false)}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Fermer
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -1703,52 +2015,11 @@ export default function LaboratoireReactionsChimiques() {
         setShowResultats={setShowResultats}
         toggleSectionVisibility={toggleSectionVisibility}
         sectionVisibility={sectionVisibility}
+        setShowQuiz={setShowQuiz}
+        reactionTerminee={reactionTerminee}
       />
 
-
-      {enReaction && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-sm rounded-xl p-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
-          <p className="text-white font-bold text-lg">Réaction en cours...</p>
-          <p className="text-white/80 text-sm">Observez les changements chimiques</p>
-          <div className="mt-3 w-48 bg-white/20 rounded-full h-2">
-            <div
-              className="bg-white h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progressReaction * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className={`absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg max-w-sm ${sectionVisibility.guide ? '' : 'hidden'}`}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center">
-            <Info className="mr-2 text-blue-600" size={14} />
-            <span className="font-medium text-gray-700 text-sm">Guide d'utilisation</span>
-          </div>
-          <button
-            onClick={() => toggleSectionVisibility('guide')}
-            className="p-1 hover:bg-gray-100 rounded"
-            title="Masquer/Afficher le guide"
-          >
-            <Eye size={12} className="text-gray-500" />
-          </button>
-        </div>
-        <div className="text-xs text-gray-600 space-y-1">
-          <p>
-            🖱️ <strong>Navigation:</strong> Glissez pour tourner, molette pour zoomer
-          </p>
-          <p>
-            🧪 <strong>Expérience:</strong> Cliquez sur les béchers pour verser
-          </p>
-          <p>
-            👀 <strong>Observation:</strong> Regardez les changements de couleur
-          </p>
-          <p>
-            📚 <strong>Apprentissage:</strong> Consultez l'analyse détaillée
-          </p>
-        </div>
-      </div>
+      {/* Enlever la section "réaction en cours" après la fin de l'expérience */}
 
       <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-lg">
         <div className="flex items-center mb-2">
@@ -1761,10 +2032,7 @@ export default function LaboratoireReactionsChimiques() {
         </div>
       </div>
 
-      <FloatingToggleButtons
-        sectionVisibility={sectionVisibility}
-        toggleSectionVisibility={toggleSectionVisibility}
-      />
+      <FloatingToggleButtons sectionVisibility={sectionVisibility} toggleSectionVisibility={toggleSectionVisibility} />
 
       <QuizModal
         showQuiz={showQuiz}
@@ -1777,6 +2045,12 @@ export default function LaboratoireReactionsChimiques() {
         handleQuizAnswer={handleQuizAnswer}
         nextQuestion={nextQuestion}
         resetQuiz={resetQuiz}
+      />
+
+      <AnalyseResultatsModal
+        showResultats={showResultats}
+        setShowResultats={setShowResultats}
+        reactionData={reactionData}
       />
     </div>
   )
