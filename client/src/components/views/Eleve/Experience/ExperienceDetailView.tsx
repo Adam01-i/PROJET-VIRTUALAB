@@ -119,8 +119,8 @@ export default function ExperienceDetailView({
     </div>
   );
 
-  const supabaseExperiences = allExperiences.filter(
-    (exp) => !exp.id.startsWith("local-") && exp.id !== experience.id
+  const localExperiences = allExperiences.filter(
+    (exp) => exp.id.startsWith("local-") && exp.id !== experience.id
   );
 
   if (isFullscreen) {
@@ -230,16 +230,16 @@ export default function ExperienceDetailView({
         </div>
       </div>
 
-      {/* Expériences Supabase uniquement */}
+      {/* ✅ Autres expériences locales uniquement */}
       <div className="pt-10 px-14">
-        <h3 className="text-1g font-bold text-gray-800 mb-4">Explorer d'autres expériences</h3>
+        <h3 className="text-1g font-bold text-gray-800 mb-4">Autres simulations locales</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {supabaseExperiences.slice(0, 6).map((exp) => (
+          {localExperiences.slice(0, 6).map((exp) => (
             <ExperienceCard
               key={exp.id}
               experience={exp}
               onStart={() => onSelectExperience(exp.id)}
-              isLocal={false}
+              isLocal={true}
             />
           ))}
         </div>

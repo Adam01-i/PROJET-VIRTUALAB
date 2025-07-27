@@ -2,7 +2,7 @@ import type { Experience } from "../../types/Experience/experience";
 
 export const experienceData: Experience[] = [
   {
-    id: "1",
+    id: "3",
     classe_id: "",
     titre: "Réactions d'oxydo-réduction avec le fer",
     description:
@@ -11,7 +11,7 @@ export const experienceData: Experience[] = [
     niveau: "Première",
     image:
       "/assets/simulations/sim-redox-reaction.png", // ✅ Remplacée
-    simulationPath: "RedoxReaction",
+    simulationPath: "3RedoxReaction",
     objectifs: [
       "Comprendre le principe des réactions d'oxydo-réduction",
       "Identifier les espèces oxydantes et réductrices selon la série électrochimique",
@@ -47,7 +47,7 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-    id: "2",
+    id: "6",
     classe_id: "",
     titre: "Synthese Moleculaire",
     description:
@@ -56,7 +56,7 @@ export const experienceData: Experience[] = [
     niveau: "Première",
     image:
       "/assets/simulations/sim-synthese-moleculaire.png", // ✅ Remplacée
-    simulationPath: "SyntheseMoleculaire",
+    simulationPath: "6SyntheseMoleculaire",
     objectifs: [
       "Comprendre le principe de l’électrolyse et le rôle des électrodes",
       "Décomposer une solution ionique en ses constituants par courant continu",
@@ -83,7 +83,7 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-    id: "3",
+    id: "2",
     classe_id: "",
     titre: "Titrage acido-basique avec indicateur coloré",
     description:
@@ -92,7 +92,7 @@ export const experienceData: Experience[] = [
     niveau: "Première",
     image:
       "/assets/simulations/sim-titrage-acido-basique.png", // ✅ Remplacée
-    simulationPath: "TitrageAcidoBasique",
+    simulationPath: "2TitrageAcidoBasique",
     objectifs: [
       "Comprendre le principe du titrage acido-basique",
       "Utiliser différents indicateurs colorés appropriés",
@@ -124,7 +124,7 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-    id: "4",
+    id: "5",
     classe_id: "",
     titre: "Neutralisation et test d'une Solution Acide-Base",
     description:
@@ -133,7 +133,7 @@ export const experienceData: Experience[] = [
     niveau: "Première",
     image:
       "/assets/simulations/sim-neutralisation.png", // ✅ Remplacée
-    simulationPath: "NeutralisationEtTestSolution",
+    simulationPath: "5NeutralisationEtTestSolution",
     objectifs: [
       "Comprendre le principe de la calorimétrie et les réactions exothermiques",
       "Utiliser un calorimètre pour mesurer la variation de température",
@@ -157,7 +157,7 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-    id: "5",
+    id: "1",
     classe_id: "",
     titre: "Oxydation des composés oxygénés",
     description:
@@ -166,7 +166,7 @@ export const experienceData: Experience[] = [
     niveau: "Première",
     image:
       "/assets/simulations/sim-composes-oxygenes.png", // ✅ Remplacée
-    simulationPath: "ComposeOxygene",
+    simulationPath: "1ComposeOxygene",
     objectifs: [
       "Différencier les alcools primaires et secondaires par leurs réactions d'oxydation",
       "Identifier les produits : aldéhydes, cétones, acides carboxyliques",
@@ -202,7 +202,7 @@ export const experienceData: Experience[] = [
     ],
   },
   {
-    id: "6",
+    id: "4",
     classe_id: "",
     titre: "Chaînes carbonées insaturées : test à l’eau de brome",
     description:
@@ -211,7 +211,7 @@ export const experienceData: Experience[] = [
     niveau: "Première",
     image:
       "/assets/simulations/sim-chaines-carbonees-insaturees.png", // ✅ Remplacée
-    simulationPath: "ChainesInsaturees",
+    simulationPath: "4ChainesInsaturees",
     objectifs: [
       "Identifier les chaînes carbonées insaturées (alcènes, alcynes)",
       "Observer la réactivité chimique des doubles liaisons",

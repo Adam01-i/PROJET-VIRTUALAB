@@ -1078,7 +1078,10 @@ const SceneChimie = ({
         LABORATOIRE DE RÉACTIONS CHIMIQUES - 1ère S
       </Text>
 
-      <Environment preset="apartment" />
+      <Environment
+        files="/hdr/lebombo_1k.hdr"
+        background
+      />
       <OrbitControls
         enablePan={true}
         enableZoom={true}
@@ -1488,13 +1491,12 @@ const PanneauControle = ({
         <div className="mt-1 text-xs text-gray-600 flex items-center justify-between">
           <span>{solution1.concentration}</span>
           <span
-            className={`px-1 py-0.5 rounded text-xs font-bold ${
-              solution1.securite === "eleve"
+            className={`px-1 py-0.5 rounded text-xs font-bold ${solution1.securite === "eleve"
                 ? "bg-red-100 text-red-800"
                 : solution1.securite === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-green-100 text-green-800"
-            }`}
+              }`}
           >
             {solution1.securite === "eleve" ? "⚠️" : solution1.securite === "moyen" ? "⚡" : "✅"}
           </span>
@@ -1533,13 +1535,12 @@ const PanneauControle = ({
         <div className="mt-1 text-xs text-gray-600 flex items-center justify-between">
           <span>{solution2.concentration}</span>
           <span
-            className={`px-1 py-0.5 rounded text-xs font-bold ${
-              solution2.securite === "eleve"
+            className={`px-1 py-0.5 rounded text-xs font-bold ${solution2.securite === "eleve"
                 ? "bg-red-100 text-red-800"
                 : solution2.securite === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-green-100 text-green-800"
-            }`}
+              }`}
           >
             {solution2.securite === "eleve" ? "⚠️" : solution2.securite === "moyen" ? "⚡" : "✅"}
           </span>
@@ -1567,13 +1568,12 @@ const PanneauControle = ({
         </div>
         <div className="flex items-center gap-1">
           <span
-            className={`px-1 py-0.5 rounded text-xs font-bold ${
-              reactionData.niveau === "facile"
+            className={`px-1 py-0.5 rounded text-xs font-bold ${reactionData.niveau === "facile"
                 ? "bg-green-100 text-green-800"
                 : reactionData.niveau === "moyen"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-red-100 text-red-800"
-            }`}
+              }`}
           >
             {reactionData.niveau === "facile" ? "🟢" : reactionData.niveau === "moyen" ? "🟡" : "🔴"}
           </span>
@@ -1654,9 +1654,8 @@ const PanneauObservations = ({
       ].map(({ label, active, icon }) => (
         <div
           key={label}
-          className={`text-center text-xs p-1 rounded border ${
-            active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
-          }`}
+          className={`text-center text-xs p-1 rounded border ${active ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-500"
+            }`}
         >
           <div className="text-xs">{icon}</div>
           <div className="font-bold text-xs">{label}</div>
@@ -1790,8 +1789,7 @@ const QuizModal = ({
                 key={option.id}
                 onClick={() => !showExplanation && handleQuizAnswer(option.id)}
                 disabled={showExplanation}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  showExplanation
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${showExplanation
                     ? option.id === currentQuestion.correct
                       ? "bg-green-100 border-green-500 text-green-800"
                       : option.id === selectedAnswer && option.id !== currentQuestion.correct
@@ -1800,7 +1798,7 @@ const QuizModal = ({
                     : selectedAnswer === option.id
                       ? "bg-blue-100 border-blue-500"
                       : "bg-gray-50 border-gray-300 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span>{option.text}</span>
@@ -1883,13 +1881,12 @@ const AnalyseResultatsModal = ({ showResultats, setShowResultats, reactionData }
               <div>
                 <span className="font-semibold">Niveau de difficulté:</span>
                 <span
-                  className={`ml-2 px-2 py-1 rounded text-xs font-bold ${
-                    reactionData.niveau === "facile"
+                  className={`ml-2 px-2 py-1 rounded text-xs font-bold ${reactionData.niveau === "facile"
                       ? "bg-green-100 text-green-800"
                       : reactionData.niveau === "moyen"
                         ? "bg-yellow-100 text-yellow-800"
                         : "bg-red-100 text-red-800"
-                  }`}
+                    }`}
                 >
                   {reactionData.niveau}
                 </span>

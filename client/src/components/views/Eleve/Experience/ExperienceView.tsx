@@ -36,9 +36,7 @@ const getLocalSimulations = async (): Promise<any[]> => {
 const enrichLocalSimulations = (simulations: any[]) => {
   return simulations.map((sim) => {
     const detailed = experienceData.find((d) => sim.simulationPath === d.simulationPath)
-    return detailed
-      ? { ...sim, ...detailed, id: sim.id }
-      : sim
+    return detailed ? { ...sim, ...detailed, id: sim.id } : sim
   })
 }
 
@@ -49,7 +47,6 @@ export default function ExperienceView() {
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [prenom, setPrenom] = useState("")
-  const [filtre, setFiltre] = useState<"all" | "supabase" | "local">("all")
 
   const handleStartExperience = async (experienceId: string) => {
     const experience = experiences.find((e) => e.id === experienceId)
@@ -72,17 +69,16 @@ export default function ExperienceView() {
       setLocalIds(localIdSet)
 
       if (!user) {
-        const { data: allExperiences } = await supabase
-          .from("vue_experience_details")
-          .select("*")
-          .order("created_at", { ascending: false })
-
-        setExperiences([...(allExperiences || []), ...enrichedLocalSimulations])
+        setExperiences(enrichedLocalSimulations)
         setLoading(false)
         return
       }
 
-      const { data: profile } = await supabase.from("profiles").select("name, role").eq("id", user.id).single()
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name, role")
+        .eq("id", user.id)
+        .single()
 
       if (!profile || profile.role !== "eleve") {
         setLoading(false)
@@ -103,16 +99,10 @@ export default function ExperienceView() {
     fetchExperiences()
   }, [])
 
-  const filteredExperiences = experiences.filter((exp) => {
-    if (filtre === "supabase") return !localIds.has(exp.id)
-    if (filtre === "local") return localIds.has(exp.id)
-    return true
-  })
-
+  const filteredExperiences = experiences
   const totalPages = Math.ceil(filteredExperiences.length / ITEMS_PER_PAGE)
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE
   const currentData = filteredExperiences.slice(startIdx, startIdx + ITEMS_PER_PAGE)
-
   const currentExperience = activeExperience ? experiences.find((e) => e.id === activeExperience) : null
 
   const goToPage = (page: number) => {
@@ -126,29 +116,28 @@ export default function ExperienceView() {
   }
 
   if (currentExperience) {
-    return <ExperienceDetailView
-      experience={currentExperience}
-      onBack={() => setActiveExperience(null)}
-      onSelectExperience={(id) => setActiveExperience(id)}
-      allExperiences={filteredExperiences}
-    />
-
-
+    return (
+      <ExperienceDetailView
+        experience={currentExperience}
+        onBack={() => setActiveExperience(null)}
+        onSelectExperience={(id) => setActiveExperience(id)}
+        allExperiences={filteredExperiences}
+      />
+    )
   }
 
   return (
     <>
-      {/* ✅ Hero plein écran, largeur totale */}
-      <HeroSection images={[
-        "/assets/bg/exp1.png",
-        "/assets/bg/exp2.png",
-        "/assets/bg/exp3.png",
-        "/assets/bg/exp4.png",
-        "/assets/bg/exp5.png"
-      ]}>
-        {/* Overlay sombre pour améliorer contraste */}
+      <HeroSection
+        images={[
+          "/assets/bg/exp1.png",
+          "/assets/bg/exp2.png",
+          "/assets/bg/exp3.png",
+          "/assets/bg/exp4.png",
+          "/assets/bg/exp5.png",
+        ]}
+      >
         <div className="absolute inset-0 bg-black/40 z-0" />
-
         <div className="text-center max-w-3xl mx-auto">
           <FlaskConical size={48} className="text-purple-300 mx-auto mb-6" />
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
@@ -160,30 +149,11 @@ export default function ExperienceView() {
         </div>
       </HeroSection>
 
-      <div className="max-w-[1280px] mx-auto md:px-26  space-y-10">
-
-        {/* ✅ Contenu centré */}
+      <div className="max-w-[1280px] mx-auto md:px-26 space-y-10">
         <div className="max-w-[1280px] mx-auto px-6 md:px-20 py-12 space-y-10">
           <h2 className="text-2xl font-bold text-gray-800">
             {prenom ? `Mes Expériences disponibles` : "Expériences disponibles (mode invité)"}
           </h2>
-
-          {!prenom && (
-            <div className="flex gap-3 flex-wrap">
-              {["all", "supabase", "local"].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFiltre(f as any)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition border ${filtre === f
-                    ? "bg-purple-600 text-white border-purple-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
-                >
-                  {f === "all" ? "Toutes" : f === "supabase" ? "Supabase" : "Locales"}
-                </button>
-              ))}
-            </div>
-          )}
 
           {filteredExperiences.length === 0 ? (
             <div className="text-gray-500 text-center py-12">Aucune expérience disponible pour le moment.</div>
@@ -215,10 +185,11 @@ export default function ExperienceView() {
                     <button
                       key={pageNum}
                       onClick={() => goToPage(pageNum)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${currentPage === pageNum
-                        ? "bg-indigo-600 text-white"
-                        : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                        }`}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                        currentPage === pageNum
+                          ? "bg-indigo-600 text-white"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                      }`}
                     >
                       {pageNum}
                     </button>
@@ -237,7 +208,6 @@ export default function ExperienceView() {
           )}
         </div>
         <Chatbot />
-
       </div>
     </>
   )

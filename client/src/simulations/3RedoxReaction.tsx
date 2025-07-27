@@ -872,7 +872,10 @@ function Scene({
       <color attach="background" args={["#4c51bf"]} />
       <fog attach="fog" args={["#4c51bf", 12, 30]} />
 
-      <Environment preset="city" />
+      <Environment
+        files="/hdr/rooitou_park_1k.hdr"
+        background
+      />
 
       <RedoxLabEnvironment />
       <RedoxLabTable />
