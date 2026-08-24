@@ -6,6 +6,9 @@ Le projet répond à un problème concret : l'insuffisance d'équipements de lab
 
 > 📖 Projet de mémoire de Licence Professionnelle — Développement et Administration d'Applications (D2A), Université Alioune Diop de Bambey (2023-2024). Réalisé par **Serigne Moustapha MBACKÉ** et **Adama SECK**, sous l'encadrement de **Dr. Fatoumata BALDÉ**.
 
+🔗 **Dépôt GitHub** : [github.com/Adam01-i/PROJET-VIRTUALAB](https://github.com/Adam01-i/PROJET-VIRTUALAB)
+🌐 **Démo en ligne** : [virtualab2025.vercel.app](https://virtualab2025.vercel.app)
+
 ---
 
 ## 📌 Contexte et problématique
@@ -172,7 +175,36 @@ VirtuaLaB se distingue des solutions existantes (PhET, Labster, PraxiLabs, MEL S
 
 ---
 
-## 👥 Auteurs
+## 🖼️ Captures d'écran
+
+> Cette section permet de présenter visuellement l'application sur GitHub.
+
+### 🎓 Espace Élève
+![Accueil](screenshots/img_accueil.png)
+![Assistant IA Pédagogique](screenshots/img_chatbot.png)
+![Simulation — Réaction Redox](screenshots/img_simulation_redox.png)
+![Simulation — Titrage Acido-Basique](screenshots/img_simulation_titrage.png)
+![Simulation — Chaînes carbonées insaturées](screenshots/img_simulation_chaines.png)
+![Quiz interactifs](screenshots/img_quiz.png)
+![Visualisation 3D](screenshots/img_visualisation_3d.png)
+
+### 👨‍🏫 Espace Professeur
+![Tableau de bord Professeur](screenshots/img_dashboard_prof.png)
+![Gestion des classes](screenshots/img_gestion_classes_prof.png)
+![Gestion des simulations](screenshots/img_gestion_simulations.png)
+![Gestion des quiz](screenshots/img_gestion_quiz.png)
+![Gestion des objets 3D](screenshots/img_gestion_3d.png)
+
+### 🛠️ Espace Administrateur
+![Tableau de bord Administrateur](screenshots/img_dashboard_admin.png)
+![Gestion des utilisateurs](screenshots/img_gestion_utilisateurs.png)
+![Gestion des classes (admin)](screenshots/img_gestion_classes_admin.png)
+
+> 📁 Les fichiers complets sont à placer dans le dossier `screenshots/` à la racine du dépôt.
+
+---
+
+## 👥 Contribution
 
 **Serigne Moustapha MBACKÉ** & **Adama SECK**
 Licence Professionnelle, Développement et Administration d'Applications
@@ -180,11 +212,9 @@ Université Alioune Diop de Bambey — Sénégal
 
 **Encadrante** : Dr. Fatoumata BALDÉ
 
----
-
-## 🔗 Lien
-
-🌐 [virtualab2025.vercel.app](https://virtualab2025.vercel.app)
+**Répartition du travail** :
+- **Adama SECK** : conception et développement de l'ensemble des interfaces et fonctionnalités des 3 espaces (élève, professeur, administrateur) — authentification, tableaux de bord, gestion des classes/quiz/objets 3D, import/export Excel, chatbot IA — ainsi que le déploiement (Vercel + Railway) et les tests utilisateurs, du début à la fin du projet.
+- **Serigne Moustapha MBACKÉ** : conception et développement des simulations 3D interactives (titrage, réactions redox, chaînes carbonées).
 
 ---
 
